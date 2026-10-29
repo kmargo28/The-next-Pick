@@ -1,0 +1,248 @@
+﻿@namespace TheNextPick.Components
+@using TheNextPick.Engine
+@using TheNextPick.Models
+@inject GameStateService GameState
+@implements IDisposable
+
+<div class="sports-card p-4 my-3 text-center position-relative" style="max-width: 620px; margin: auto; background: #0c1017; border: 2px solid #eab308;">
+    <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+        <span class="badge bg-warning text-dark text-uppercase px-2 py-1 small fw-bold">FINALES NBA: TIRO LIBRE DECISIVO</span>
+        <span class="text-white fw-bold">TIRO @(tiroActual)/2 | ANOTADOS: @aciertos</span>
+    </div>
+
+    <h4 class="text-white fw-bold mb-1">Presión en Territorio Hostil</h4>
+    <p class="text-secondary small mb-2">Sincroniza la aguja en el punto céntrico con los hinchas rivales gritando.</p>
+
+    <!-- DUELA CON TRAYECTORIA FÍSICA EN PARÁBOLA -->
+    <div class="position-relative mx-auto rounded overflow-hidden my-2" style="width: 100%; height: 230px; border: 2px solid #334155;">
+        <CanchaFondo />
+
+        <!-- CANASTA A LA DERECHA CON RED ANIMADA -->
+        <svg viewBox="0 0 100 120" class="position-absolute end-0" style="width: 100px; height: 130px; top: 60px; pointer-events: none;">
+            <line x1="80" y1="10" x2="80" y2="100" stroke="#fff" stroke-width="5" />
+            <rect x="76" y="25" width="4" height="40" fill="#e11d48" />
+
+            <!-- Aro Naranja -->
+            <line x1="45" y1="65" x2="80" y2="65" stroke="#ff4500" stroke-width="4" stroke-linecap="round" />
+            
+            <!-- Red estilo pixel con reacción de choque -->
+            <g class="@(netSwish ? "red-swish-anim" : "")">
+                <path d="M 48,67 L 52,90 L 72,90 L 76,67 Z" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="2.5" />
+            </g>
+
+            <ellipse cx="62" cy="65" rx="14" ry="3" fill="none" stroke="#ff4500" stroke-width="2" />
+        </svg>
+
+        <!-- BALÓN VOLANDO EN PARÁBOLA POR LA PANTALLA -->
+        @if (balonVolando)
+        {
+            <div class="position-absolute" style="left: @(balonX)px; top: @(balonY)px; transform: translate(-50%, -50%); pointer-events: none; z-index: 15;">
+                <svg width="24" height="24" viewBox="0 0 24 24" class="balon-volando-giro">
+                    <circle cx="12" cy="12" r="10" fill="#e65100" stroke="#000" stroke-width="2" />
+                    <line x1="2" y1="12" x2="22" y2="12" stroke="#000" stroke-width="1.5" />
+                    <line x1="12" y1="2" x2="12" y2="22" stroke="#000" stroke-width="1.5" />
+                </svg>
+            </div>
+        }
+
+        <!-- Tirador Scott Pilgrim en la línea de libres -->
+        <div class="position-absolute" style="left: 90px; bottom: 15px;">
+            <PixelArtPlayer Estado="@estadoTirador" TieneBalon="@(!balonVolando && estadoTirador != "Celebrando")" ColorPrimario="@colorPropio" AnchoPx="90" AltoPx="115" />
+        </div>
+
+        <!-- POPUP ARCADE DE RESULTADO -->
+        @if (!string.IsNullOrEmpty(textoArcadePop))
+        {
+            <div class="position-absolute top-50 start-50 translate-middle text-center arcade-pop-anim" style="pointer-events: none; z-index: 25;">
+                <span class="display-4 fw-bold @colorTextoPop nba-title" style="-webkit-text-stroke: 2px #000; text-shadow: 3px 3px 0 #000;">
+                    @textoArcadePop
+                </span>
+            </div>
+        }
+    </div>
+
+    <!-- Barra de Tiro Libre -->
+    <div class="position-relative my-3 rounded border border-secondary" style="height: 38px; background: #0b0e14; overflow: hidden;">
+        <div class="position-absolute bg-success opacity-75 h-100" style="left: 44%; width: 12%;"></div>
+        <div class="position-absolute bg-warning h-100" style="left: @posicionBarra%; width: 6px; box-shadow: 0 0 10px #f59e0b;"></div>
+    </div>
+
+    @if (!activo && !finalizado)
+    {
+        <button class="btn btn-warning py-3 px-5 fw-bold text-dark fs-5" @onclick="IniciarTiroLibre">
+            TOMAR EL BALÓN EN LA LÍNEA
+        </button>
+    }
+    else if (activo)
+    {
+        <button class="btn btn-danger py-3 px-5 fw-bold fs-5" @onclick="Lanzar">
+            ¡LANZAR AL ARO!
+        </button>
+    }
+
+    <p class="mt-2 text-info fw-semibold small mb-0">@mensajeFeedback</p>
+</div>
+
+<style>
+    .balon-volando-giro {
+        animation: anim-rotacion 0.3s infinite linear;
+    }
+    @@keyframes anim-rotacion {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .arcade-pop-anim {
+        animation: anim-pop 0.7s forwards cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    @@keyframes anim-pop {
+        0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+        60% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+
+    .red-swish-anim {
+        animation: anim-swish 0.35s ease-out;
+        transform-origin: 62px 65px;
+    }
+    @@keyframes anim-swish {
+        0% { transform: scale(1, 1); }
+        50% { transform: scale(1.3, 1.4) skewX(8deg); }
+        100% { transform: scale(1, 1); }
+    }
+</style>
+
+@code {
+    [Parameter] public EventCallback<bool> OnFinalizado { get; set; }
+
+    private string colorPropio = "#1D428A";
+    private string estadoTirador = "Bote";
+    private int tiroActual = 1;
+    private int aciertos = 0;
+    private bool activo = false;
+    private bool finalizado = false;
+    private bool balonVolando = false;
+    private bool netSwish = false;
+
+    private double balonX = 140;
+    private double balonY = 160;
+
+    private int posicionBarra = 0;
+    private bool subiendo = true;
+    private string mensajeFeedback = "Concéntrate frente a los abucheos de la grada.";
+    private string textoArcadePop = "";
+    private string colorTextoPop = "text-warning";
+    private CancellationTokenSource? cts;
+
+    protected override void OnInitialized()
+    {
+        var eq = EquipoNBA.ObtenerPorNombre(GameState.JugadorActivo?.EquipoActual ?? "");
+        colorPropio = eq.ColorPrimario;
+    }
+
+    private async Task IniciarTiroLibre()
+    {
+        activo = true;
+        cts = new();
+        estadoTirador = "Bote";
+        mensajeFeedback = "Detén la aguja en el centro verde.";
+        textoArcadePop = "";
+
+        try
+        {
+            while (activo && !cts.Token.IsCancellationRequested)
+            {
+                posicionBarra += subiendo ? 5 : -5;
+                if (posicionBarra >= 95) subiendo = false;
+                if (posicionBarra <= 5) subiendo = true;
+                StateHasChanged();
+                await Task.Delay(16, cts.Token);
+            }
+        }
+        catch (TaskCanceledException) { }
+    }
+
+    private async Task Lanzar()
+    {
+        activo = false;
+        cts?.Cancel();
+        estadoTirador = "Lanzando";
+
+        bool encesto = (posicionBarra >= 44 && posicionBarra <= 56);
+        if (encesto) aciertos++;
+
+        // ANIMACIÓN DE PARÁBOLA DEL BALÓN EN TIEMPO REAL
+        balonVolando = true;
+        balonX = 140;
+        balonY = 150;
+        StateHasChanged();
+
+        double destinoX = encesto ? 520 : (posicionBarra < 44 ? 490 : 550);
+        double destinoY = 115;
+
+        // Vuelo de subida y bajada
+        for (int i = 0; i <= 25; i++)
+        {
+            double t = i / 25.0;
+            // Curva Bézier cuadrática hacia la canasta
+            double alturaArco = 180;
+            balonX = (1 - t) * (1 - t) * 140 + 2 * (1 - t) * t * 330 + t * t * destinoX;
+            balonY = (1 - t) * (1 - t) * 150 + 2 * (1 - t) * t * (150 - alturaArco) + t * t * destinoY;
+            StateHasChanged();
+            await Task.Delay(16);
+        }
+
+        if (encesto)
+        {
+            netSwish = true;
+            textoArcadePop = "SWISH! 🎯";
+            colorTextoPop = "text-success";
+            mensajeFeedback = "¡Canasta limpia bajo presión!";
+            StateHasChanged();
+            await Task.Delay(250);
+            netSwish = false;
+        }
+        else
+        {
+            textoArcadePop = "CLANK! ❌";
+            colorTextoPop = "text-danger";
+            mensajeFeedback = "El balón rebotó en el aro.";
+            // Rebote de fallo hacia abajo
+            for (int r = 0; r < 8; r++)
+            {
+                balonY += 8;
+                balonX -= 4;
+                StateHasChanged();
+                await Task.Delay(20);
+            }
+        }
+
+        await Task.Delay(800);
+        balonVolando = false;
+        textoArcadePop = "";
+
+        if (tiroActual == 1)
+        {
+            tiroActual = 2;
+            estadoTirador = "Bote";
+            mensajeFeedback = "Segundo tiro libre. ¡Concéntrate!";
+            StateHasChanged();
+        }
+        else
+        {
+            finalizado = true;
+            estadoTirador = aciertos >= 1 ? "Celebrando" : "Bote";
+            mensajeFeedback = $"Tiros libres concluidos ({aciertos}/2 anotados).";
+            StateHasChanged();
+
+            await Task.Delay(1300);
+            await OnFinalizado.InvokeAsync(aciertos >= 1);
+        }
+    }
+
+    public void Dispose()
+    {
+        cts?.Cancel();
+        cts?.Dispose();
+    }
+}

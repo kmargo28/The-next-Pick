@@ -5,7 +5,7 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
   "mainAssemblyName": "The-next-Pick",
   "applicationEnvironment": "Development",
   "resources": {
-    "hash": "sha256-NU1E/+XSpFsWkVxBiHlcj1tbZPqngVe63UsgWHMkC0w=",
+    "hash": "sha256-sE2mknmtj4jPQ22S/bSiyCbiv9HMLrm85FsgJegQDzk=",
     "jsModuleNative": [
       {
         "name": "dotnet.native.bjoj0wmylw.js"
@@ -1242,16 +1242,16 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
       },
       {
         "virtualPath": "The-next-Pick.wasm",
-        "name": "The-next-Pick.yl0t6cv0ty.wasm",
-        "hash": "sha256-Vg7G1U62fYguXIh5YNHYvU96pfycdfP4xuk+epavzGQ=",
+        "name": "The-next-Pick.fhlzmzoqfs.wasm",
+        "hash": "sha256-g5lM765ixttTQ9hKNRD+8K9EzaotkNMH/sTfruKeOCM=",
         "cache": "force-cache"
       }
     ],
     "pdb": [
       {
         "virtualPath": "The-next-Pick.pdb",
-        "name": "The-next-Pick.rukk4bfwxb.pdb",
-        "hash": "sha256-bdmeLceMXSLvCn5l9JaVykulsGlM77aPAKeAehN98oE=",
+        "name": "The-next-Pick.cuylndw2jk.pdb",
+        "hash": "sha256-pO4oSFdc7wpIBDgDmeNfEAxPdeLdOJLDo1RaRh2so8g=",
         "cache": "force-cache"
       }
     ],

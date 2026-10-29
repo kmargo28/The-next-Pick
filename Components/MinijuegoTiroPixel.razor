@@ -1,0 +1,180 @@
+﻿@namespace TheNextPick.Components
+@using TheNextPick.Engine
+@using TheNextPick.Models
+@inject GameStateService GameState
+@implements IDisposable
+
+<div class="sports-card p-3 my-3 text-center position-relative" style="max-width: 580px; margin: auto; background: #0c1017; border: 2px solid #2d3748;">
+    
+    <!-- GUÍA GRÁFICA TÁCTICA -->
+    <div class="p-2 mb-2 rounded bg-dark border border-secondary text-start small">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-warning fw-bold">🎯 LANZAMIENTO CLUTCH (ESTILO ARCADE)</span>
+            <span class="badge bg-danger">DEFENSA OPONENTE: @defensaContestacion%</span>
+        </div>
+        <div class="text-secondary" style="font-size: 0.75rem;">
+            1. Mantén presionado para saltar. ➜ 2. Suelta justo en la <strong>FRANJA VERDE</strong>.
+        </div>
+    </div>
+
+    <!-- PISTA Y GRADAS -->
+    <div class="position-relative mx-auto rounded overflow-hidden" 
+         style="width: 100%; height: 260px; border: 2px solid #2d3748;">
+        
+        <CanchaFondo />
+
+        <!-- ARO AL EXTREMO DERECHO -->
+        <svg viewBox="0 0 100 120" class="position-absolute end-0" style="width: 100px; height: 120px; top: 70px; pointer-events: none;">
+            <line x1="80" y1="20" x2="80" y2="100" stroke="#fff" stroke-width="4" />
+            <line x1="55" y1="65" x2="80" y2="65" stroke="#ff5722" stroke-width="4" />
+            <rect x="40" y="63" width="16" height="4" fill="#ff5722" />
+            <path d="M 40,67 L 43,88 L 53,88 L 56,67" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.7" />
+
+            @if (balonEnVuelo)
+            {
+                <circle cx="@balonVueloX" cy="@balonVueloY" r="7" fill="#e65100" stroke="#000" stroke-width="1.5" />
+            }
+        </svg>
+
+        <!-- DEFENSOR PIXEL ART (Cerrando la marca) -->
+        <div class="position-absolute" style="right: 120px; bottom: 15px; transform: scaleX(-1);">
+            <PixelArtPlayer Estado="@(animandoTiro ? "Saltando" : "Idle")" ColorPrimario="#334155" AnchoPx="85" AltoPx="110" />
+        </div>
+
+        <!-- ATACANTE PIXEL ART (Tu Jugador Estilo Scott Pilgrim) -->
+        <div class="position-absolute" style="left: 70px; bottom: 15px;">
+            <PixelArtPlayer Estado="@estadoJugador" ColorPrimario="@colorEquipo" AnchoPx="95" AltoPx="120" />
+        </div>
+
+        <!-- MEDIDOR DE TIRO VERDE -->
+        <div class="position-absolute bottom-0 start-50 translate-middle-x mb-2 px-3 py-1 rounded bg-black bg-opacity-85 border border-secondary" style="width: 280px;">
+            <div class="progress position-relative bg-dark" style="height: 12px; overflow: visible;">
+                <div class="position-absolute bg-success h-100 opacity-75" style="left: @zonaVerdeMin%; width: @(zonaVerdeMax - zonaVerdeMin)%;"></div>
+                <div class="progress-bar bg-warning" style="width: @potenciaActual%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTÓN DE CONTROL -->
+    <div class="mt-3">
+        @if (!animandoTiro && !tiroResuelto)
+        {
+            @if (!cargandoSalto)
+            {
+                <button class="btn btn-warning py-3 px-5 fw-bold text-dark fs-5" @onpointerdown="IniciarElevacion">
+                    MANTENER PARA SALTAR 🏀
+                </button>
+            }
+            else
+            {
+                <button class="btn btn-danger py-3 px-5 fw-bold text-white fs-5" @onpointerup="SoltarLanzamiento">
+                    ¡SOLTAR EN LO VERDE! 🎯
+                </button>
+            }
+        }
+        else
+        {
+            <div class="text-warning fw-bold py-2 fs-5">@mensajeResultado</div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<bool> OnFinalizado { get; set; }
+
+    private string estadoJugador = "Bote";
+    private string colorEquipo = "#1D428A";
+    private int potenciaActual = 0;
+    private bool cargandoSalto = false;
+    private bool animandoTiro = false;
+    private bool balonEnVuelo = false;
+    private double balonVueloX = 20;
+    private double balonVueloY = 80;
+    private bool tiroResuelto = false;
+    private string mensajeResultado = "";
+
+    private int zonaVerdeMin = 68;
+    private int zonaVerdeMax = 80;
+    private int defensaContestacion = 50;
+    private CancellationTokenSource cts = new();
+
+    protected override void OnInitialized()
+    {
+        var eq = EquipoNBA.ObtenerPorNombre(GameState.JugadorActivo?.EquipoActual ?? "");
+        colorEquipo = eq.ColorPrimario;
+
+        int tiro = GameState.JugadorActivo?.TiroExterior ?? 70;
+        defensaContestacion = Random.Shared.Next(40, 80);
+
+        int ancho = Math.Clamp((tiro / 9) - (defensaContestacion / 18), 5, 13);
+        zonaVerdeMin = Random.Shared.Next(65, 80);
+        zonaVerdeMax = zonaVerdeMin + ancho;
+    }
+
+    private async Task IniciarElevacion()
+    {
+        if (animandoTiro || tiroResuelto) return;
+        cargandoSalto = true;
+        estadoJugador = "Saltando";
+        potenciaActual = 0;
+
+        try
+        {
+            while (cargandoSalto && !cts.Token.IsCancellationRequested)
+            {
+                potenciaActual += 5;
+                if (potenciaActual >= 100) potenciaActual = 0;
+                StateHasChanged();
+                await Task.Delay(18, cts.Token);
+            }
+        }
+        catch (TaskCanceledException) { }
+    }
+
+    private async Task SoltarLanzamiento()
+    {
+        if (!cargandoSalto || animandoTiro) return;
+        cargandoSalto = false;
+        animandoTiro = true;
+        estadoJugador = "Lanzando";
+
+        bool acierto = potenciaActual >= zonaVerdeMin && potenciaActual <= zonaVerdeMax;
+
+        balonEnVuelo = true;
+        balonVueloX = 20;
+        balonVueloY = 80;
+        StateHasChanged();
+
+        for (int i = 0; i < 6; i++)
+        {
+            balonVueloX += 8;
+            balonVueloY -= (i < 3 ? 6 : -4);
+            StateHasChanged();
+            await Task.Delay(40);
+        }
+
+        balonEnVuelo = false;
+        tiroResuelto = true;
+
+        if (acierto)
+        {
+            estadoJugador = "Celebrando";
+            mensajeResultado = "¡GREEN RELEASE! Canasta limpia con marca encima.";
+        }
+        else
+        {
+            estadoJugador = "Bote";
+            mensajeResultado = potenciaActual < zonaVerdeMin ? "Tiro corto. Faltó elevación." : "Tiro desviado contra el aro.";
+        }
+        StateHasChanged();
+
+        await Task.Delay(1300);
+        await OnFinalizado.InvokeAsync(acierto);
+    }
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+    }
+}

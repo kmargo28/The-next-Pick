@@ -1,0 +1,160 @@
+﻿@namespace TheNextPick.Components
+@using TheNextPick.Engine
+@using TheNextPick.Models
+@inject GameStateService GameState
+@implements IDisposable
+
+<div class="sports-card p-4 my-3 text-center position-relative" style="max-width: 600px; margin: auto; background: #0c1017; border: 2px solid #3b82f6;">
+    <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+        <span class="badge bg-primary text-uppercase px-2 py-1 small fw-bold">PLAYOFFS: REBOTE CRUCIAL</span>
+        <span class="text-white fw-bold">RELOJ: 1.2 SEG</span>
+    </div>
+
+    <h4 class="text-white fw-bold mb-1">Batalla por el Rebote Ofensivo</h4>
+    <p class="text-secondary small mb-2">Gana la posición de caja al rival y presiona SALTAR en la sombra del balón.</p>
+
+    <div class="position-relative mx-auto rounded overflow-hidden my-2" style="width: 100%; height: 230px; border: 2px solid #334155;">
+        <CanchaFondo />
+
+        <!-- Sombra del rebote cayendo -->
+        <ellipse cx="@sombraX" cy="195" rx="@(radioSombra)" ry="@(radioSombra * 0.3)" fill="rgba(245, 158, 11, 0.6)" stroke="#000" stroke-width="1.5" />
+        
+        <!-- Balón en caída -->
+        <circle cx="@sombraX" cy="@balonY" r="9" fill="#e65100" stroke="#000" stroke-width="2" />
+
+        <!-- Pívot Rival (Sin balón, peleando posición) -->
+        <div class="position-absolute" style="left: @(posicionRivalX)px; bottom: 15px; transform: scaleX(-1);">
+            <PixelArtPlayer Estado="Defendiendo" TieneBalon="false" ColorPrimario="#b91c1c" AnchoPx="90" AltoPx="115" />
+        </div>
+
+        <!-- Tu Jugador Scott Pilgrim (Peleando rebote) -->
+        <div class="position-absolute" style="left: @(posicionPropiaX)px; bottom: 15px;">
+            <PixelArtPlayer Estado="@estadoPropio" TieneBalon="@tieneRebote" ColorPrimario="@colorPropio" AnchoPx="90" AltoPx="115" />
+        </div>
+
+        @if (!string.IsNullOrEmpty(textoPop))
+        {
+            <div class="position-absolute top-50 start-50 translate-middle text-center arcade-pop-anim" style="pointer-events: none;">
+                <span class="display-4 fw-bold @colorPop nba-title" style="-webkit-text-stroke: 2px #000; text-shadow: 3px 3px 0 #000;">
+                    @textoPop
+                </span>
+            </div>
+        }
+    </div>
+
+    @if (!capturado)
+    {
+        <div class="d-flex justify-content-center gap-2 mt-2">
+            <button class="btn btn-outline-light px-4 py-3 fw-bold" @onclick="() => Mover(-25)">
+                ⬅️ EMPUJAR IZQ
+            </button>
+            <button class="btn btn-warning px-5 py-3 fw-bold text-dark fs-5" @onclick="SaltarRebote">
+                ¡SALTAR AL REBOTE! 🚀
+            </button>
+            <button class="btn btn-outline-light px-4 py-3 fw-bold" @onclick="() => Mover(25)">
+                EMPUJAR DER ➡️
+            </button>
+        </div>
+    }
+
+    <p class="mt-2 text-info fw-semibold small mb-0">@mensajeGuia</p>
+</div>
+
+@code {
+    [Parameter] public EventCallback<bool> OnFinalizado { get; set; }
+
+    private string colorPropio = "#1D428A";
+    private string estadoPropio = "Idle";
+    private bool tieneRebote = false;
+    private bool capturado = false;
+
+    private int posicionPropiaX = 140;
+    private int posicionRivalX = 230;
+    private int sombraX = 180;
+    private double balonY = 40;
+    private double radioSombra = 20;
+
+    private string textoPop = "";
+    private string colorPop = "text-warning";
+    private string mensajeGuia = "Ajústate sobre la sombra amarilla y salta cuando el balón descienda.";
+    private CancellationTokenSource cts = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var eq = EquipoNBA.ObtenerPorNombre(GameState.JugadorActivo?.EquipoActual ?? "");
+        colorPropio = eq.ColorPrimario;
+
+        // Bucle de descenso del balón
+        try
+        {
+            while (!capturado && balonY < 185 && !cts.Token.IsCancellationRequested)
+            {
+                balonY += 3.5;
+                radioSombra = Math.Max(8, 22 - (185 - balonY) * 0.08);
+                StateHasChanged();
+                await Task.Delay(35, cts.Token);
+            }
+
+            if (!capturado)
+            {
+                // El rival se lo lleva por tardar
+                await ConcluirRebote(false);
+            }
+        }
+        catch (TaskCanceledException) { }
+    }
+
+    private void Mover(int delta)
+    {
+        if (capturado) return;
+        posicionPropiaX = Math.Clamp(posicionPropiaX + delta, 60, 260);
+        StateHasChanged();
+    }
+
+    private async Task SaltarRebote()
+    {
+        if (capturado) return;
+        capturado = true;
+        cts.Cancel();
+        estadoPropio = "Saltando";
+
+        // Ganas si estás cerca de la sombra (distancia < 45px) y el balón estaba bajando (<170 y >70)
+        bool ganoPosicion = Math.Abs((posicionPropiaX + 45) - sombraX) <= 45;
+        bool buenTiming = balonY >= 70 && balonY <= 175;
+        bool exito = ganoPosicion && buenTiming;
+
+        await ConcluirRebote(exito);
+    }
+
+    private async Task ConcluirRebote(bool exito)
+    {
+        capturado = true;
+        cts.Cancel();
+
+        if (exito)
+        {
+            tieneRebote = true;
+            estadoPropio = "Celebrando";
+            textoPop = "REBOTE ASEGURADO! 🛡️";
+            colorPop = "text-success";
+            mensajeGuia = "¡Ganaste la posición en el aire y sellaste la victoria!";
+        }
+        else
+        {
+            estadoPropio = "Idle";
+            textoPop = "PERDIDO EN EL AIRE! ❌";
+            colorPop = "text-danger";
+            mensajeGuia = "El pívot rival te superó en el salto y palmeó el balón.";
+        }
+        StateHasChanged();
+
+        await Task.Delay(1300);
+        await OnFinalizado.InvokeAsync(exito);
+    }
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+    }
+}

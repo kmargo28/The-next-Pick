@@ -1,0 +1,178 @@
+﻿@namespace TheNextPick.Components
+
+<div class="scott-pilgrim-sprite d-inline-block text-center position-relative" style="user-select: none;">
+    <svg viewBox="0 0 48 52" width="@AnchoPx" height="@AltoPx" style="shape-rendering: crispEdges; overflow: visible;">
+        
+        <!-- Sombra en la duela -->
+        <ellipse class="@(Estado == "Bote" ? "sombra-frame-anim" : "")" 
+                 cx="24" cy="50" rx="@(Estado == "Saltando" ? "7" : "14")" ry="3" 
+                 fill="rgba(0,0,0,0.4)" />
+
+        <!-- CUERPO PRINCIPAL -->
+        <g class="@(Estado == "Bote" || Estado == "Idle" || Estado == "Defendiendo" ? "frame-idle-bounce" : "")"
+           transform="@(Estado == "Saltando" ? "translate(0, -10)" : "translate(0, 0)")">
+            
+            <!-- CABELLO VOLUMINOSO ANIME -->
+            <path d="M 12,4 L 36,4 L 40,8 L 42,16 L 38,15 L 36,19 L 32,18 L 30,22 L 20,20 L 18,23 L 14,18 L 10,15 L 8,9 Z" 
+                  fill="#18110b" stroke="#000" stroke-width="2" />
+            <path d="M 15,6 L 32,6 L 36,10 L 32,14 L 24,13 L 21,17 L 16,13 Z" fill="#3b2314" />
+            <rect x="18" y="7" width="10" height="2" fill="#6a4327" />
+
+            <!-- CABEZA CHIBI -->
+            <rect x="14" y="14" width="20" height="14" fill="#e8b17b" stroke="#000" stroke-width="2" />
+            <rect x="15" y="15" width="18" height="12" fill="#f5c492" />
+
+            <!-- OJOS Y ROSTRO -->
+            @if (Estado == "Celebrando")
+            {
+                <path d="M 18,20 L 22,17 L 26,20" stroke="#000" stroke-width="2.5" fill="none" />
+                <path d="M 28,20 L 32,17 L 36,20" stroke="#000" stroke-width="2.5" fill="none" />
+                <rect x="24" y="24" width="6" height="3" fill="#c53030" stroke="#000" stroke-width="1" />
+            }
+            else
+            {
+                <rect x="18" y="18" width="5" height="6" fill="#000000" />
+                <rect x="19" y="19" width="2" height="2" fill="#ffffff" />
+
+                <rect x="29" y="18" width="5" height="6" fill="#000000" />
+                <rect x="30" y="19" width="2" height="2" fill="#ffffff" />
+                <rect x="17" y="16" width="6" height="2" fill="#000" />
+                <rect x="29" y="16" width="6" height="2" fill="#000" />
+                <rect x="24" y="25" width="4" height="2" fill="#000" />
+            }
+
+            <!-- JERSEY DEL EQUIPO -->
+            <rect x="13" y="28" width="22" height="13" fill="@ColorPrimario" stroke="#000" stroke-width="2" />
+            <rect x="15" y="29" width="18" height="11" fill="@ColorPrimario" />
+            <rect x="13" y="28" width="3" height="13" fill="#ffffff" stroke="#000" stroke-width="1" />
+            <rect x="32" y="28" width="3" height="13" fill="#ffffff" stroke="#000" stroke-width="1" />
+            <rect x="22" y="32" width="4" height="5" fill="#ffffff" stroke="#000" stroke-width="1" />
+
+            <!-- BRAZOS Y BALÓN -->
+            @if (Estado == "Defendiendo")
+            {
+                <!-- POSTURA DEFENSIVA: Brazos abiertos de contención SIN BALÓN -->
+                <rect x="6" y="26" width="7" height="5" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+                <rect x="5" y="22" width="5" height="6" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+
+                <rect x="35" y="26" width="7" height="5" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+                <rect x="38" y="22" width="5" height="6" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+            }
+            else if (Estado == "Bote" || Estado == "Idle")
+            {
+                <rect x="8" y="28" width="5" height="9" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+                
+                @if (TieneBalon)
+                {
+                    <g class="frame-dribble-arm">
+                        <rect x="35" y="29" width="5" height="9" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+                    </g>
+                    <!-- Balón picando -->
+                    <g class="frame-ball-bounce">
+                        <circle cx="39" cy="42" r="7.5" fill="#e65100" stroke="#000" stroke-width="2" />
+                        <line x1="31.5" y1="42" x2="46.5" y2="42" stroke="#000" stroke-width="1.5" />
+                        <line x1="39" y1="34.5" x2="39" y2="49.5" stroke="#000" stroke-width="1.5" />
+                    </g>
+                }
+                else
+                {
+                    <!-- Brazo derecho relajado sin balón -->
+                    <rect x="35" y="28" width="5" height="9" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+                }
+            }
+            else if (Estado == "Saltando")
+            {
+                <rect x="10" y="16" width="5" height="12" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+                <rect x="33" y="16" width="5" height="12" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+                @if (TieneBalon)
+                {
+                    <circle cx="30" cy="10" r="8" fill="#e65100" stroke="#000" stroke-width="2" />
+                }
+            }
+            else if (Estado == "Lanzando")
+            {
+                <rect x="10" y="20" width="5" height="9" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+                <rect x="32" y="14" width="12" height="5" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+                <rect x="42" y="18" width="4" height="5" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+            }
+            else if (Estado == "Celebrando")
+            {
+                <rect x="7" y="16" width="5" height="12" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+                <rect x="36" y="16" width="5" height="12" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+            }
+
+            <!-- SHORTS -->
+            <rect x="14" y="39" width="20" height="7" fill="@ColorPrimario" stroke="#000" stroke-width="2" />
+            <rect x="23" y="42" width="2" height="4" fill="#000000" />
+
+            <!-- PIERNAS Y TENIS CHUNKY -->
+            @if (Estado == "Saltando")
+            {
+                <rect x="16" y="44" width="5" height="4" fill="#f5c492" stroke="#000" stroke-width="1" />
+                <rect x="27" y="45" width="5" height="4" fill="#f5c492" stroke="#000" stroke-width="1" />
+                <rect x="13" y="47" width="9" height="5" fill="#ffffff" stroke="#000" stroke-width="2" />
+                <rect x="26" y="47" width="9" height="5" fill="#ffffff" stroke="#000" stroke-width="2" />
+            }
+            else
+            {
+                <rect x="16" y="44" width="5" height="4" fill="#f5c492" stroke="#000" stroke-width="1" />
+                <rect x="27" y="44" width="5" height="4" fill="#f5c492" stroke="#000" stroke-width="1" />
+                <rect x="12" y="46" width="10" height="5" fill="#ffffff" stroke="#000" stroke-width="2" />
+                <rect x="12" y="49" width="10" height="2" fill="#000" />
+                <rect x="26" y="46" width="10" height="5" fill="#ffffff" stroke="#000" stroke-width="2" />
+                <rect x="26" y="49" width="10" height="2" fill="#000" />
+            }
+        </g>
+    </svg>
+</div>
+
+<style>
+    .frame-idle-bounce {
+        animation: anim-pixel-bob 0.4s infinite steps(2);
+        transform-origin: bottom center;
+    }
+
+    @@keyframes anim-pixel-bob {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+        100% { transform: translateY(0); }
+    }
+
+    .frame-ball-bounce {
+        animation: anim-ball-snap 0.4s infinite steps(3);
+        transform-origin: 39px 42px;
+    }
+
+    @@keyframes anim-ball-snap {
+        0% { transform: translateY(-14px) scale(0.9, 1.1); }
+        66% { transform: translateY(0) scale(1, 1); }
+        100% { transform: translateY(2px) scale(1.2, 0.8); }
+    }
+
+    .frame-dribble-arm {
+        animation: anim-dribble-arm 0.4s infinite steps(2);
+        transform-origin: 35px 29px;
+    }
+
+    @@keyframes anim-dribble-arm {
+        0% { transform: rotate(-10deg); }
+        100% { transform: rotate(14deg); }
+    }
+
+    .sombra-frame-anim {
+        animation: anim-sombra-pixel 0.4s infinite steps(2);
+    }
+
+    @@keyframes anim-sombra-pixel {
+        0% { transform: scale(0.8); opacity: 0.25; }
+        100% { transform: scale(1.1); opacity: 0.5; }
+    }
+</style>
+
+@code {
+    [Parameter] public string Estado { get; set; } = "Bote"; // Bote, Idle, Defendiendo, Saltando, Lanzando, Celebrando
+    [Parameter] public bool TieneBalon { get; set; } = true;
+    [Parameter] public string ColorPrimario { get; set; } = "#1D428A";
+    [Parameter] public int AnchoPx { get; set; } = 110;
+    [Parameter] public int AltoPx { get; set; } = 130;
+}

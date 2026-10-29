@@ -1,0 +1,103 @@
+﻿@namespace TheNextPick.Components
+@implements IDisposable
+
+<div class="sports-card p-3 my-3 text-center" style="max-width: 480px; margin: auto; background: #0c1017; border: 1px solid rgba(255, 255, 255, 0.15);">
+    <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+        <span class="badge bg-danger text-uppercase px-2 py-1 small fw-bold">Sprint de 3/4 de Cancha</span>
+        <span class="text-white small fw-bold">DISTANCIA: @((int)progresoSprint)% / 100%</span>
+    </div>
+
+    <p class="text-secondary small mb-2">Alterna los botones IZQ y DER con cadencia rápida para esprintar la duela.</p>
+
+    <!-- PISTA DE SPRINT CON JUGADOR SVG -->
+    <div class="position-relative mx-auto rounded overflow-hidden" style="width: 320px; height: 160px; background: #141a24; border: 2px solid #2d3748;">
+        <svg viewBox="0 0 320 160" style="width: 100%; height: 100%;">
+            <!-- Duela de carrera con marcas de yardas -->
+            <line x1="0" y1="80" x2="320" y2="80" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="10" />
+            <line x1="280" y1="20" x2="280" y2="140" stroke="#f59e0b" stroke-width="4" />
+            <text x="285" y="40" fill="#f59e0b" font-size="10" font-weight="bold">META</text>
+
+            <!-- Corredor estilizado -->
+            <g transform="translate(@(20 + (progresoSprint * 2.5)), 75)">
+                <circle cx="0" cy="-20" r="8" fill="#e65100" stroke="#fff" stroke-width="1.5" />
+                <line x1="0" y1="-12" x2="0" y2="10" stroke="#fff" stroke-width="3" />
+                <line x1="0" y1="10" x2="-8" y2="25" stroke="#f59e0b" stroke-width="2.5" />
+                <line x1="0" y1="10" x2="8" y2="25" stroke="#f59e0b" stroke-width="2.5" />
+            </g>
+        </svg>
+
+        <div class="position-absolute bottom-0 start-0 w-100 bg-dark progress" style="height: 6px;">
+            <div class="progress-bar bg-warning" style="width: @progresoSprint%;"></div>
+        </div>
+    </div>
+
+    @if (!activo && !finalizado)
+    {
+        <button class="btn btn-warning py-2 px-5 fw-bold text-dark fs-5 mt-3" @onclick="IniciarSprint">
+            ALINEARSE EN LÍNEA DE FONDO
+        </button>
+    }
+    else if (activo)
+    {
+        <div class="d-flex justify-content-center gap-3 mt-3">
+            <button class="btn @(pieEsperado == 0 ? "btn-warning" : "btn-outline-secondary") py-3 px-4 fw-bold fs-5 text-dark" 
+                    @onclick="() => Pisar(0)">
+                PIE IZQ 👟
+            </button>
+            <button class="btn @(pieEsperado == 1 ? "btn-warning" : "btn-outline-secondary") py-3 px-4 fw-bold fs-5 text-dark" 
+                    @onclick="() => Pisar(1)">
+                PIE DER 👟
+            </button>
+        </div>
+    }
+
+    <div class="mt-2 text-info fw-semibold small">@mensajeGuia</div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<int> OnFinalizado { get; set; }
+
+    private double progresoSprint = 0;
+    private int pieEsperado = 0;
+    private bool activo = false;
+    private bool finalizado = false;
+    private DateTime inicioTiempo;
+    private string mensajeGuia = "Prepárate para reaccionar al toque.";
+
+    private void IniciarSprint()
+    {
+        activo = true;
+        progresoSprint = 0;
+        pieEsperado = 0;
+        inicioTiempo = DateTime.UtcNow;
+        mensajeGuia = "¡Alterna rápido los pies!";
+    }
+
+    private async void Pisar(int pie)
+    {
+        if (!activo || finalizado) return;
+
+        if (pie == pieEsperado)
+        {
+            progresoSprint += 7.5;
+            pieEsperado = (pieEsperado == 0) ? 1 : 0;
+            StateHasChanged();
+
+            if (progresoSprint >= 100)
+            {
+                finalizado = true;
+                activo = false;
+                var segundos = (DateTime.UtcNow - inicioTiempo).TotalSeconds;
+                int puntos = segundos < 3.8 ? 35 : (segundos < 5.0 ? 25 : 15);
+
+                mensajeGuia = $"¡Crucaste la meta en {segundos.ToString("0.00")}s! (+{puntos} pts)";
+                StateHasChanged();
+
+                await Task.Delay(1300);
+                await OnFinalizado.InvokeAsync(puntos);
+            }
+        }
+    }
+
+    public void Dispose() { }
+}

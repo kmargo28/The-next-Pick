@@ -9,12 +9,18 @@ public enum FaseJuego
     DraftCombine,
     EleccionEquipo,
     TemporadaRegular,
-    MinijuegoCancha,
+    MinijuegoTiro,
+    MinijuegoCancha = MinijuegoTiro,
     MinijuegoLectura,
     MinijuegoDuelo,
+    AllStarInvitacion,
     AllStarTriples,
     PortadaHito,
     Playoffs,
+    PlayoffBossBattle,
+    PlayoffTirosLibres,
+    PlayoffReboteBoxOut,
+    PlayoffContraataqueDunk,
     FinTemporada,
     AgenciaLibre,
     Retiro
@@ -38,7 +44,7 @@ public class GameStateService
     public string EstrellaCompanero { get; set; } = "";
     public int QuimicaEstrella { get; set; } = 50;
 
-    // Finanzas y Estilo de Vida ($)
+    // Finanzas ($)
     public int SalarioAnual { get; set; } = 4_500_000;
     public int DineroDisponible { get; set; } = 4_500_000;
     public bool TieneChefPersonal { get; set; } = false;
@@ -51,7 +57,7 @@ public class GameStateService
     public int Quimica { get; set; } = 50;
     public int Hype { get; set; } = 30;
 
-    // Temporada (4 a 5 decisiones)
+    // Temporada
     public int TemporadaActual { get; set; } = 1;
     public int Victorias { get; set; } = 0;
     public int Derrotas { get; set; } = 0;
@@ -78,7 +84,7 @@ public class GameStateService
     public int UltimasAsistencias { get; set; } = 0;
     public bool UltimoFueVictoria { get; set; } = false;
 
-    // Trofeos
+    // Palmarés
     public int AnillosCampeon { get; set; } = 0;
     public int PremiosMVP { get; set; } = 0;
     public bool GanadorROTY { get; set; } = false;
@@ -166,7 +172,6 @@ public class GameStateService
         EstrellaCompanero = eq.EstrellaFranquicia;
         QuimicaEstrella = 50;
 
-        // Asignar Némesis del Draft
         var rivalEq = EquipoNBA.Franquicias.FirstOrDefault(f => f.Nombre != eq.Nombre) ?? EquipoNBA.Franquicias[1];
         EquipoRivalDraft = rivalEq.Nombre;
         NombreRivalDraft = JugadorActivo?.Posicion == Posicion.Base ? "Darius Cole" : "Trevor Vance";
@@ -189,11 +194,9 @@ public class GameStateService
     {
         DecisionesTomadasTemporada++;
 
-        // Bono de recuperación si se compró chef personal
         int deltaE = opcion.DeltaEnergia;
         if (TieneChefPersonal && deltaE < 0) deltaE += 5;
 
-        // Bono de Hype si se compraron zapatillas de firma
         int deltaH = opcion.DeltaHype;
         if (TieneZapatillasExclusivas && deltaH > 0) deltaH = (int)(deltaH * 1.3);
 
@@ -204,22 +207,33 @@ public class GameStateService
         QuimicaEstrella = Math.Clamp(QuimicaEstrella + (opcion.DeltaQuimica / 2), 0, 100);
         UltimaNoticia = opcion.Retroalimentacion;
 
-        // All-Star Weekend a mitad de temporada (Decisión 2)
-        if (!allStarDisputado && DecisionesTomadasTemporada == 2 && (Hype >= 55 || (JugadorActivo?.OVR >= 75)))
+        // Concurso de Triples: Exige tiro estricto (+87) y Hype (+70)
+                // Concurso de Triples: Exige tiro estricto (+87) y Hype (+70) con invitación opcional
+        if (!allStarDisputado && DecisionesTomadasTemporada == 2)
         {
             allStarDisputado = true;
-            FaseActual = FaseJuego.AllStarTriples;
-            Notificar();
-            return;
+            bool califica = (JugadorActivo?.TiroExterior >= 87) && (Hype >= 70);
+
+            if (califica)
+            {
+                FaseActual = FaseJuego.AllStarInvitacion;
+                UltimaNoticia = "¡Invitación estelar recibida! La NBA te convoca al Concurso de Triples All-Star 2027.";
+                Notificar();
+                return;
+            }
+            else
+            {
+                UltimaNoticia = "All-Star Weekend: No alcanzaste el mínimo de +87 de tiro exterior para ser invitado al Concurso de Triples.";
+            }
         }
 
-        // Minijuegos reducidos y equilibrados en momentos clutch
+        // Minijuegos regulares moderados (25% en momentos de partido)
         if (DilemaActual?.EsMomentoPartido == true && Random.Shared.Next(1, 100) <= 25)
         {
             int azar = Random.Shared.Next(0, 3);
             FaseActual = azar switch
             {
-                0 => FaseJuego.MinijuegoCancha,
+                0 => FaseJuego.MinijuegoTiro,
                 1 => FaseJuego.MinijuegoLectura,
                 _ => FaseJuego.MinijuegoDuelo
             };
@@ -230,17 +244,35 @@ public class GameStateService
         ContinuarBucleTemporada();
     }
 
-    public void FinalizarAllStarTriples(int puntos)
+        public void ResponderInvitacionAllStar(bool aceptar)
     {
-        if (puntos >= 16)
+        if (aceptar)
         {
-            Hype = Math.Clamp(Hype + 20, 0, 100);
-            DineroDisponible += 500_000;
-            LanzarPortada("CAMPEON DE TRIPLES", "Coronado en el All-Star Weekend 2027", "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=700&auto=format&fit=crop&q=80");
+            FaseActual = FaseJuego.AllStarTriples;
+            UltimaNoticia = "¡Confirmaste tu participación en el Concurso de Triples de la NBA!";
         }
         else
         {
-            Hype = Math.Clamp(Hype + 8, 0, 100);
+            // Decisión inteligente de descanso físico
+            Energia = Math.Clamp(Energia + 25, 0, 100);
+            FaseActual = FaseJuego.TemporadaRegular;
+            UltimaNoticia = "Declinaste la invitación del All-Star. Aprovechaste la pausa para recuperar +25% de energía física.";
+            ContinuarBucleTemporada();
+        }
+        Notificar();
+    }
+
+    public void FinalizarAllStarTriples(int puntos)
+    {
+        if (puntos >= 18)
+        {
+            Hype = Math.Clamp(Hype + 22, 0, 100);
+            DineroDisponible += 750_000;
+            LanzarPortada("CAMPEÓN DEL ALL-STAR", "Consagrado el mejor tirador de la NBA", "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=700&auto=format&fit=crop&q=80");
+        }
+        else
+        {
+            Hype = Math.Clamp(Hype + 6, 0, 100);
             FaseActual = FaseJuego.TemporadaRegular;
             ContinuarBucleTemporada();
         }
@@ -252,15 +284,15 @@ public class GameStateService
         {
             ConfianzaDT = Math.Clamp(ConfianzaDT + 10, 0, 100);
             Hype = Math.Clamp(Hype + 12, 0, 100);
-            UltimaNoticia = "Intervencion individual clave en la posesion final.";
+            UltimaNoticia = "Intervención individual clave en la posesión final.";
         }
         else
         {
             ConfianzaDT = Math.Clamp(ConfianzaDT - 6, 0, 100);
-            UltimaNoticia = "Fallo tactico en el cierre del juego.";
+            UltimaNoticia = "Fallo táctico en el cierre del juego.";
         }
 
-        if (FaseActual == FaseJuego.Playoffs)
+        if (FaseActual == FaseJuego.Playoffs || FaseActual == FaseJuego.PlayoffBossBattle || FaseActual == FaseJuego.PlayoffTirosLibres)
         {
             ResolverPartidoPlayoff(exitoso);
         }
@@ -291,7 +323,6 @@ public class GameStateService
         SiguienteDilema();
     }
 
-    // --- TIENDA DE ESTILO DE VIDA ---
     public bool ComprarChefPersonal()
     {
         if (DineroDisponible >= 1_200_000 && !TieneChefPersonal)
@@ -337,27 +368,44 @@ public class GameStateService
         VictoriasSeriePlayoff = 0;
         DerrotasSeriePlayoff = 0;
         RivalPlayoffs = ObtenerRivalAleatorio();
-        UltimaNoticia = $"Clasificaron a Playoffs. Primera Ronda contra {RivalPlayoffs}.";
+        UltimaNoticia = $"Postemporada: Primera Ronda contra {RivalPlayoffs}.";
         Notificar();
     }
+
+        private int ultimoMinijuegoPlayoff = -1;
 
     public void JugarPartidoPlayoff(bool asumirLiderazgo)
     {
         if (asumirLiderazgo)
         {
-            int azar = Random.Shared.Next(0, 3);
-            FaseActual = azar switch
+            // Rotación inteligente entre los 4 minijuegos de Playoffs (sin repetir el anterior)
+            int proximo;
+            do
             {
-                0 => FaseJuego.MinijuegoCancha,
-                1 => FaseJuego.MinijuegoLectura,
-                _ => FaseJuego.MinijuegoDuelo
+                proximo = Random.Shared.Next(0, 4);
+            } while (proximo == ultimoMinijuegoPlayoff);
+
+            ultimoMinijuegoPlayoff = proximo;
+
+            FaseActual = proximo switch
+            {
+                0 => FaseJuego.PlayoffBossBattle,
+                1 => FaseJuego.PlayoffTirosLibres,
+                2 => FaseJuego.PlayoffReboteBoxOut,
+                _ => FaseJuego.PlayoffContraataqueDunk
             };
             Notificar();
         }
         else
         {
             int media = JugadorActivo != null ? (JugadorActivo.TiroExterior + JugadorActivo.Defensa) / 2 : 70;
-            bool ganado = Random.Shared.Next(1, 100) <= (35 + (media / 4) + (Quimica / 4) + (QuimicaEstrella / 6));
+            int dificultadRonda = (int)RondaActualPlayoffs * 9;
+            int probBase = 42 - dificultadRonda;
+            int probVictoria = probBase + (media / 5) + (Quimica / 5) + (QuimicaEstrella / 8);
+
+            if (Energia < 50) probVictoria -= 25;
+
+            bool ganado = Random.Shared.Next(1, 101) <= Math.Clamp(probVictoria, 8, 80);
             ResolverPartidoPlayoff(ganado);
         }
     }
@@ -368,14 +416,14 @@ public class GameStateService
         if (victoria) VictoriasSeriePlayoff++;
         else DerrotasSeriePlayoff++;
 
-        Energia = Math.Clamp(Energia - 15, 0, 100);
+        Energia = Math.Clamp(Energia - 18, 0, 100);
 
         if (VictoriasSeriePlayoff >= 2)
         {
             if (RondaActualPlayoffs == RondaPlayoffs.FinalesNBA)
             {
                 AnillosCampeon++;
-                PremiosGanadosTemporada.Add("Anillo de Campeon de la NBA");
+                PremiosGanadosTemporada.Add("Anillo de Campeón de la NBA");
                 LanzarPortada("¡CAMPEONES DEL MUNDO!", $"El trofeo Larry O'Brien viaja con {JugadorActivo?.EquipoActual}", "https://images.unsplash.com/photo-1519766304817-4f37bda74a29?w=700&auto=format&fit=crop&q=80");
                 return;
             }
@@ -388,7 +436,7 @@ public class GameStateService
         }
         else if (DerrotasSeriePlayoff >= 2)
         {
-            UltimaNoticia = $"Eliminados en {NombreRonda(RondaActualPlayoffs)} ante {RivalPlayoffs}.";
+            UltimaNoticia = $"Eliminados en {NombreRonda(RondaActualPlayoffs)} ante {RivalPlayoffs}. Temporada concluida.";
             ProcesarFinDeTemporada();
             return;
         }
@@ -474,45 +522,50 @@ public class GameStateService
         FaseActual = FaseJuego.FinTemporada;
         PremiosGanadosTemporada.Clear();
 
-        // Ingresos de fin de temporada
         DineroDisponible += SalarioAnual;
         if (TieneInversionStartup) DineroDisponible += 800_000;
 
-        PuntosDesarrollo += Victorias >= 3 ? 4 : 2;
+                // Entrega equilibrada: 4 base + 2 por récord ganador + 2 por títulos/premios
+        int puntosGanados = 4;
+        if (Victorias >= 3) puntosGanados += 2;
+        if (PremiosGanadosTemporada.Count > 0) puntosGanados += 2;
+        PuntosDesarrollo += puntosGanados;
 
         int media = JugadorActivo != null ? (JugadorActivo.TiroExterior + JugadorActivo.Pase + JugadorActivo.Defensa) / 3 : 70;
-        bool cumpleMVP = Hype >= 85 && Victorias >= 3 && media >= 82;
+        bool cumpleMVP = Hype >= 88 && Victorias >= 3 && media >= 84;
         if (cumpleMVP)
         {
             PremiosMVP++;
-            PremiosGanadosTemporada.Add("Jugador Mas Valioso (MVP)");
+            PremiosGanadosTemporada.Add("Jugador Más Valioso (MVP)");
         }
 
-        bool cumpleROTY = TemporadaActual == 1 && PickAsignado <= 10 && Hype >= 65 && UltimosPuntos >= 16;
+        bool cumpleROTY = TemporadaActual == 1 && PickAsignado <= 8 && Hype >= 70 && UltimosPuntos >= 18;
         if (!GanadorROTY && cumpleROTY)
         {
             GanadorROTY = true;
-            PremiosGanadosTemporada.Add("Novato del Ano (ROTY)");
+            PremiosGanadosTemporada.Add("Novato del Año (ROTY)");
         }
 
-        if (JugadorActivo?.Defensa >= 85 && Quimica >= 70)
+        if (JugadorActivo?.Defensa >= 87 && Quimica >= 75)
         {
             PremiosDPOY++;
-            PremiosGanadosTemporada.Add("Defensor del Ano (DPOY)");
+            PremiosGanadosTemporada.Add("Defensor del Año (DPOY)");
         }
 
         Notificar();
     }
 
-    public void MejorarAtributo(string atributo)
+        public void MejorarAtributo(string atributo)
     {
         if (JugadorActivo == null || PuntosDesarrollo <= 0) return;
         switch (atributo)
         {
-            case "TiroExterior": if (JugadorActivo.TiroExterior < 99) { JugadorActivo.TiroExterior += 2; PuntosDesarrollo--; } break;
-            case "Pase": if (JugadorActivo.Pase < 99) { JugadorActivo.Pase += 2; PuntosDesarrollo--; } break;
-            case "Defensa": if (JugadorActivo.Defensa < 99) { JugadorActivo.Defensa += 2; PuntosDesarrollo--; } break;
-            case "Atletismo": if (JugadorActivo.Atletismo < 99) { JugadorActivo.Atletismo += 2; PuntosDesarrollo--; } break;
+            case "TiroExterior": if (JugadorActivo.TiroExterior < 99) { JugadorActivo.TiroExterior = Math.Min(99, JugadorActivo.TiroExterior + 3); PuntosDesarrollo--; } break;
+            case "TiroMedia": if (JugadorActivo.TiroMedia < 99) { JugadorActivo.TiroMedia = Math.Min(99, JugadorActivo.TiroMedia + 3); PuntosDesarrollo--; } break;
+            case "Pase": if (JugadorActivo.Pase < 99) { JugadorActivo.Pase = Math.Min(99, JugadorActivo.Pase + 3); PuntosDesarrollo--; } break;
+            case "Defensa": if (JugadorActivo.Defensa < 99) { JugadorActivo.Defensa = Math.Min(99, JugadorActivo.Defensa + 3); PuntosDesarrollo--; } break;
+            case "Rebote": if (JugadorActivo.Rebote < 99) { JugadorActivo.Rebote = Math.Min(99, JugadorActivo.Rebote + 3); PuntosDesarrollo--; } break;
+            case "Atletismo": if (JugadorActivo.Atletismo < 99) { JugadorActivo.Atletismo = Math.Min(99, JugadorActivo.Atletismo + 3); PuntosDesarrollo--; } break;
         }
         Notificar();
     }
@@ -526,7 +579,6 @@ public class GameStateService
         JugadorActivo.Edad += saltoAnios;
         JugadorActivo.AniosEnLiga += saltoAnios;
 
-        // Aumento de contrato con el rendimiento
         if (PremiosMVP > 0 || AnillosCampeon > 0) SalarioAnual = 38_000_000;
         else if (JugadorActivo.OVR >= 85) SalarioAnual = 22_000_000;
 
@@ -632,4 +684,6 @@ public class GameStateService
 
     private void Notificar() => OnStateChanged?.Invoke();
 }
+
+
 

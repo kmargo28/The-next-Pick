@@ -1,46 +1,164 @@
 ﻿@namespace TheNextPick.Components
 @using TheNextPick.Engine
+@using TheNextPick.Models
 @inject GameStateService GameState
 
-<div class="sports-card p-4 text-center" style="max-width: 620px; margin: auto;">
+<div class="sports-card p-4 text-center my-3" style="max-width: 620px; margin: auto; background: #0c1017; border: 2px solid #2d3748;">
     <div class="mb-3">
-        <img src="https://a.espncdn.com/i/teamlogos/leagues/500/nba.png" style="height: 60px;" alt="NBA" />
-        <h2 class="nba-title text-white mt-2 mb-0">NBA DRAFT COMBINE</h2>
-        <span class="text-secondary small">Evaluación de Prospección Oficial (Prueba @(pruebaActual)/2)</span>
+        <img src="https://a.espncdn.com/i/teamlogos/leagues/500/nba.png" style="height: 48px;" alt="NBA" />
+        <h2 class="nba-title text-white mt-1 mb-0 fs-1">NBA DRAFT COMBINE</h2>
+        <span class="text-secondary small fw-bold">PUNTOS TOTALES: @puntosAcumulados PTS</span>
     </div>
 
-    <MinijuegoArena TipoActual="@tipoPruebaActual" AlCompletar="ManejarPruebaCompletada" />
-</div>
-
-@code {
-    private int pruebaActual = 1;
-    private int puntosAcumulados = 0;
-    private MinijuegoArena.TipoMinijuego tipoPruebaActual;
-
-    private readonly MinijuegoArena.TipoMinijuego[] pruebasDisponibles = new[]
+    @if (etapaCombine == EtapaCombine.IntroPrueba1)
     {
-        MinijuegoArena.TipoMinijuego.TiroSuspension,
-        MinijuegoArena.TipoMinijuego.SaltoVertical,
-        MinijuegoArena.TipoMinijuego.DribbleQTE
-    };
-
-    protected override void OnInitialized()
-    {
-        tipoPruebaActual = pruebasDisponibles[Random.Shared.Next(pruebasDisponibles.Length)];
+        <div class="p-4 rounded bg-dark border border-secondary text-start">
+            <span class="badge bg-warning text-dark fw-bold mb-2">PRUEBA 1 DE 2</span>
+            <h4 class="text-white fw-bold">@ObtenerNombrePrueba(prueba1)</h4>
+            <p class="text-secondary small mb-3">Los ojeadores y gerentes generales de las 30 franquicias de la NBA analizan tus aptitudes en la duela.</p>
+            <button class="btn btn-warning w-100 py-3 fw-bold text-dark fs-5" @onclick="() => etapaCombine = EtapaCombine.JugandoPrueba1">
+                SALTAR A LA CANCHA ▶
+            </button>
+        </div>
     }
-
-    private void ManejarPruebaCompletada(int pts)
+    else if (etapaCombine == EtapaCombine.JugandoPrueba1)
     {
-        puntosAcumulados += pts;
-        if (pruebaActual == 1)
+        @if (prueba1 == TipoPruebaCombine.AgilidadConos)
         {
-            pruebaActual = 2;
-            tipoPruebaActual = pruebasDisponibles.First(p => p != tipoPruebaActual);
-            StateHasChanged();
+            <LaneAgilityDrill OnFinalizado="ManejarFinPrueba1" />
+        }
+        else if (prueba1 == TipoPruebaCombine.SprintTresCuartos)
+        {
+            <SprintTresCuartos OnFinalizado="ManejarFinPrueba1" />
+        }
+        else if (prueba1 == TipoPruebaCombine.SaltoVertical)
+        {
+            <VerticalLeapDrill OnFinalizado="ManejarFinPrueba1" />
+        }
+        else if (prueba1 == TipoPruebaCombine.LucesReaccion)
+        {
+            <ReactionLightsDrill OnFinalizado="ManejarFinPrueba1" />
         }
         else
         {
-            GameState.FinalizarCombine(puntosAcumulados);
+            <MinijuegoTiroPixel OnFinalizado="(exito) => ManejarFinPrueba1(exito ? 35 : 12)" />
         }
+    }
+    else if (etapaCombine == EtapaCombine.ResultadoPrueba1)
+    {
+        <div class="p-4 rounded bg-dark border border-secondary text-center">
+            <span class="badge bg-success fw-bold fs-6 mb-2">PRUEBA 1 CONCLUIDA</span>
+            <h3 class="text-white fw-bold mb-1">+@puntosPrueba1 Puntos Oficiales</h3>
+            <p class="text-secondary small mb-3">Los informes físicos ya circulan en las mesas de operaciones del Draft.</p>
+            <button class="btn btn-warning w-100 py-3 fw-bold text-dark fs-5" @onclick="() => etapaCombine = EtapaCombine.JugandoPrueba2">
+                CONTINUAR A LA PRUEBA 2 (@ObtenerNombrePrueba(prueba2)) ▶
+            </button>
+        </div>
+    }
+    else if (etapaCombine == EtapaCombine.JugandoPrueba2)
+    {
+        @if (prueba2 == TipoPruebaCombine.AgilidadConos)
+        {
+            <LaneAgilityDrill OnFinalizado="ManejarFinPrueba2" />
+        }
+        else if (prueba2 == TipoPruebaCombine.SprintTresCuartos)
+        {
+            <SprintTresCuartos OnFinalizado="ManejarFinPrueba2" />
+        }
+        else if (prueba2 == TipoPruebaCombine.SaltoVertical)
+        {
+            <VerticalLeapDrill OnFinalizado="ManejarFinPrueba2" />
+        }
+        else if (prueba2 == TipoPruebaCombine.LucesReaccion)
+        {
+            <ReactionLightsDrill OnFinalizado="ManejarFinPrueba2" />
+        }
+        else
+        {
+            <MinijuegoTiroPixel OnFinalizado="(exito) => ManejarFinPrueba2(exito ? 35 : 12)" />
+        }
+    }
+    else if (etapaCombine == EtapaCombine.ResumenFinal)
+    {
+        <div class="p-4 rounded bg-dark border border-warning text-center">
+            <span class="badge bg-warning text-dark fw-bold fs-6 mb-2">EVALUACIÓN DEL COMBINE FINALIZADA</span>
+            <h2 class="text-white fw-bold mb-0">Total: @puntosAcumulados Puntos</h2>
+            <p class="text-secondary small mb-4">Todo está listo. Tu proyección determinará las franquicias interesadas.</p>
+            <button class="btn btn-success w-100 py-3 fw-bold text-white fs-5" @onclick="FinalizarCombineDefinitivo">
+                IR A LA NOCHE DEL DRAFT 🏆
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    private enum EtapaCombine
+    {
+        IntroPrueba1,
+        JugandoPrueba1,
+        ResultadoPrueba1,
+        JugandoPrueba2,
+        ResumenFinal
+    }
+
+    public enum TipoPruebaCombine
+    {
+        AgilidadConos,
+        SprintTresCuartos,
+        SaltoVertical,
+        LucesReaccion,
+        TiroPixel
+    }
+
+    private EtapaCombine etapaCombine = EtapaCombine.IntroPrueba1;
+    private TipoPruebaCombine prueba1 = TipoPruebaCombine.AgilidadConos;
+    private TipoPruebaCombine prueba2 = TipoPruebaCombine.SaltoVertical;
+    private int puntosPrueba1 = 0;
+    private int puntosPrueba2 = 0;
+    private int puntosAcumulados = 0;
+
+    protected override void OnInitialized()
+    {
+        var opciones = new[] 
+        { 
+            TipoPruebaCombine.AgilidadConos, 
+            TipoPruebaCombine.SprintTresCuartos, 
+            TipoPruebaCombine.SaltoVertical, 
+            TipoPruebaCombine.LucesReaccion, 
+            TipoPruebaCombine.TiroPixel 
+        };
+        var mezcladas = opciones.OrderBy(_ => Random.Shared.Next()).ToList();
+        prueba1 = mezcladas[0];
+        prueba2 = mezcladas[1];
+    }
+
+    private string ObtenerNombrePrueba(TipoPruebaCombine p) => p switch
+    {
+        TipoPruebaCombine.AgilidadConos => "Circuito de Conos (Lane Agility)",
+        TipoPruebaCombine.SprintTresCuartos => "Sprint de 3/4 de Cancha",
+        TipoPruebaCombine.SaltoVertical => "Prueba de Salto Vertical",
+        TipoPruebaCombine.LucesReaccion => "Sensores de Reacción Periférica",
+        _ => "Tiro en Suspensión con Oposición"
+    };
+
+    private void ManejarFinPrueba1(int pts)
+    {
+        puntosPrueba1 = pts;
+        puntosAcumulados += pts;
+        etapaCombine = EtapaCombine.ResultadoPrueba1;
+        StateHasChanged();
+    }
+
+    private void ManejarFinPrueba2(int pts)
+    {
+        puntosPrueba2 = pts;
+        puntosAcumulados += pts;
+        etapaCombine = EtapaCombine.ResumenFinal;
+        StateHasChanged();
+    }
+
+    private void FinalizarCombineDefinitivo()
+    {
+        GameState.FinalizarCombine(puntosAcumulados);
     }
 }

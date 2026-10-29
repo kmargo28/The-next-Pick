@@ -1,0 +1,125 @@
+﻿@namespace TheNextPick.Components
+@using TheNextPick.Engine
+@using TheNextPick.Models
+@inject GameStateService GameState
+@implements IDisposable
+
+<div class="sports-card p-4 my-3 text-center position-relative" style="max-width: 600px; margin: auto; background: #0c1017; border: 2px solid #ef4444;">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="badge bg-danger text-uppercase px-2 py-1 small fw-bold">JUEGO DE ELIMINACIÓN PLAYOFFS</span>
+        <span class="text-white fw-bold">RONDA: @GameState.NombreRonda(GameState.RondaActualPlayoffs)</span>
+    </div>
+
+    <h4 class="text-white fw-bold mb-1">Duelo Decisivo vs @rivalEstrella</h4>
+    <p class="text-secondary small mb-2">Lee el movimiento de ataque del rival y responde con el bloqueo correcto.</p>
+
+    <!-- ARENA EN PIXEL ART CON GRADAS -->
+    <div class="position-relative mx-auto rounded overflow-hidden my-2" style="width: 100%; height: 220px; border: 2px solid #334155;">
+        <CanchaFondo />
+
+        <!-- TU JUGADOR: DEFENSOR SIN BALÓN -->
+        <div class="position-absolute" style="left: 80px; bottom: 15px;">
+            <PixelArtPlayer Estado="@estadoPropio" TieneBalon="false" ColorPrimario="@colorPropio" AnchoPx="95" AltoPx="120" />
+        </div>
+
+        <!-- SUPERESTRELLA RIVAL: ATACANTE CON BALÓN -->
+        <div class="position-absolute" style="right: 80px; bottom: 15px; transform: scaleX(-1);">
+            <PixelArtPlayer Estado="@estadoRival" TieneBalon="true" ColorPrimario="#b91c1c" AnchoPx="95" AltoPx="120" />
+        </div>
+
+        <!-- TÍTULO DE JUGADA RIVAL -->
+        <div class="position-absolute top-0 start-50 translate-middle-x mt-2 px-3 py-1 bg-black bg-opacity-80 rounded text-warning fw-bold small border border-secondary">
+            @movimientoRivalTexto
+        </div>
+    </div>
+
+    @if (!resuelto)
+    {
+        <div class="row g-2 mt-2">
+            <div class="col-4">
+                <button class="btn btn-outline-warning w-100 py-3 fw-bold" @onclick='() => Responder("CerrarPenetracion")'>
+                    🛡️ CERRAR ENTRADA
+                </button>
+            </div>
+            <div class="col-4">
+                <button class="btn btn-outline-danger w-100 py-3 fw-bold" @onclick='() => Responder("TaponarTriple")'>
+                    ✋ TAPONAR TIRO
+                </button>
+            </div>
+            <div class="col-4">
+                <button class="btn btn-outline-info w-100 py-3 fw-bold" @onclick='() => Responder("RobarPase")'>
+                    ⚡ ROBAR EL PASE
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-warning fw-bold py-2 fs-5">@resultadoTexto</div>
+    }
+</div>
+
+@code {
+    [Parameter] public EventCallback<bool> OnFinalizado { get; set; }
+
+    private string rivalEstrella = "Nikola Jokić";
+    private string colorPropio = "#1D428A";
+    private string estadoPropio = "Defendiendo";
+    private string estadoRival = "Bote";
+    private string movimientoRivalTexto = "";
+    private string accionCorrecta = "TaponarTriple";
+    private bool resuelto = false;
+    private string resultadoTexto = "";
+
+    protected override void OnInitialized()
+    {
+        var eqPropio = EquipoNBA.ObtenerPorNombre(GameState.JugadorActivo?.EquipoActual ?? "");
+        colorPropio = eqPropio.ColorPrimario;
+
+        var eqRival = EquipoNBA.ObtenerPorNombre(GameState.RivalPlayoffs);
+        rivalEstrella = eqRival.EstrellaFranquicia;
+
+        int azar = Random.Shared.Next(0, 3);
+        if (azar == 0)
+        {
+            accionCorrecta = "CerrarPenetracion";
+            movimientoRivalTexto = $"¡{rivalEstrella} baja el hombro para entrar a la pintura!";
+            estadoRival = "Bote";
+        }
+        else if (azar == 1)
+        {
+            accionCorrecta = "TaponarTriple";
+            movimientoRivalTexto = $"¡{rivalEstrella} frena de golpe y se eleva para el triple ganador!";
+            estadoRival = "Saltando";
+        }
+        else
+        {
+            accionCorrecta = "RobarPase";
+            movimientoRivalTexto = $"¡{rivalEstrella} salta buscando asistir al pivot cortando!";
+            estadoRival = "Lanzando";
+        }
+    }
+
+    private async Task Responder(string accion)
+    {
+        resuelto = true;
+        bool exito = (accion == accionCorrecta);
+
+        if (exito)
+        {
+            estadoPropio = "Celebrando";
+            resultadoTexto = "¡LECTURA PERFECTA! Bloqueaste la posesión en el clutch de Playoffs.";
+        }
+        else
+        {
+            estadoRival = "Celebrando";
+            resultadoTexto = $"¡Canasta de {rivalEstrella}! La estrella rival superó tu marca.";
+        }
+        StateHasChanged();
+
+        await Task.Delay(1400);
+        await OnFinalizado.InvokeAsync(exito);
+    }
+
+    public void Dispose() { }
+}

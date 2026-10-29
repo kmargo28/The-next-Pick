@@ -1,0 +1,60 @@
+﻿@namespace TheNextPick.Components
+
+<div class="cancha-fondo position-relative overflow-hidden w-100 h-100" style="background: #0f131a; user-select: none;">
+    <!-- GRADAS SUPERIORES CON HINCHADA EN ANIMACIÓN DE 2 CUADROS -->
+    <div class="position-absolute top-0 start-0 w-100 d-flex justify-content-around align-items-end" 
+         style="height: 95px; background: #161b26; border-bottom: 4px solid #000; padding-bottom: 3px;">
+        @for (int i = 0; i < 15; i++)
+        {
+            var delay = (i % 3) * 0.15;
+            var colorHincha = (i % 3 == 0) ? "#e11d48" : ((i % 3 == 1) ? "#2563eb" : "#f59e0b");
+            <div class="hincha-pixel-scott" style="animation: anim-hincha-step 0.4s infinite steps(2); animation-delay: @(delay)s;">
+                <svg width="26" height="36" viewBox="0 0 18 26" style="shape-rendering: crispEdges;">
+                    <!-- Pancarta o brazos arriba -->
+                    @if (i % 2 == 0)
+                    {
+                        <rect x="2" y="0" width="14" height="7" fill="#fbbf24" stroke="#000" stroke-width="1.5" />
+                        <rect x="5" y="2" width="8" height="3" fill="#000" />
+                    }
+                    else
+                    {
+                        <rect x="0" y="3" width="4" height="7" fill="#f5c492" stroke="#000" stroke-width="1" />
+                        <rect x="14" y="3" width="4" height="7" fill="#f5c492" stroke="#000" stroke-width="1" />
+                    }
+                    <!-- Cabeza y pelo anime -->
+                    <rect x="4" y="7" width="10" height="5" fill="#18110b" stroke="#000" stroke-width="1" />
+                    <rect x="5" y="10" width="8" height="6" fill="#f5c492" stroke="#000" stroke-width="1" />
+                    <!-- Ojos pixel -->
+                    <rect x="7" y="12" width="1" height="2" fill="#000" />
+                    <rect x="10" y="12" width="1" height="2" fill="#000" />
+                    <!-- Camiseta -->
+                    <rect x="3" y="16" width="12" height="10" fill="@colorHincha" stroke="#000" stroke-width="1.5" />
+                </svg>
+            </div>
+        }
+    </div>
+
+    <!-- DUELA DE MADERA EN PERSPECTIVA ARCADE -->
+    <div class="position-absolute bottom-0 start-0 w-100" 
+         style="height: 185px; background: radial-gradient(circle at 50% 20%, #a85d32 0%, #6d3314 90%); border-top: 3px solid #000;">
+        <svg viewBox="0 0 400 185" class="w-100 h-100" preserveAspectRatio="none">
+            <!-- Líneas de parqué -->
+            @for (int x = 0; x <= 400; x += 35)
+            {
+                <line x1="@x" y1="0" x2="@(x - 25)" y2="185" stroke="rgba(0,0,0,0.2)" stroke-width="2" />
+            }
+            <!-- Llave y semicírculo de triple en perspectiva -->
+            <ellipse cx="200" cy="180" rx="160" ry="85" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="3" />
+            <circle cx="200" cy="180" r="45" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2.5" />
+            <line x1="0" y1="182" x2="400" y2="182" stroke="rgba(255,255,255,0.5)" stroke-width="4" />
+        </svg>
+    </div>
+</div>
+
+<style>
+    @@keyframes anim-hincha-step {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-4px); }
+        100% { transform: translateY(0); }
+    }
+</style>

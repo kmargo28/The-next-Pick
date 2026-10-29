@@ -288,6 +288,48 @@
 
         <DecisionCard />
     }
+    else if (GameState.FaseActual == FaseJuego.AllStarInvitacion)
+    {
+        <!-- PANTALLA OFICIAL DE INVITACIÓN AL ALL-STAR -->
+        <div class="sports-card p-4 text-center my-3 border border-warning" style="max-width: 600px; margin: auto;">
+            <div class="mb-3">
+                <img src="https://a.espncdn.com/i/teamlogos/leagues/500/nba.png" style="height: 48px;" alt="NBA" />
+                <h2 class="nba-title text-warning mt-1 mb-0 fs-1">INVITACIÓN AL ALL-STAR 2027</h2>
+                <span class="badge bg-dark border border-warning text-light small">CONCURSO OFICIAL DE TRIPLES</span>
+            </div>
+
+            <p class="text-light mb-3" style="line-height: 1.6;">
+                La NBA te ha seleccionado formalmente como uno de los 8 mejores tiradores de la liga gracias a tu 
+                <strong class="text-warning">@(GameState.JugadorActivo?.TiroExterior) OVR de tiro</strong>.
+            </p>
+
+            <div class="row g-3 my-2">
+                <div class="col-12 col-md-6">
+                    <div class="p-3 rounded bg-dark border border-warning h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <h5 class="text-warning fw-bold mb-1">🎯 Aceptar y Competir</h5>
+                            <small class="text-secondary d-block mb-3">Compite por el trofeo oficial, +22% de Hype y ,000 en premios comerciales.</small>
+                        </div>
+                        <button class="btn btn-warning w-100 py-2 fw-bold text-dark" @onclick="() => GameState.ResponderInvitacionAllStar(true)">
+                            PARTICIPAR AHORA
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <div class="p-3 rounded bg-dark border border-secondary h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <h5 class="text-light fw-bold mb-1">🛋️ Rechazar y Descansar</h5>
+                            <small class="text-secondary d-block mb-3">Prioriza la salud de tus piernas para los Playoffs. Recuperas +25% de Energía inmediata.</small>
+                        </div>
+                        <button class="btn btn-outline-light w-100 py-2 fw-bold" @onclick="() => GameState.ResponderInvitacionAllStar(false)">
+                            DESCANSAR (+25⚡)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
     else if (GameState.FaseActual == FaseJuego.AllStarTriples)
     {
         <ConcursoTriples OnFinalizado="(pts) => GameState.FinalizarAllStarTriples(pts)" />
@@ -299,17 +341,37 @@
                         ImagenFondo="@GameState.ImagenPortada" 
                         OnCerrar="() => GameState.CerrarPortada()" />
     }
-    else if (GameState.FaseActual == FaseJuego.MinijuegoCancha)
+    else if (GameState.FaseActual == FaseJuego.MinijuegoTiro)
     {
-        <CanchaTiro OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
+        <MinijuegoTiroArrastre OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
     }
     else if (GameState.FaseActual == FaseJuego.MinijuegoLectura)
     {
         <LecturaJugada OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
     }
+    else if (GameState.FaseActual == FaseJuego.MinijuegoTiro)
+    {
+        <MinijuegoTiroArrastre OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
+    }
     else if (GameState.FaseActual == FaseJuego.MinijuegoDuelo)
     {
         <DueloUnoContraUno OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
+    }
+    else if (GameState.FaseActual == FaseJuego.PlayoffBossBattle)
+    {
+        <PlayoffBossBattle OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
+    }
+    else if (GameState.FaseActual == FaseJuego.PlayoffTirosLibres)
+    {
+        <PlayoffTirosLibres OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
+    }
+    else if (GameState.FaseActual == FaseJuego.PlayoffReboteBoxOut)
+    {
+        <PlayoffReboteBoxOut OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
+    }
+    else if (GameState.FaseActual == FaseJuego.PlayoffContraataqueDunk)
+    {
+        <PlayoffContraataqueDunk OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
     }
     else if (GameState.FaseActual == FaseJuego.Playoffs)
     {
@@ -366,25 +428,36 @@
 
             <div class="card bg-dark border-secondary p-3 my-3 text-start">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="text-white fw-bold">DESARROLLO DE HABILIDADES</span>
-                    <span class="badge bg-primary">Puntos: @GameState.PuntosDesarrollo</span>
+                    <div>
+                        <span class="text-white fw-bold d-block">DESARROLLO DE HABILIDADES</span>
+                        <small class="text-secondary">+3 por atributo mejorado</small>
+                    </div>
+                    <span class="badge bg-warning text-dark fs-6 px-3 py-2">Puntos Disponibles: @GameState.PuntosDesarrollo</span>
                 </div>
                 <div class="row g-2">
-                    <div class="col-6 d-flex justify-content-between align-items-center p-2 rounded bg-black">
-                        <span class="small text-white">Tiro: @GameState.JugadorActivo?.TiroExterior</span>
-                        <button class="btn btn-sm btn-outline-success" disabled="@(GameState.PuntosDesarrollo <= 0)" @onclick='() => GameState.MejorarAtributo("TiroExterior")'>+2</button>
+                    <div class="col-6 d-flex justify-content-between align-items-center p-2 rounded bg-black border border-secondary">
+                        <span class="small text-white">🎯 T. Exterior: <strong>@GameState.JugadorActivo?.TiroExterior</strong></span>
+                        <button class="btn btn-sm btn-outline-warning fw-bold" disabled="@(GameState.PuntosDesarrollo <= 0 || GameState.JugadorActivo?.TiroExterior >= 99)" @onclick='() => GameState.MejorarAtributo("TiroExterior")'>+3</button>
                     </div>
-                    <div class="col-6 d-flex justify-content-between align-items-center p-2 rounded bg-black">
-                        <span class="small text-white">Pase: @GameState.JugadorActivo?.Pase</span>
-                        <button class="btn btn-sm btn-outline-success" disabled="@(GameState.PuntosDesarrollo <= 0)" @onclick='() => GameState.MejorarAtributo("Pase")'>+2</button>
+                    <div class="col-6 d-flex justify-content-between align-items-center p-2 rounded bg-black border border-secondary">
+                        <span class="small text-white">🏀 T. Media: <strong>@GameState.JugadorActivo?.TiroMedia</strong></span>
+                        <button class="btn btn-sm btn-outline-warning fw-bold" disabled="@(GameState.PuntosDesarrollo <= 0 || GameState.JugadorActivo?.TiroMedia >= 99)" @onclick='() => GameState.MejorarAtributo("TiroMedia")'>+3</button>
                     </div>
-                    <div class="col-6 d-flex justify-content-between align-items-center p-2 rounded bg-black">
-                        <span class="small text-white">Defensa: @GameState.JugadorActivo?.Defensa</span>
-                        <button class="btn btn-sm btn-outline-success" disabled="@(GameState.PuntosDesarrollo <= 0)" @onclick='() => GameState.MejorarAtributo("Defensa")'>+2</button>
+                    <div class="col-6 d-flex justify-content-between align-items-center p-2 rounded bg-black border border-secondary">
+                        <span class="small text-white">🤝 Pase: <strong>@GameState.JugadorActivo?.Pase</strong></span>
+                        <button class="btn btn-sm btn-outline-warning fw-bold" disabled="@(GameState.PuntosDesarrollo <= 0 || GameState.JugadorActivo?.Pase >= 99)" @onclick='() => GameState.MejorarAtributo("Pase")'>+3</button>
                     </div>
-                    <div class="col-6 d-flex justify-content-between align-items-center p-2 rounded bg-black">
-                        <span class="small text-white">Atletismo: @GameState.JugadorActivo?.Atletismo</span>
-                        <button class="btn btn-sm btn-outline-success" disabled="@(GameState.PuntosDesarrollo <= 0)" @onclick='() => GameState.MejorarAtributo("Atletismo")'>+2</button>
+                    <div class="col-6 d-flex justify-content-between align-items-center p-2 rounded bg-black border border-secondary">
+                        <span class="small text-white">🛡️ Defensa: <strong>@GameState.JugadorActivo?.Defensa</strong></span>
+                        <button class="btn btn-sm btn-outline-warning fw-bold" disabled="@(GameState.PuntosDesarrollo <= 0 || GameState.JugadorActivo?.Defensa >= 99)" @onclick='() => GameState.MejorarAtributo("Defensa")'>+3</button>
+                    </div>
+                    <div class="col-6 d-flex justify-content-between align-items-center p-2 rounded bg-black border border-secondary">
+                        <span class="small text-white">📦 Rebote: <strong>@GameState.JugadorActivo?.Rebote</strong></span>
+                        <button class="btn btn-sm btn-outline-warning fw-bold" disabled="@(GameState.PuntosDesarrollo <= 0 || GameState.JugadorActivo?.Rebote >= 99)" @onclick='() => GameState.MejorarAtributo("Rebote")'>+3</button>
+                    </div>
+                    <div class="col-6 d-flex justify-content-between align-items-center p-2 rounded bg-black border border-secondary">
+                        <span class="small text-white">⚡ Atletismo: <strong>@GameState.JugadorActivo?.Atletismo</strong></span>
+                        <button class="btn btn-sm btn-outline-warning fw-bold" disabled="@(GameState.PuntosDesarrollo <= 0 || GameState.JugadorActivo?.Atletismo >= 99)" @onclick='() => GameState.MejorarAtributo("Atletismo")'>+3</button>
                     </div>
                 </div>
             </div>
@@ -531,3 +604,10 @@
         GameState.OnStateChanged -= ActualizarYGuardar;
     }
 }
+
+
+
+
+
+
+

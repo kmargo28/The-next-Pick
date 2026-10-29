@@ -1,0 +1,141 @@
+﻿@namespace TheNextPick.Components
+@implements IDisposable
+
+<div class="sports-card p-3 my-3 text-center" style="max-width: 480px; margin: auto; background: #0c1017; border: 1px solid rgba(255, 255, 255, 0.15);">
+    <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+        <span class="badge bg-warning text-dark text-uppercase px-2 py-1 small fw-bold">Combine: Agilidad en Llave</span>
+        <span class="text-white small fw-bold">TIEMPO: @tiempoRestante.ToString("0.0") s</span>
+    </div>
+
+    <p class="text-secondary small mb-2">Toca los conos en la secuencia táctica iluminada antes de que acabe el reloj.</p>
+
+    <!-- DUELA DE CONOS EN SVG JUGABLE -->
+    <div class="position-relative mx-auto rounded overflow-hidden" style="width: 320px; height: 320px; background: #141a24; border: 2px solid #2d3748;">
+        <svg viewBox="0 0 320 320" style="width: 100%; height: 100%;">
+            <!-- Llave de pintura -->
+            <rect x="70" y="30" width="180" height="260" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" />
+            <circle cx="160" cy="30" r="50" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2" />
+            <circle cx="160" cy="290" r="50" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2" />
+
+            <!-- Líneas de trayectoria del circuito -->
+            <path d="M 70,290 L 70,30 L 250,30 L 250,290 Z" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6" opacity="0.4" />
+
+            <!-- Cono 1: Inferior Izquierdo -->
+            <g transform="translate(70, 290)" style="cursor: pointer;" @onclick="() => TocarCono(0)">
+                <circle cx="0" cy="0" r="22" fill="@(conoObjetivo == 0 ? "#f59e0b" : "#2d3748")" stroke="#fff" stroke-width="2" />
+                <polygon points="0,-12 10,8 -10,8" fill="#e65100" />
+                <text x="0" y="4" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">1</text>
+            </g>
+
+            <!-- Cono 2: Superior Izquierdo -->
+            <g transform="translate(70, 30)" style="cursor: pointer;" @onclick="() => TocarCono(1)">
+                <circle cx="0" cy="0" r="22" fill="@(conoObjetivo == 1 ? "#f59e0b" : "#2d3748")" stroke="#fff" stroke-width="2" />
+                <polygon points="0,-12 10,8 -10,8" fill="#e65100" />
+                <text x="0" y="4" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">2</text>
+            </g>
+
+            <!-- Cono 3: Superior Derecho -->
+            <g transform="translate(250, 30)" style="cursor: pointer;" @onclick="() => TocarCono(2)">
+                <circle cx="0" cy="0" r="22" fill="@(conoObjetivo == 2 ? "#f59e0b" : "#2d3748")" stroke="#fff" stroke-width="2" />
+                <polygon points="0,-12 10,8 -10,8" fill="#e65100" />
+                <text x="0" y="4" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">3</text>
+            </g>
+
+            <!-- Cono 4: Inferior Derecho -->
+            <g transform="translate(250, 290)" style="cursor: pointer;" @onclick="() => TocarCono(3)">
+                <circle cx="0" cy="0" r="22" fill="@(conoObjetivo == 3 ? "#f59e0b" : "#2d3748")" stroke="#fff" stroke-width="2" />
+                <polygon points="0,-12 10,8 -10,8" fill="#e65100" />
+                <text x="0" y="4" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">4</text>
+            </g>
+        </svg>
+
+        @if (!iniciado)
+        {
+            <div class="position-absolute top-50 start-50 translate-middle text-center w-100 p-3 bg-black bg-opacity-75">
+                <button class="btn btn-warning py-2 px-4 fw-bold text-dark fs-5" @onclick="IniciarPrueba">
+                    INICIAR CIRCUITO
+                </button>
+            </div>
+        }
+    </div>
+
+    <div class="mt-2 text-info fw-semibold small">@mensajeGuia</div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<int> OnFinalizado { get; set; }
+
+    private int conoObjetivo = 0;
+    private int vueltasCompletadas = 0;
+    private double tiempoRestante = 10.0;
+    private bool iniciado = false;
+    private bool finalizado = false;
+    private string mensajeGuia = "Presiona 'Iniciar Circuito' y sigue la secuencia de conos 1 -> 2 -> 3 -> 4.";
+    private CancellationTokenSource cts = new();
+
+    private async Task IniciarPrueba()
+    {
+        iniciado = true;
+        conoObjetivo = 0;
+        tiempoRestante = 9.0;
+        mensajeGuia = "¡Toca el Cono 1 para arrancar el sprint!";
+
+        try
+        {
+            while (tiempoRestante > 0 && !finalizado && !cts.Token.IsCancellationRequested)
+            {
+                await Task.Delay(100, cts.Token);
+                tiempoRestante = Math.Max(0, tiempoRestante - 0.1);
+                StateHasChanged();
+            }
+
+            if (!finalizado)
+            {
+                await ConcluirPrueba();
+            }
+        }
+        catch (TaskCanceledException) { }
+    }
+
+    private async void TocarCono(int indice)
+    {
+        if (!iniciado || finalizado) return;
+
+        if (indice == conoObjetivo)
+        {
+            conoObjetivo++;
+            if (conoObjetivo > 3)
+            {
+                conoObjetivo = 0;
+                vueltasCompletadas++;
+            }
+            StateHasChanged();
+
+            if (vueltasCompletadas >= 2)
+            {
+                await ConcluirPrueba();
+            }
+        }
+    }
+
+    private async Task ConcluirPrueba()
+    {
+        finalizado = true;
+        cts.Cancel();
+
+        int puntos = vueltasCompletadas >= 2 ? 35 : (vueltasCompletadas == 1 ? 20 : 10);
+        mensajeGuia = vueltasCompletadas >= 2 
+            ? $"¡Agilidad de elite! Circuito terminado en tiempo récord (+{puntos} pts)." 
+            : $"Circuito completado (+{puntos} pts).";
+        StateHasChanged();
+
+        await Task.Delay(1400);
+        await OnFinalizado.InvokeAsync(puntos);
+    }
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+    }
+}

@@ -1,0 +1,115 @@
+﻿@namespace TheNextPick.Components
+@implements IDisposable
+
+<div class="sports-card p-3 my-3 text-center" style="max-width: 480px; margin: auto; background: #0c1017; border: 2px solid #2d3748;">
+    <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+        <span class="badge bg-danger text-uppercase px-2 py-1 small fw-bold">Combine: Reflejos Periféricos</span>
+        <span class="text-white small fw-bold">ACIERTOS: @aciertos / 5</span>
+    </div>
+
+    <p class="text-secondary small mb-2">Toca el sensor LED que se ilumine en VERDE antes de que se apague.</p>
+
+    <!-- TABLERO DE SENSORES INTERACTIVOS CON JUGADOR EN EL CENTRO -->
+    <div class="position-relative mx-auto rounded overflow-hidden" style="width: 320px; height: 260px; background: #141a24; border: 2px solid #2d3748;">
+        <CanchaFondo />
+
+        <!-- Jugador Scott Pilgrim centrado preparado -->
+        <div class="position-absolute start-50 translate-middle-x" style="bottom: 25px;">
+            <PixelArtPlayer Estado="@estadoJugador" ColorPrimario="#f59e0b" AnchoPx="85" AltoPx="110" />
+        </div>
+
+        <!-- Sensor Izquierdo -->
+        <button class="position-absolute btn p-0 rounded-circle border border-white"
+                style="left: 25px; top: 90px; width: 44px; height: 44px; background: @(luzActiva == 0 ? "#10b981" : "#1f2937"); box-shadow: @(luzActiva == 0 ? "0 0 15px #10b981" : "none");"
+                @onclick="() => TocarLuz(0)">
+        </button>
+
+        <!-- Sensor Superior -->
+        <button class="position-absolute btn p-0 rounded-circle border border-white start-50 translate-middle-x"
+                style="top: 25px; width: 44px; height: 44px; background: @(luzActiva == 1 ? "#10b981" : "#1f2937"); box-shadow: @(luzActiva == 1 ? "0 0 15px #10b981" : "none");"
+                @onclick="() => TocarLuz(1)">
+        </button>
+
+        <!-- Sensor Derecho -->
+        <button class="position-absolute btn p-0 rounded-circle border border-white"
+                style="right: 25px; top: 90px; width: 44px; height: 44px; background: @(luzActiva == 2 ? "#10b981" : "#1f2937"); box-shadow: @(luzActiva == 2 ? "0 0 15px #10b981" : "none");"
+                @onclick="() => TocarLuz(2)">
+        </button>
+
+        @if (!iniciado)
+        {
+            <div class="position-absolute top-50 start-50 translate-middle w-100 p-3 bg-black bg-opacity-75">
+                <button class="btn btn-warning py-2 px-4 fw-bold text-dark fs-5" @onclick="IniciarPrueba">
+                    ACTIVAR SENSORES 💡
+                </button>
+            </div>
+        }
+    </div>
+
+    <div class="mt-2 text-info fw-semibold small">@mensajeGuia</div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<int> OnFinalizado { get; set; }
+
+    private string estadoJugador = "Idle";
+    private int luzActiva = -1;
+    private int aciertos = 0;
+    private int rondas = 0;
+    private bool iniciado = false;
+    private bool finalizado = false;
+    private string mensajeGuia = "Pulsa 'Activar Sensores' para poner a prueba tus reflejos.";
+    private CancellationTokenSource cts = new();
+
+    private async Task IniciarPrueba()
+    {
+        iniciado = true;
+        aciertos = 0;
+        rondas = 0;
+        estadoJugador = "Bote";
+
+        try
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                rondas++;
+                luzActiva = Random.Shared.Next(0, 3);
+                mensajeGuia = "¡Toca el sensor activo!";
+                StateHasChanged();
+
+                await Task.Delay(1100, cts.Token); // Ventana de reacción de 1.1s
+                luzActiva = -1;
+                StateHasChanged();
+                await Task.Delay(400, cts.Token);
+            }
+
+            finalizado = true;
+            estadoJugador = aciertos >= 4 ? "Celebrando" : "Idle";
+            int puntos = aciertos >= 4 ? 35 : (aciertos >= 2 ? 22 : 10);
+            mensajeGuia = $"Prueba concluida con {aciertos}/5 reflejos a tiempo (+{puntos} pts).";
+            StateHasChanged();
+
+            await Task.Delay(1300);
+            await OnFinalizado.InvokeAsync(puntos);
+        }
+        catch (TaskCanceledException) { }
+    }
+
+    private void TocarLuz(int indice)
+    {
+        if (!iniciado || finalizado || luzActiva == -1) return;
+
+        if (indice == luzActiva)
+        {
+            aciertos++;
+            luzActiva = -1;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+    }
+}

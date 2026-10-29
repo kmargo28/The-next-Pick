@@ -1,0 +1,143 @@
+﻿@namespace TheNextPick.Components
+@using TheNextPick.Engine
+@using TheNextPick.Models
+@inject GameStateService GameState
+@implements IDisposable
+
+<div class="sports-card p-4 my-3 text-center position-relative" style="max-width: 600px; margin: auto; background: #0c1017; border: 2px solid #10b981;">
+    <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+        <span class="badge bg-success text-uppercase px-2 py-1 small fw-bold">CONTRAATAQUE EN TRANSICIÓN</span>
+        <span class="text-white fw-bold">FINAL DE SERIE PLAYOFFS</span>
+    </div>
+
+    <h4 class="text-white fw-bold mb-1">Volcada / Mate de la Victoria</h4>
+    <p class="text-secondary small mb-2">Carga carrera y suelta el mate dentro de la zona de despegue.</p>
+
+    <div class="position-relative mx-auto rounded overflow-hidden my-2" style="width: 100%; height: 230px; border: 2px solid #334155;">
+        <CanchaFondo />
+
+        <!-- Canasta Rival a la derecha -->
+        <svg viewBox="0 0 100 120" class="position-absolute end-0" style="width: 100px; height: 130px; top: 60px; pointer-events: none;">
+            <line x1="80" y1="10" x2="80" y2="100" stroke="#fff" stroke-width="5" />
+            <line x1="45" y1="65" x2="80" y2="65" stroke="#ff4500" stroke-width="4" stroke-linecap="round" />
+            <ellipse cx="62" cy="65" rx="14" ry="3" fill="none" stroke="#ff4500" stroke-width="2" />
+        </svg>
+
+        <!-- Defensor corriendo detrás sin balón -->
+        <div class="position-absolute" style="left: @(posicionCorredorX - 80)px; bottom: 15px;">
+            <PixelArtPlayer Estado="Bote" TieneBalon="false" ColorPrimario="#b91c1c" AnchoPx="85" AltoPx="110" />
+        </div>
+
+        <!-- Tu Jugador atacando en velocidad con balón -->
+        <div class="position-absolute" style="left: @(posicionCorredorX)px; bottom: @(posicionCorredorY)px;">
+            <PixelArtPlayer Estado="@estadoDunk" TieneBalon="true" ColorPrimario="@colorPropio" AnchoPx="95" AltoPx="120" />
+        </div>
+
+        @if (!string.IsNullOrEmpty(textoPop))
+        {
+            <div class="position-absolute top-50 start-50 translate-middle text-center arcade-pop-anim" style="pointer-events: none;">
+                <span class="display-3 fw-bold @colorPop nba-title" style="-webkit-text-stroke: 2px #000; text-shadow: 3px 3px 0 #000;">
+                    @textoPop
+                </span>
+            </div>
+        }
+    </div>
+
+    @if (!volcado)
+    {
+        <div class="my-2">
+            <button class="btn btn-warning py-3 px-5 fw-bold text-dark fs-4" @onclick="EjecutarVolcada">
+                ¡DESPEGAR Y CLAVARLA! 💥
+            </button>
+        </div>
+    }
+
+    <p class="mt-2 text-info fw-semibold small mb-0">@mensajeGuia</p>
+</div>
+
+@code {
+    [Parameter] public EventCallback<bool> OnFinalizado { get; set; }
+
+    private string colorPropio = "#1D428A";
+    private string estadoDunk = "Bote";
+    private int posicionCorredorX = 60;
+    private int posicionCorredorY = 15;
+    private bool volcado = false;
+    private string textoPop = "";
+    private string colorPop = "text-warning";
+    private string mensajeGuia = "Presiona 'DESPEGAR' cuando estés cerca de la zona para clavar el mate.";
+    private CancellationTokenSource cts = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var eq = EquipoNBA.ObtenerPorNombre(GameState.JugadorActivo?.EquipoActual ?? "");
+        colorPropio = eq.ColorPrimario;
+
+        // Carrera hacia la canasta
+        try
+        {
+            while (!volcado && posicionCorredorX < 360 && !cts.Token.IsCancellationRequested)
+            {
+                posicionCorredorX += 5;
+                StateHasChanged();
+                await Task.Delay(25, cts.Token);
+            }
+
+            if (!volcado)
+            {
+                await ResolverMate(false);
+            }
+        }
+        catch (TaskCanceledException) { }
+    }
+
+    private async Task EjecutarVolcada()
+    {
+        if (volcado) return;
+        volcado = true;
+        cts.Cancel();
+        estadoDunk = "Saltando";
+        posicionCorredorY = 55;
+        StateHasChanged();
+
+        // Éxito si despegas entre x: 230 y 340 (distancia ideal de mate)
+        bool exito = posicionCorredorX >= 220 && posicionCorredorX <= 350;
+
+        await Task.Delay(350);
+        await ResolverMate(exito);
+    }
+
+    private async Task ResolverMate(bool exito)
+    {
+        volcado = true;
+        cts.Cancel();
+
+        if (exito)
+        {
+            estadoDunk = "Celebrando";
+            posicionCorredorY = 15;
+            posicionCorredorX = 350;
+            textoPop = "POSTER DUNK!! 💥";
+            colorPop = "text-success";
+            mensajeGuia = "¡Volcada descomunal sobre el defensor rival!";
+        }
+        else
+        {
+            estadoDunk = "Bote";
+            posicionCorredorY = 15;
+            textoPop = "TAPON RIVAL! ❌";
+            colorPop = "text-danger";
+            mensajeGuia = "Despegaste fuera de distancia y te taponaron el aro.";
+        }
+        StateHasChanged();
+
+        await Task.Delay(1400);
+        await OnFinalizado.InvokeAsync(exito);
+    }
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+    }
+}

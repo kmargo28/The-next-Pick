@@ -19,7 +19,7 @@ public class Jugador
     public int Atletismo { get; set; }
 
     // Media general (OVR)
-    public int OVR => (TiroExterior + TiroMedia + Pase + Defensa + Rebote + Atletismo) / 6;
+    public int OVR => Math.Clamp((int)Math.Round((TiroExterior + TiroMedia + Pase + Defensa + Rebote + Atletismo) / 6.0), 40, 99);
 
     // Estadísticas globales de carrera
     public int PuntosTotales { get; set; } = 0;
@@ -103,3 +103,4 @@ public class JugadorBuilder
 
     public Jugador Build() => _jugador;
 }
+
