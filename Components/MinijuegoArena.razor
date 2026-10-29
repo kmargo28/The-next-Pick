@@ -1,0 +1,271 @@
+﻿@namespace TheNextPick.Components
+@inject IJSRuntime JS
+@implements IDisposable
+
+<div class="sports-card p-4 text-center my-3 border border-warning">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="badge bg-warning text-dark fw-bold px-3 py-1 fs-6">🏀 MINIJUEGO INTERACTIVO</span>
+        <span class="text-warning fw-bold fs-5">PUNTOS: @PuntajeTotal</span>
+    </div>
+
+    @if (TipoActual == TipoMinijuego.TiroSuspension)
+    {
+        <!-- 1. TIRO EN SUSPENSIÓN (TIMING) -->
+        <h4 class="nba-title fs-3 text-white mb-1">Tiro en Suspensión Clutch</h4>
+        <p class="text-secondary small">Frena la aguja dentro de la franja verde para embocar el balón.</p>
+
+        <div class="position-relative my-4 rounded" style="height: 38px; background: #0b0e14; border: 2px solid #3b82f6; overflow: hidden;">
+            <div class="position-absolute bg-success h-100 opacity-75" style="left: @zonaVerdeInicio%; width: @zonaVerdeAncho%;"></div>
+            <div class="position-absolute bg-warning h-100" style="left: @posicionBarra%; width: 6px; box-shadow: 0 0 10px #f59e0b;"></div>
+        </div>
+
+        @if (!activo)
+        {
+            <button class="btn btn-primary px-4 py-2 fw-bold" @onclick="IniciarBarra">Comenzar Lanzamiento</button>
+        }
+        else
+        {
+            <button class="btn btn-warning px-5 py-2 fw-bold fs-5 text-dark" @onclick="DetenerTiro">¡LANZAR!</button>
+        }
+    }
+    else if (TipoActual == TipoMinijuego.SaltoVertical)
+    {
+        <!-- 2. SALTO VERTICAL / COMBINE -->
+        <h4 class="nba-title fs-3 text-white mb-1">Prueba de Salto Vertical</h4>
+        <p class="text-secondary small">Carga potencia manteniendo presionado y suelta lo más cerca posible del 90%.</p>
+
+        <div class="progress my-4 bg-dark border border-secondary" style="height: 32px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-danger" style="width: @potenciaSalto%;">
+                <span class="fw-bold fs-6">@potenciaSalto%</span>
+            </div>
+        </div>
+
+        @if (!cargandoSalto)
+        {
+            <button class="btn btn-danger px-4 py-2 fw-bold" @onclick="EmpezarCargaSalto">Cargar Potencia</button>
+        }
+        else
+        {
+            <button class="btn btn-warning px-5 py-2 fw-bold text-dark" @onclick="SoltarSalto">¡DESPEGAR!</button>
+        }
+    }
+    else if (TipoActual == TipoMinijuego.DribbleQTE)
+    {
+        <!-- 3. MANEJO DE BALÓN / DRIBBLING (QUICK TIME EVENT) -->
+        <h4 class="nba-title fs-3 text-white mb-1">Quiebre de Tobillos (Crossover)</h4>
+        <p class="text-secondary small">Reacciona presionando la dirección indicada antes de que se agote el tiempo.</p>
+
+        <div class="my-4 py-4 rounded bg-dark border border-secondary">
+            <span class="nba-title display-3 fw-bold text-warning">@teclaObjetivo</span>
+        </div>
+
+        <div class="d-flex justify-content-center gap-2">
+            <button class="btn btn-outline-light px-4 py-2 fw-bold" @onclick='() => ValidarQTE("IZQUIERDA")'>⬅️ IZQUIERDA</button>
+            <button class="btn btn-outline-light px-4 py-2 fw-bold" @onclick='() => ValidarQTE("CENTRO")'>⬆️ CENTRO</button>
+            <button class="btn btn-outline-light px-4 py-2 fw-bold" @onclick='() => ValidarQTE("DERECHA")'>➡️ DERECHA</button>
+        </div>
+    }
+    else if (TipoActual == TipoMinijuego.DefensaRobo)
+    {
+        <!-- 4. ROBO / TAPÓN DEFENSIVO -->
+        <h4 class="nba-title fs-3 text-white mb-1">Acoso Defensivo</h4>
+        <p class="text-secondary small">El atacante rival intenta penetrar. Adivina el carril para robar el balón.</p>
+
+        <div class="row g-2 my-4">
+            <div class="col-4">
+                <button class="btn btn-choice w-100 py-3" @onclick="() => Defender(0)">Cerrar Izquierda</button>
+            </div>
+            <div class="col-4">
+                <button class="btn btn-choice w-100 py-3" @onclick="() => Defender(1)">Bloqueo Central</button>
+            </div>
+            <div class="col-4">
+                <button class="btn btn-choice w-100 py-3" @onclick="() => Defender(2)">Cerrar Derecha</button>
+            </div>
+        </div>
+    }
+    else if (TipoActual == TipoMinijuego.TiroLibreClutch)
+    {
+        <!-- 5. TIRO LIBRE FINAL -->
+        <h4 class="nba-title fs-3 text-white mb-1">Tiro Libre con Presión del Público</h4>
+        <p class="text-secondary small">El aro oscila por los abucheos. Encesta en el punto medio exacto.</p>
+
+        <div class="position-relative my-4 rounded" style="height: 38px; background: #0b0e14; border: 2px solid #ef4444; overflow: hidden;">
+            <div class="position-absolute bg-success h-100 opacity-75" style="left: 45%; width: 12%;"></div>
+            <div class="position-absolute bg-danger h-100" style="left: @posicionBarra%; width: 8px;"></div>
+        </div>
+
+        @if (!activo)
+        {
+            <button class="btn btn-danger px-4 py-2 fw-bold" @onclick="IniciarBarra">Concentrarse</button>
+        }
+        else
+        {
+            <button class="btn btn-success px-5 py-2 fw-bold" @onclick="DetenerTiroLibre">¡LANZAR AL ARO!</button>
+        }
+    }
+
+    <p class="mt-3 text-info fw-semibold mb-0">@mensajeFeedback</p>
+</div>
+
+@code {
+    public enum TipoMinijuego
+    {
+        TiroSuspension,
+        SaltoVertical,
+        DribbleQTE,
+        DefensaRobo,
+        TiroLibreClutch
+    }
+
+    [Parameter] public TipoMinijuego TipoActual { get; set; } = TipoMinijuego.TiroSuspension;
+    [Parameter] public EventCallback<int> AlCompletar { get; set; }
+
+    public int PuntajeTotal { get; private set; } = 0;
+    private string mensajeFeedback = "Prepárate para la prueba.";
+    private bool activo = false;
+    private CancellationTokenSource? cts;
+
+    // Variables de Barra Oscilante
+    private int posicionBarra = 0;
+    private bool subiendo = true;
+    private int zonaVerdeInicio = 65;
+    private int zonaVerdeAncho = 18;
+
+    // Variables de Salto Vertical
+    private int potenciaSalto = 0;
+    private bool cargandoSalto = false;
+
+    // Variables de Dribble QTE
+    private string teclaObjetivo = "IZQUIERDA";
+    private readonly string[] opcionesQTE = new[] { "IZQUIERDA", "CENTRO", "DERECHA" };
+
+    // --- TIMING / TIRO ---
+    private async Task IniciarBarra()
+    {
+        activo = true;
+        cts = new();
+        while (activo && !cts.Token.IsCancellationRequested)
+        {
+            posicionBarra += subiendo ? 4 : -4;
+            if (posicionBarra >= 95) subiendo = false;
+            if (posicionBarra <= 5) subiendo = true;
+            StateHasChanged();
+            await Task.Delay(16);
+        }
+    }
+
+    private void DetenerTiro()
+    {
+        activo = false;
+        cts?.Cancel();
+        if (posicionBarra >= zonaVerdeInicio && posicionBarra <= (zonaVerdeInicio + zonaVerdeAncho))
+        {
+            PuntajeTotal += 30;
+            mensajeFeedback = "🎯 ¡TRIPLE LIMPIO! +30 Puntos.";
+        }
+        else
+        {
+            PuntajeTotal += 10;
+            mensajeFeedback = "⚠️ Pegó en el aro. +10 Puntos.";
+        }
+        Finalizar();
+    }
+
+    // --- SALTO VERTICAL ---
+    private async Task EmpezarCargaSalto()
+    {
+        cargandoSalto = true;
+        potenciaSalto = 0;
+        cts = new();
+        while (cargandoSalto && !cts.Token.IsCancellationRequested)
+        {
+            potenciaSalto += 3;
+            if (potenciaSalto >= 100) potenciaSalto = 0;
+            StateHasChanged();
+            await Task.Delay(25);
+        }
+    }
+
+    private void SoltarSalto()
+    {
+        cargandoSalto = false;
+        cts?.Cancel();
+        if (potenciaSalto >= 82 && potenciaSalto <= 96)
+        {
+            PuntajeTotal += 35;
+            mensajeFeedback = $"💥 ¡SALTO DE ÉLITE! ({potenciaSalto}% de potencia) +35 Pts.";
+        }
+        else
+        {
+            PuntajeTotal += 12;
+            mensajeFeedback = $"Salto regular ({potenciaSalto}%). +12 Pts.";
+        }
+        Finalizar();
+    }
+
+    // --- DRIBBLE QTE ---
+    protected override void OnInitialized()
+    {
+        teclaObjetivo = opcionesQTE[Random.Shared.Next(opcionesQTE.Length)];
+    }
+
+    private void ValidarQTE(string direccion)
+    {
+        if (direccion == teclaObjetivo)
+        {
+            PuntajeTotal += 25;
+            mensajeFeedback = "⚡ ¡Crossover fulminante! Dejaste atrás al defensor. +25 Pts.";
+        }
+        else
+        {
+            PuntajeTotal += 5;
+            mensajeFeedback = "Perdiste el bote ante el tapón rival. +5 Pts.";
+        }
+        Finalizar();
+    }
+
+    // --- DEFENSA ROBO ---
+    private void Defender(int opcion)
+    {
+        int jugadaRival = Random.Shared.Next(0, 3);
+        if (opcion == jugadaRival)
+        {
+            PuntajeTotal += 30;
+            mensajeFeedback = "🛡️ ¡Lectura perfecta! Robo de balón en transición. +30 Pts.";
+        }
+        else
+        {
+            PuntajeTotal += 8;
+            mensajeFeedback = "El rival anotó la bandeja. +8 Pts.";
+        }
+        Finalizar();
+    }
+
+    // --- TIRO LIBRE CLUTCH ---
+    private void DetenerTiroLibre()
+    {
+        activo = false;
+        cts?.Cancel();
+        if (posicionBarra >= 45 && posicionBarra <= 57)
+        {
+            PuntajeTotal += 25;
+            mensajeFeedback = "🔥 ¡CLUTCH! Encestaste el tiro libre definitivo. +25 Pts.";
+        }
+        else
+        {
+            mensajeFeedback = "❌ Silencio en la grada... Balón fuera.";
+        }
+        Finalizar();
+    }
+
+    private void Finalizar()
+    {
+        Task.Run(async () =>
+        {
+            await Task.Delay(1600);
+            await InvokeAsync(() => AlCompletar.InvokeAsync(PuntajeTotal));
+        });
+    }
+
+    public void Dispose() => cts?.Cancel();
+}

@@ -1,0 +1,108 @@
+﻿@namespace TheNextPick.Components
+
+<div class="sports-card p-4 my-3 text-center" style="max-width: 520px; margin: auto;">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="badge bg-warning text-dark text-uppercase px-2 py-1 small fw-bold">NBA All-Star Weekend</span>
+        <span class="text-white fw-bold">PUNTOS: @puntosTotales / 30</span>
+    </div>
+
+    <h4 class="text-white fw-bold mb-1">Concurso de Triples (3-Point Contest)</h4>
+    <p class="text-secondary small mb-3">Carro @(carroActual + 1) de 5 | Tiro @(tiroEnCarro + 1) de 5 @(tiroEnCarro == 4 ? "⭐ (MONEY BALL x2)" : "")</p>
+
+    <!-- Pizarra de Tiro -->
+    <div class="position-relative my-4 rounded border border-secondary" style="height: 42px; background: #0b0e14; overflow: hidden;">
+        <!-- Zona verde de acierto -->
+        <div class="position-absolute bg-success opacity-75 h-100" style="left: @zonaVerdeInicio%; width: 14%;"></div>
+        <!-- Aguja de timing -->
+        <div class="position-absolute bg-warning h-100" style="left: @posicionBarra%; width: 6px; box-shadow: 0 0 8px #f59e0b;"></div>
+    </div>
+
+    <div class="d-flex justify-content-center gap-1 my-3">
+        @for (int i = 0; i < 5; i++)
+        {
+            var rackIdx = i;
+            <span class="badge @(rackIdx < carroActual ? "bg-success" : (rackIdx == carroActual ? "bg-warning text-dark" : "bg-dark border border-secondary")) px-3 py-2">
+                Estacion @(rackIdx + 1)
+            </span>
+        }
+    </div>
+
+    @if (!activo && !finalizado)
+    {
+        <button class="btn btn-warning py-3 px-5 fw-bold text-dark fs-5 mt-2" @onclick="IniciarDisparos">
+            Comenzar Ronda
+        </button>
+    }
+    else if (activo)
+    {
+        <button class="btn btn-danger py-3 px-5 fw-bold fs-5 mt-2" @onclick="LanzarTriple">
+            ¡LANZAR!
+        </button>
+    }
+
+    <p class="mt-3 text-info fw-semibold small mb-0">@mensajeFeedback</p>
+</div>
+
+@code {
+    [Parameter] public EventCallback<int> OnFinalizado { get; set; }
+
+    private int carroActual = 0;
+    private int tiroEnCarro = 0;
+    private int puntosTotales = 0;
+    private bool activo = false;
+    private bool finalizado = false;
+    private string mensajeFeedback = "Alineate en la esquina para iniciar la ronda.";
+
+    private int posicionBarra = 0;
+    private bool subiendo = true;
+    private int zonaVerdeInicio = 68;
+    private CancellationTokenSource? cts;
+
+    private async Task IniciarDisparos()
+    {
+        activo = true;
+        cts = new();
+        mensajeFeedback = "Calcula el release optimo en la franja verde.";
+
+        while (activo && !cts.Token.IsCancellationRequested)
+        {
+            posicionBarra += subiendo ? 5 : -5;
+            if (posicionBarra >= 95) subiendo = false;
+            if (posicionBarra <= 5) subiendo = true;
+            StateHasChanged();
+            await Task.Delay(16);
+        }
+    }
+
+    private async Task LanzarTriple()
+    {
+        bool acierto = posicionBarra >= zonaVerdeInicio && posicionBarra <= (zonaVerdeInicio + 14);
+        bool esMoneyBall = (tiroEnCarro == 4);
+        int puntosTiro = acierto ? (esMoneyBall ? 2 : 1) : 0;
+        puntosTotales += puntosTiro;
+
+        mensajeFeedback = acierto 
+            ? (esMoneyBall ? "¡MONEY BALL ADENTRO! (+2 pts)" : "¡Triple encestado! (+1 pt)") 
+            : "Tiro errado al hierro.";
+
+        tiroEnCarro++;
+        if (tiroEnCarro >= 5)
+        {
+            tiroEnCarro = 0;
+            carroActual++;
+            zonaVerdeInicio = Random.Shared.Next(45, 78); // Cambia el ángulo en cada carro
+        }
+
+        if (carroActual >= 5)
+        {
+            activo = false;
+            finalizado = true;
+            cts?.Cancel();
+            mensajeFeedback = $"Ronda completada con {puntosTotales} puntos.";
+            StateHasChanged();
+
+            await Task.Delay(1600);
+            await OnFinalizado.InvokeAsync(puntosTotales);
+        }
+    }
+}

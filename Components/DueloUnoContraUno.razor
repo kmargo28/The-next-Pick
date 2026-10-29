@@ -1,0 +1,104 @@
+﻿@namespace TheNextPick.Components
+
+<div class="sports-card p-4 my-3 text-center" style="max-width: 500px; margin: auto;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="badge bg-warning text-dark text-uppercase px-2 py-1 small fw-bold">Duelo 1 vs 1</span>
+        <span class="text-secondary small fw-bold">ULTIMA POSESION RIVAL</span>
+    </div>
+
+    <h5 class="text-white fw-bold mb-1">Acoso Defensivo en Perimetro</h5>
+    <p class="text-secondary small mb-3">Observa el movimiento del atacante y reacciona de inmediato.</p>
+
+    <!-- Pizarra de duelo -->
+    <div class="p-4 my-3 rounded bg-dark border border-secondary text-center" style="min-height: 140px;">
+        <span class="display-6 fw-bold text-warning d-block mb-1">@textoMovimientoRival</span>
+        <small class="text-secondary">@pistaVisual</small>
+    </div>
+
+    @if (!respondido)
+    {
+        <div class="row g-2">
+            <div class="col-4">
+                <button class="btn btn-outline-light w-100 py-3 fw-bold" @onclick='() => ResolverAccion("Izquierda")'>
+                    Cerrar Izq
+                </button>
+            </div>
+            <div class="col-4">
+                <button class="btn btn-outline-light w-100 py-3 fw-bold" @onclick='() => ResolverAccion("Salto")'>
+                    Taponar Tiro
+                </button>
+            </div>
+            <div class="col-4">
+                <button class="btn btn-outline-light w-100 py-3 fw-bold" @onclick='() => ResolverAccion("Derecha")'>
+                    Cerrar Der
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert @(exito ? "alert-success" : "alert-danger") p-3 text-center border-0 mb-0">
+            <div class="fw-bold fs-6 mb-1">@(exito ? "Robo de Balon Confirmado" : "Bandeja Anotada por el Rival")</div>
+            <div class="small">@mensajeFinal</div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public EventCallback<bool> OnFinalizado { get; set; }
+
+    private readonly string[] movimientos = new[] { "Finta hacia la Izquierda", "Elevacion para Lanzar", "Crossover a la Derecha" };
+    private string movimientoElegido = "";
+    private string respuestaCorrecta = "";
+    private string textoMovimientoRival = "";
+    private string pistaVisual = "Preparando postura...";
+    private bool respondido = false;
+    private bool exito = false;
+    private string mensajeFinal = "";
+
+    protected override void OnInitialized()
+    {
+        int indice = Random.Shared.Next(movimientos.Length);
+        movimientoElegido = movimientos[indice];
+
+        if (indice == 0)
+        {
+            respuestaCorrecta = "Izquierda";
+            textoMovimientoRival = "Ataca por la Izquierda";
+            pistaVisual = "Bote bajo buscando el carril zurdo";
+        }
+        else if (indice == 1)
+        {
+            respuestaCorrecta = "Salto";
+            textoMovimientoRival = "Frena y Arma el Brazo";
+            pistaVisual = "Cuadra los pies para el tiro en suspension";
+        }
+        else
+        {
+            respuestaCorrecta = "Derecha";
+            textoMovimientoRival = "Crossover a la Derecha";
+            pistaVisual = "Cambio violento de mano hacia tu costado derecho";
+        }
+    }
+
+    private async Task ResolverAccion(string eleccion)
+    {
+        respondido = true;
+        exito = (eleccion == respuestaCorrecta);
+
+        if (exito)
+        {
+            mensajeFinal = eleccion == "Salto"
+                ? "Tapon rotundo contra el tablero. Recuperacion limpia de posesion."
+                : "Metiste la mano en el momento exacto y robaste el balon en transicion.";
+        }
+        else
+        {
+            mensajeFinal = "Llegaste tarde al desplazamiento defensivo. El atacante consiguio dos puntos.";
+        }
+        StateHasChanged();
+
+        await Task.Delay(1600);
+        await OnFinalizado.InvokeAsync(exito);
+    }
+}

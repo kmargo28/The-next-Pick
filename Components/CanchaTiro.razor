@@ -1,0 +1,133 @@
+﻿@namespace TheNextPick.Components
+
+<div class="sports-card p-4 my-3 text-center" style="max-width: 480px; margin: auto;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="badge bg-danger text-uppercase px-2 py-1 small fw-bold">Posesion Clutch</span>
+        <span class="text-secondary small fw-bold">INTENTO @intentos / 3 | ENCESTADAS: @canastas</span>
+    </div>
+
+    <h5 class="text-white fw-bold mb-1">Tiro en Suspension</h5>
+    <p class="text-secondary small mb-3">Jala el balon hacia abajo para tensar y suelta en la zona optima.</p>
+
+    <!-- Contenedor interactivo con puntero bloqueado en elementos hijos para evitar saltos -->
+    <div class="position-relative mx-auto rounded border border-secondary"
+         style="width: 320px; height: 320px; background: #0f141c; touch-action: none; user-select: none; cursor: grab;"
+         @onpointerdown="IniciarTiro"
+         @onpointermove="MoverTiro"
+         @onpointerup="LanzarBalon">
+
+        <svg viewBox="0 0 320 320" style="width: 100%; height: 100%; pointer-events: none;">
+            <!-- Lineas de duela -->
+            <path d="M 30,0 L 30,50 A 130,130 0 0,0 290,50 L 290,0" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="2" />
+            <rect x="110" y="0" width="100" height="110" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="2" />
+            <circle cx="160" cy="110" r="35" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="2" stroke-dasharray="4" />
+
+            <!-- Tablero y Aro -->
+            <line x1="125" y1="20" x2="195" y2="20" stroke="#ffffff" stroke-width="5" />
+            <circle cx="160" cy="34" r="13" fill="none" stroke="#e65100" stroke-width="4" />
+            <path d="M 150,34 Q 160,56 170,34" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.5" />
+
+            <!-- Guia de dispersion cuando se jala -->
+            @if (arrastrando)
+            {
+                <line x1="160" y1="250" x2="@(160 - (desvioX * 1.4))" y2="@(250 - (fuerzaY * 1.8))"
+                      stroke="#f59e0b" stroke-width="2" stroke-dasharray="4" />
+            }
+
+            <!-- Balon -->
+            <g transform="translate(@posBalonX, @posBalonY)">
+                <circle cx="0" cy="0" r="15" fill="#f57c00" stroke="#000000" stroke-width="2" />
+                <path d="M -15,0 A 15,15 0 0,0 15,0" fill="none" stroke="#000" stroke-width="1.5" />
+                <path d="M 0,-15 A 15,15 0 0,0 0,15" fill="none" stroke="#000" stroke-width="1.5" />
+            </g>
+        </svg>
+
+        <!-- Indicador de tension -->
+        @if (arrastrando)
+        {
+            <div class="position-absolute bottom-0 start-50 translate-middle-x mb-2 px-2 py-1 rounded bg-dark border border-secondary small text-warning">
+                Fuerza: @((int)fuerzaY) % | Desvio: @((int)Math.Abs(desvioX))
+            </div>
+        }
+    </div>
+
+    <div class="mt-3 text-info fw-semibold small">@mensajeEstado</div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<bool> OnFinalizado { get; set; }
+
+    private double posBalonX = 160;
+    private double posBalonY = 250;
+    private double inicioY = 0;
+    private double inicioX = 0;
+    private double fuerzaY = 0;
+    private double desvioX = 0;
+    private bool arrastrando = false;
+    private bool bloqueado = false;
+    private int intentos = 0;
+    private int canastas = 0;
+    private string mensajeEstado = "Presiona el balon, jala hacia abajo y suelta.";
+
+    private void IniciarTiro(PointerEventArgs e)
+    {
+        if (bloqueado) return;
+        arrastrando = true;
+        inicioX = e.ClientX;
+        inicioY = e.ClientY;
+        fuerzaY = 0;
+        desvioX = 0;
+    }
+
+    private void MoverTiro(PointerEventArgs e)
+    {
+        if (!arrastrando || bloqueado) return;
+        desvioX = Math.Clamp((e.ClientX - inicioX) * 0.7, -45, 45);
+        fuerzaY = Math.Clamp((e.ClientY - inicioY) * 0.8, 0, 90);
+
+        posBalonX = 160 + desvioX;
+        posBalonY = 250 + (fuerzaY * 0.35);
+    }
+
+    private async Task LanzarBalon(PointerEventArgs e)
+    {
+        if (!arrastrando || bloqueado) return;
+        arrastrando = false;
+        bloqueado = true;
+        intentos++;
+
+        // Criterio de acierto equilibrado: Fuerza entre 45 y 75, desvio lateral menor a 14
+        bool encesto = fuerzaY >= 40 && fuerzaY <= 78 && Math.Abs(desvioX) <= 14;
+
+        posBalonX = encesto ? 160 : (160 + (desvioX * 1.5));
+        posBalonY = encesto ? 34 : 15;
+        StateHasChanged();
+
+        await Task.Delay(350);
+
+        if (encesto)
+        {
+            canastas++;
+            mensajeEstado = "Anotacion limpia.";
+        }
+        else
+        {
+            mensajeEstado = fuerzaY < 40 ? "Tiro corto. Falto potencia." : "Tiro desviado.";
+        }
+
+        await Task.Delay(800);
+
+        if (intentos >= 3)
+        {
+            await OnFinalizado.InvokeAsync(canastas >= 2);
+        }
+        else
+        {
+            posBalonX = 160;
+            posBalonY = 250;
+            bloqueado = false;
+            mensajeEstado = "Apunta el siguiente lanzamiento.";
+            StateHasChanged();
+        }
+    }
+}

@@ -1,0 +1,108 @@
+﻿@namespace TheNextPick.Components
+
+<div class="sports-card p-4 my-3 text-start" style="max-width: 520px; margin: auto;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="badge bg-primary text-uppercase px-2 py-1 small fw-bold">Lectura Ofensiva</span>
+        <span class="text-secondary small fw-bold">RELOJ: 4 SEG</span>
+    </div>
+
+    <h5 class="text-white fw-bold mb-2">@escenarioActual.Titulo</h5>
+    <div class="p-3 mb-4 rounded bg-dark border border-secondary text-light small" style="line-height: 1.6;">
+        @escenarioActual.Situacion
+    </div>
+
+    @if (!respondido)
+    {
+        <div class="d-grid gap-2">
+            <button class="btn btn-outline-light p-3 text-start border-secondary" @onclick='() => Resolver("Penetrar")'>
+                <div class="text-uppercase small text-secondary fw-bold">Accion A</div>
+                <div class="fw-semibold text-white">Penetrar con agresividad hacia el aro</div>
+            </button>
+            <button class="btn btn-outline-light p-3 text-start border-secondary" @onclick='() => Resolver("Pasar")'>
+                <div class="text-uppercase small text-secondary fw-bold">Accion B</div>
+                <div class="fw-semibold text-white">Descargar el pase al companero liberado</div>
+            </button>
+            <button class="btn btn-outline-light p-3 text-start border-secondary" @onclick='() => Resolver("Tirar")'>
+                <div class="text-uppercase small text-secondary fw-bold">Accion C</div>
+                <div class="fw-semibold text-white">Elevarse en suspension para el tiro exterior</div>
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="alert @(acerto ? "alert-success" : "alert-danger") p-3 text-center border-0 mb-0">
+            <div class="fw-bold fs-6 mb-1">@(acerto ? "Lectura Correcta" : "Decision Equivocada")</div>
+            <div class="small">@mensajeResultado</div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public EventCallback<bool> OnFinalizado { get; set; }
+
+    private class EscenarioLectura
+    {
+        public string Titulo { get; set; } = "";
+        public string Situacion { get; set; } = "";
+        public string OpcionCorrecta { get; set; } = "";
+        public string ExplicacionAcierto { get; set; } = "";
+        public string ExplicacionFallo { get; set; } = "";
+    }
+
+    private static readonly List<EscenarioLectura> Escenarios = new()
+    {
+        new()
+        {
+            Titulo = "Cobertura Drop del Pivot Rival",
+            Situacion = "Sales del bloqueo directo. El pivot rival retrocede a proteger la pintura a 3 metros de distancia, dandote espacio abierto en la media distancia.",
+            OpcionCorrecta = "Tirar",
+            ExplicacionAcierto = "Aprovechaste el espacio concedido para encestar el tiro comodo sin oposicion.",
+            ExplicacionFallo = "Atacaste la pintura donde el pivot rival te esperaba bien posicionado para taponar."
+        },
+        new()
+        {
+            Titulo = "Ayuda Defensiva desde la Esquina Fuerte",
+            Situacion = "Penetras hacia la linea de fondo. Dos defensores cierran tu carril colapsando la llave, dejando al tirador titular solo en la esquina.",
+            OpcionCorrecta = "Pasar",
+            ExplicacionAcierto = "Asistencia perfecta para el triple libre de marca en la esquina.",
+            ExplicacionFallo = "Forzaste el tiro contra dos defensores altos en lugar de encontrar al hombre abierto."
+        },
+        new()
+        {
+            Titulo = "Cierre Defensivo Desbalanceado (Closeout)",
+            Situacion = "Recibes en el perimetro. El alero defensor salta a tapar tu posible tiro de 3 con los pies totalmente despegados del suelo.",
+            OpcionCorrecta = "Penetrar",
+            ExplicacionAcierto = "Atacaste el pie de apoyo del rival desbalanceado y entraste hasta la canasta.",
+            ExplicacionFallo = "Lanzaste apresurado contra el salto del defensor recibiendo el contacto defensivo."
+        },
+        new()
+        {
+            Titulo = "Atrapada en el Perimetro (Trap 2x1)",
+            Situacion = "Te doblan la marca en la esquina del campo impidiendo cualquier carril de carrera hacia el canasto.",
+            OpcionCorrecta = "Pasar",
+            ExplicacionAcierto = "Pase rapido sobre la cabeza para romper el dos contra uno y generar superioridad 4 vs 3.",
+            ExplicacionFallo = "Quisiste driblar entre dos rivales y perdiste el balon en la linea de banda."
+        }
+    };
+
+    private EscenarioLectura escenarioActual = new();
+    private bool respondido = false;
+    private bool acerto = false;
+    private string mensajeResultado = "";
+
+    protected override void OnInitialized()
+    {
+        escenarioActual = Escenarios[Random.Shared.Next(Escenarios.Count)];
+    }
+
+    private async Task Resolver(string seleccion)
+    {
+        respondido = true;
+        acerto = (seleccion == escenarioActual.OpcionCorrecta);
+        mensajeResultado = acerto ? escenarioActual.ExplicacionAcierto : escenarioActual.ExplicacionFallo;
+        StateHasChanged();
+
+        await Task.Delay(1800);
+        await OnFinalizado.InvokeAsync(acerto);
+    }
+}
