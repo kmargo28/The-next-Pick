@@ -33,6 +33,14 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Descargas/The Next Pick/The-next-Pick/Components/DecisionCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEZWNpc2lvbkNhcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Descargas/The Next Pick/The-next-Pick/Components/DraftCombine.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEcmFmdENvbWJpbmUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Descargas/The Next Pick/The-next-Pick/Pages/Counter.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ291bnRlci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 

@@ -207,9 +207,6 @@ D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\ic
 D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\icudt_EFIGS.tptq2av103.dat
 D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\icudt_no_CJK.lfu7j35m59.dat
 D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\Microsoft.DotNet.HotReload.WebAssembly.Browser.yjsbyxld1f.wasm
-D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\The-next-Pick.wao14e74w8.wasm
-D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\The-next-Pick.1964yupbga.pdb
-D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\dotnet.wx86e7glhj.js
 D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\blazor.webassembly.w3qd1tpl0e.js.gz
 D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\Microsoft.AspNetCore.Authorization.wtuaf1iwft.wasm.gz
 D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\Microsoft.AspNetCore.Components.lzv87xd451.wasm.gz
@@ -418,9 +415,6 @@ D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\ic
 D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\icudt_EFIGS.tptq2av103.dat.gz
 D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\icudt_no_CJK.lfu7j35m59.dat.gz
 D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\Microsoft.DotNet.HotReload.WebAssembly.Browser.yjsbyxld1f.wasm.gz
-D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\The-next-Pick.wao14e74w8.wasm.gz
-D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\The-next-Pick.1964yupbga.pdb.gz
-D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\dotnet.wx86e7glhj.js.gz
 D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\The-next-Pick.staticwebassets.runtime.json
 D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\The-next-Pick.staticwebassets.endpoints.json
 D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\The-next-Pick.dll
@@ -1112,10 +1106,6 @@ D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\compressed\xwg9vxjpbw
 D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\compressed\fl7xa7eql5-{0}-tptq2av103-tptq2av103.gz
 D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\compressed\rdu1sqcso4-{0}-lfu7j35m59-lfu7j35m59.gz
 D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\compressed\anlddzcv80-{0}-yjsbyxld1f-yjsbyxld1f.gz
-D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\compressed\pbtg266j02-{0}-wao14e74w8-wao14e74w8.gz
-D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\compressed\kmuu5nt83f-{0}-1964yupbga-1964yupbga.gz
-D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\compressed\x5pvb5tpfy-{0}-wx86e7glhj-wx86e7glhj.gz
-D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\compressed\183i3r35wi-{0}-bp5vhdfzr2-bp5vhdfzr2.gz
 D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\staticwebassets.build.json
 D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\staticwebassets.build.json.cache
 D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\staticwebassets.development.json
@@ -1127,3 +1117,13 @@ D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\refint\The-next-Pick.
 D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\The-next-Pick.pdb
 D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\ref\The-next-Pick.dll
 D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\nuget.config
+D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\The-next-Pick.1s9lq758tk.wasm
+D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\The-next-Pick.v3iuocr245.pdb
+D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\dotnet.ztf3eieqbx.js
+D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\The-next-Pick.1s9lq758tk.wasm.gz
+D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\The-next-Pick.v3iuocr245.pdb.gz
+D:\Descargas\The Next Pick\The-next-Pick\bin\Debug\net10.0\wwwroot\_framework\dotnet.ztf3eieqbx.js.gz
+D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\compressed\pbtg266j02-{0}-1s9lq758tk-1s9lq758tk.gz
+D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\compressed\kmuu5nt83f-{0}-v3iuocr245-v3iuocr245.gz
+D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\compressed\x5pvb5tpfy-{0}-ztf3eieqbx-ztf3eieqbx.gz
+D:\Descargas\The Next Pick\The-next-Pick\obj\Debug\net10.0\compressed\183i3r35wi-{0}-tghiqie16d-tghiqie16d.gz
