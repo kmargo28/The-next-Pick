@@ -1,0 +1,166 @@
+﻿@namespace TheNextPick.Components
+@using TheNextPick.Engine
+@using TheNextPick.Models
+@inject GameStateService GameState
+@implements IDisposable
+
+<div class="sports-card p-4 my-3 text-center position-relative" style="max-width: 620px; margin: auto; background: #0c1017; border: 3px solid #334155;">
+    
+    <!-- ENCABEZADO DE SALA DE PRENSA -->
+    <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+        <span class="badge bg-danger text-white text-uppercase px-3 py-1 fs-6 fw-bold">🎙️ RUEDA DE PRENSA OFICIAL</span>
+        <span class="text-white fw-bold">AFICIONADOS: @(GameState.FansMillones.ToString("0.0"))M FANS</span>
+    </div>
+
+    <!-- ESCENARIO DE PRENSA EN PIXEL ART -->
+    <div class="position-relative mx-auto rounded overflow-hidden my-3" style="width: 100%; height: 210px; border: 2px solid #1f2937; background: #181d26;">
+        <CanchaFondo />
+
+        <!-- MESA DE MICRÓFONOS CON LOGO NBA -->
+        <div class="position-absolute bottom-0 start-50 translate-middle-x" style="width: 240px; height: 60px; background: #000; border: 3px solid #374151; border-bottom: none; z-index: 10;">
+            <div class="d-flex justify-content-center align-items-center h-100 gap-3">
+                <img src="https://a.espncdn.com/i/teamlogos/leagues/500/nba.png" style="height: 28px;" alt="NBA" />
+                <span class="text-white fw-bold nba-title fs-4">PRESS ROOM</span>
+            </div>
+            <!-- Micrófonos montados -->
+            <rect class="position-absolute" style="top: -12px; left: 40px; width: 6px; height: 14px; background: #9ca3af;"></rect>
+            <rect class="position-absolute" style="top: -12px; right: 40px; width: 6px; height: 14px; background: #9ca3af;"></rect>
+        </div>
+
+        <!-- TU JUGADOR DETRÁS DE LOS MICRÓFONOS -->
+        <div class="position-absolute start-50 translate-middle-x" style="bottom: 45px; z-index: 5;">
+            <PixelArtPlayer Estado="@estadoJugador" TieneBalon="false" ColorPrimario="@colorEquipo" AnchoPx="90" AltoPx="115" />
+        </div>
+
+        <!-- DESTELLOS DE FLASH DE CÁMARAS -->
+        <div class="position-absolute top-0 start-0 w-100 h-100 flash-prensa" style="pointer-events: none;"></div>
+    </div>
+
+    <!-- PREGUNTA DEL PERIODISTA -->
+    <div class="p-3 mb-3 rounded bg-dark border border-secondary text-start">
+        <span class="badge bg-secondary mb-1">@preguntaActual.MedioDePrensa</span>
+        <h5 class="text-white fw-bold mb-1">"@preguntaActual.TextoPregunta"</h5>
+        <small class="text-secondary">Elige con inteligencia tu postura ante los medios nacionales.</small>
+    </div>
+
+    @if (!respondido)
+    {
+        <div class="d-grid gap-2 text-start">
+            <button class="btn btn-outline-light p-3 border-secondary text-start" @onclick="() => Responder(preguntaActual.OpcionHumilde)">
+                <span class="badge bg-primary mb-1">EQUIPO PRIMERO</span>
+                <div class="fw-semibold text-white">@preguntaActual.OpcionHumilde.Texto</div>
+            </button>
+            <button class="btn btn-outline-light p-3 border-secondary text-start" @onclick="() => Responder(preguntaActual.OpcionArrogante)">
+                <span class="badge bg-danger mb-1">AUTOCONFIANZA EXTREMA</span>
+                <div class="fw-semibold text-white">@preguntaActual.OpcionArrogante.Texto</div>
+            </button>
+            <button class="btn btn-outline-light p-3 border-secondary text-start" @onclick="() => Responder(preguntaActual.OpcionCorporativa)">
+                <span class="badge bg-secondary mb-1">DIPLOMÁTICA / CORPORATIVA</span>
+                <div class="fw-semibold text-white">@preguntaActual.OpcionCorporativa.Texto</div>
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-dark border border-warning p-3 text-center mb-0">
+            <h5 class="text-warning fw-bold mb-1">@retroalimentacionTitulo</h5>
+            <p class="small text-light mb-0">@retroalimentacionTexto</p>
+        </div>
+    }
+</div>
+
+<style>
+    .flash-prensa {
+        animation: anim-flash 2.5s infinite;
+        background: rgba(255, 255, 255, 0);
+    }
+    @@keyframes anim-flash {
+        0%, 90%, 94%, 98%, 100% { background: rgba(255, 255, 255, 0); }
+        92%, 96% { background: rgba(255, 255, 255, 0.15); }
+    }
+</style>
+
+@code {
+    [Parameter] public EventCallback OnFinalizado { get; set; }
+
+    public class RespuestaPrensa
+    {
+        public string Texto { get; set; } = "";
+        public double DeltaFans { get; set; }
+        public int DeltaHype { get; set; }
+        public int DeltaDT { get; set; }
+        public int DeltaQuimica { get; set; }
+        public string Reaccion { get; set; } = "";
+    }
+
+    public class PreguntaPrensa
+    {
+        public string MedioDePrensa { get; set; } = "ESPN";
+        public string TextoPregunta { get; set; } = "";
+        public RespuestaPrensa OpcionHumilde { get; set; } = new();
+        public RespuestaPrensa OpcionArrogante { get; set; } = new();
+        public RespuestaPrensa OpcionCorporativa { get; set; } = new();
+    }
+
+    private string estadoJugador = "Idle";
+    private string colorEquipo = "#1D428A";
+    private bool respondido = false;
+    private string retroalimentacionTitulo = "";
+    private string retroalimentacionTexto = "";
+
+    private readonly List<PreguntaPrensa> catalogoPreguntas = new()
+    {
+        new()
+        {
+            MedioDePrensa = "The Athletic",
+            TextoPregunta = "¿Sientes que tus compañeros no te están buscando lo suficiente en los momentos decisivos?",
+            OpcionHumilde = new() { Texto = "\"Ganamos y perdemos juntos. Confío plenamente en el sistema y en mis compañeros.\"", DeltaFans = +0.2, DeltaHype = -2, DeltaDT = +10, DeltaQuimica = +15, Reaccion = "El vestuario aplaudió tu lealtad. La química subió notablemente." },
+            OpcionArrogante = new() { Texto = "\"Si el balón estuviera en mis manos cada posesión, llevaríamos diez victorias más.\"", DeltaFans = +0.8, DeltaHype = +18, DeltaDT = -15, DeltaQuimica = -20, Reaccion = "¡Titular viral! Ganaste miles de fans, pero el vestuario está furioso." },
+            OpcionCorporativa = new() { Texto = "\"Revisaremos los videos con el cuerpo técnico para seguir mejorando las lecturas.\"", DeltaFans = +0.1, DeltaHype = 0, DeltaDT = +5, DeltaQuimica = +4, Reaccion = "Respuesta profesional neutra sin controversia." }
+        },
+        new()
+        {
+            MedioDePrensa = "Bleacher Report",
+            TextoPregunta = "Te comparan con leyendas históricas de la liga en tu posición. ¿Crees estar a ese nivel?",
+            OpcionHumilde = new() { Texto = "\"Es un honor, pero aún no he ganado nada en esta liga. Me falta mucho trabajo.\"", DeltaFans = +0.4, DeltaHype = +5, DeltaDT = +8, DeltaQuimica = +8, Reaccion = "La afición admira tu humildad y ética de trabajo." },
+            OpcionArrogante = new() { Texto = "\"A mi edad nadie hacía lo que yo hago en una cancha de baloncesto. Supérenlo.\"", DeltaFans = +1.2, DeltaHype = +25, DeltaDT = -10, DeltaQuimica = -8, Reaccion = "¡Incendio en redes! Tu nombre es tendencia global número uno." },
+            OpcionCorporativa = new() { Texto = "\"Solo me enfoco en el rival de mañana y en clasificar a los Playoffs.\"", DeltaFans = +0.1, DeltaHype = -2, DeltaDT = +4, DeltaQuimica = +2, Reaccion = "Desviaste el debate con madurez corporativa." }
+        },
+        new()
+        {
+            MedioDePrensa = "TNT Sports",
+            TextoPregunta = "La afición rival te abucheó fuertemente en el estadio esta noche. ¿Te afectó?",
+            OpcionHumilde = new() { Texto = "\"Es parte de la pasión del deporte. Su ambiente me obliga a ser mejor.\"", DeltaFans = +0.3, DeltaHype = +4, DeltaDT = +6, DeltaQuimica = +5, Reaccion = "Te ganaste el respeto unánime de los analistas." },
+            OpcionArrogante = new() { Texto = "\"Me encanta silenciarlos. Pagaron una entrada para ver mi espectáculo de todos modos.\"", DeltaFans = +0.9, DeltaHype = +22, DeltaDT = -6, DeltaQuimica = +4, Reaccion = "Te convertiste en el villano favorito de la liga." },
+            OpcionCorporativa = new() { Texto = "\"Estaba concentrado en la pizarra táctica, no escucho la tribuna.\"", DeltaFans = +0.1, DeltaHype = 0, DeltaDT = +4, DeltaQuimica = 0, Reaccion = "Respuesta fría de sangre de hielo." }
+        }
+    };
+
+    private PreguntaPrensa preguntaActual = new();
+
+    protected override void OnInitialized()
+    {
+        var eq = EquipoNBA.ObtenerPorNombre(GameState.JugadorActivo?.EquipoActual ?? "");
+        colorEquipo = eq.ColorPrimario;
+        preguntaActual = catalogoPreguntas[Random.Shared.Next(catalogoPreguntas.Count)];
+    }
+
+    private async Task Responder(RespuestaPrensa r)
+    {
+        respondido = true;
+        GameState.FansMillones = Math.Max(0.1, Math.Round(GameState.FansMillones + r.DeltaFans, 2));
+        GameState.Hype = Math.Clamp(GameState.Hype + r.DeltaHype, 0, 100);
+        GameState.ConfianzaDT = Math.Clamp(GameState.ConfianzaDT + r.DeltaDT, 0, 100);
+        GameState.Quimica = Math.Clamp(GameState.Quimica + r.DeltaQuimica, 0, 100);
+
+        estadoJugador = r.DeltaHype > 10 ? "Celebrando" : "Idle";
+        retroalimentacionTitulo = r.DeltaFans > 0.5 ? "¡DECLARACIONES VIRALES!" : "DECLARACIONES RESPETADAS";
+        retroalimentacionTexto = r.Reaccion;
+        StateHasChanged();
+
+        await Task.Delay(2000);
+        await OnFinalizado.InvokeAsync();
+    }
+
+    public void Dispose() { }
+}

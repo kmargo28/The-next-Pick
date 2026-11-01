@@ -1,50 +1,45 @@
 ﻿@namespace TheNextPick.Components
 @implements IDisposable
 
-<div class="sports-card p-3 my-3 text-center" style="max-width: 480px; margin: auto; background: #0c1017; border: 1px solid rgba(255, 255, 255, 0.15);">
+<div class="sports-card p-3 my-3 text-center" style="max-width: 580px; margin: auto; background: #0c1017; border: 2px solid #2d3748;">
     <div class="d-flex justify-content-between align-items-center mb-2 px-2">
-        <span class="badge bg-danger text-uppercase px-2 py-1 small fw-bold">Sprint de 3/4 de Cancha</span>
-        <span class="text-white small fw-bold">DISTANCIA: @((int)progresoSprint)% / 100%</span>
+        <span class="badge bg-danger text-uppercase px-2 py-1 small fw-bold">PRUEBA 2/5: SPRINT 3/4 CANCHA</span>
+        <span class="text-white small fw-bold">TIEMPO: @tiempoTranscurrido.ToString("0.00")s (@puntos / 20 PTS)</span>
     </div>
 
-    <p class="text-secondary small mb-2">Alterna los botones IZQ y DER con cadencia rápida para esprintar la duela.</p>
+    <div class="position-relative mx-auto rounded overflow-hidden" style="width: 100%; height: 230px; border: 2px solid #2d3748;">
+        <CanchaFondo />
 
-    <!-- PISTA DE SPRINT CON JUGADOR SVG -->
-    <div class="position-relative mx-auto rounded overflow-hidden" style="width: 320px; height: 160px; background: #141a24; border: 2px solid #2d3748;">
-        <svg viewBox="0 0 320 160" style="width: 100%; height: 100%;">
-            <!-- Duela de carrera con marcas de yardas -->
-            <line x1="0" y1="80" x2="320" y2="80" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="10" />
-            <line x1="280" y1="20" x2="280" y2="140" stroke="#f59e0b" stroke-width="4" />
-            <text x="285" y="40" fill="#f59e0b" font-size="10" font-weight="bold">META</text>
-
-            <!-- Corredor estilizado -->
-            <g transform="translate(@(20 + (progresoSprint * 2.5)), 75)">
-                <circle cx="0" cy="-20" r="8" fill="#e65100" stroke="#fff" stroke-width="1.5" />
-                <line x1="0" y1="-12" x2="0" y2="10" stroke="#fff" stroke-width="3" />
-                <line x1="0" y1="10" x2="-8" y2="25" stroke="#f59e0b" stroke-width="2.5" />
-                <line x1="0" y1="10" x2="8" y2="25" stroke="#f59e0b" stroke-width="2.5" />
-            </g>
+        <!-- Línea de Meta -->
+        <svg viewBox="0 0 40 230" class="position-absolute end-0 top-0 h-100" style="width: 40px; pointer-events: none; z-index: 5;">
+            <line x1="20" y1="0" x2="20" y2="230" stroke="#f59e0b" stroke-width="5" stroke-dasharray="8" />
+            <text x="5" y="115" fill="#f59e0b" font-size="11" font-weight="bold" transform="rotate(-90 15,115)">META</text>
         </svg>
 
-        <div class="position-absolute bottom-0 start-0 w-100 bg-dark progress" style="height: 6px;">
+        <!-- Corredor Pixel Art -->
+        <div class="position-absolute" style="left: @(20 + (progresoSprint * 4.4))px; bottom: 15px; transition: left 0.06s linear; z-index: 6;">
+            <PixelArtPlayer Estado="@(finalizado ? "Celebrando" : (activo ? "Bote" : "Idle"))" TieneBalon="false" ColorPrimario="#1D428A" AnchoPx="85" AltoPx="110" />
+        </div>
+
+        <div class="position-absolute bottom-0 start-0 w-100 bg-dark progress" style="height: 6px; z-index: 10;">
             <div class="progress-bar bg-warning" style="width: @progresoSprint%;"></div>
         </div>
     </div>
 
     @if (!activo && !finalizado)
     {
-        <button class="btn btn-warning py-2 px-5 fw-bold text-dark fs-5 mt-3" @onclick="IniciarSprint">
-            ALINEARSE EN LÍNEA DE FONDO
+        <button class="btn btn-warning py-3 px-5 fw-bold text-dark fs-5 mt-3 w-100" @onclick="IniciarSprint">
+            ALINEARSE EN LÍNEA DE SALIDA (CRONÓMETRO ACTIVO) ⏱️
         </button>
     }
     else if (activo)
     {
         <div class="d-flex justify-content-center gap-3 mt-3">
-            <button class="btn @(pieEsperado == 0 ? "btn-warning" : "btn-outline-secondary") py-3 px-4 fw-bold fs-5 text-dark" 
+            <button class="btn @(pieEsperado == 0 ? "btn-warning text-dark scale-tap" : "btn-outline-secondary text-muted") py-3 px-4 fw-bold fs-5 flex-grow-1" 
                     @onclick="() => Pisar(0)">
                 PIE IZQ 👟
             </button>
-            <button class="btn @(pieEsperado == 1 ? "btn-warning" : "btn-outline-secondary") py-3 px-4 fw-bold fs-5 text-dark" 
+            <button class="btn @(pieEsperado == 1 ? "btn-warning text-dark scale-tap" : "btn-outline-secondary text-muted") py-3 px-4 fw-bold fs-5 flex-grow-1" 
                     @onclick="() => Pisar(1)">
                 PIE DER 👟
             </button>
@@ -62,15 +57,27 @@
     private bool activo = false;
     private bool finalizado = false;
     private DateTime inicioTiempo;
-    private string mensajeGuia = "Prepárate para reaccionar al toque.";
+    private double tiempoTranscurrido = 0;
+    private int puntos = 0;
+    private string mensajeGuia = "Alterna los botones con rapidez rítmica. Cada segundo de retraso te costará posiciones en el Draft.";
+    private CancellationTokenSource cts = new();
 
-    private void IniciarSprint()
+    private async Task IniciarSprint()
     {
         activo = true;
         progresoSprint = 0;
         pieEsperado = 0;
         inicioTiempo = DateTime.UtcNow;
-        mensajeGuia = "¡Alterna rápido los pies!";
+
+        _ = Task.Run(async () =>
+        {
+            while (activo && !cts.Token.IsCancellationRequested)
+            {
+                tiempoTranscurrido = (DateTime.UtcNow - inicioTiempo).TotalSeconds;
+                await InvokeAsync(StateHasChanged);
+                await Task.Delay(40, cts.Token);
+            }
+        });
     }
 
     private async void Pisar(int pie)
@@ -79,7 +86,7 @@
 
         if (pie == pieEsperado)
         {
-            progresoSprint += 7.5;
+            progresoSprint = Math.Min(100, progresoSprint + 7.5);
             pieEsperado = (pieEsperado == 0) ? 1 : 0;
             StateHasChanged();
 
@@ -87,10 +94,17 @@
             {
                 finalizado = true;
                 activo = false;
-                var segundos = (DateTime.UtcNow - inicioTiempo).TotalSeconds;
-                int puntos = segundos < 3.8 ? 35 : (segundos < 5.0 ? 25 : 15);
+                cts.Cancel();
+                tiempoTranscurrido = (DateTime.UtcNow - inicioTiempo).TotalSeconds;
 
-                mensajeGuia = $"¡Crucaste la meta en {segundos.ToString("0.00")}s! (+{puntos} pts)";
+                // Penalización estricta por tiempo
+                if (tiempoTranscurrido <= 3.15) puntos = 20; // Récord NBA Combine
+                else if (tiempoTranscurrido <= 3.45) puntos = 15;
+                else if (tiempoTranscurrido <= 3.85) puntos = 9;
+                else if (tiempoTranscurrido <= 4.40) puntos = 4;
+                else puntos = 1; // Demora crítica
+
+                mensajeGuia = $"¡Tiempo final: {tiempoTranscurrido.ToString("0.00")}s! (+{puntos} PTS).";
                 StateHasChanged();
 
                 await Task.Delay(1300);
@@ -99,5 +113,9 @@
         }
     }
 
-    public void Dispose() { }
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+    }
 }

@@ -1,0 +1,27 @@
+﻿@namespace TheNextPick.Components
+@using TheNextPick.Engine
+@inject GameStateService GameState
+
+<div class="card bg-black border-secondary p-3 my-2 text-start rounded">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-warning fw-bold small text-uppercase">INSIGNIAS PASIVAS (BADGES)</span>
+        <span class="badge bg-dark border border-secondary text-secondary">@GameState.CatalogoInsignias.Count(b => b.Desbloqueada) / @GameState.CatalogoInsignias.Count DESBLOQUEADAS</span>
+    </div>
+
+    <div class="row g-2">
+        @foreach (var badge in GameState.CatalogoInsignias)
+        {
+            <div class="col-6 col-md-4">
+                <div class="p-2 rounded border h-100 @(badge.Desbloqueada ? "bg-dark border-warning" : "bg-black border-secondary opacity-50")">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="fs-4">@badge.Icono</span>
+                        <strong class="small @(badge.Desbloqueada ? "text-warning" : "text-muted")">@badge.Nombre</strong>
+                    </div>
+                    <div class="text-secondary" style="font-size: 0.65rem; line-height: 1.2;">
+                        @(badge.Desbloqueada ? badge.BeneficioTexto : badge.Descripcion)
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

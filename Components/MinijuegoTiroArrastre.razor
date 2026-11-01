@@ -4,75 +4,67 @@
 @inject GameStateService GameState
 @implements IDisposable
 
-<div class="sports-card p-4 my-3 text-center position-relative" style="max-width: 640px; margin: auto; background: #0b0e14; border: 3px solid #000; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+<div class="sports-card p-3 my-3 text-center position-relative" style="max-width: 640px; margin: auto; background: #0c1017; border: 3px solid #000; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
     
-    <!-- ENCABEZADO ARCADE -->
     <div class="d-flex justify-content-between align-items-center mb-2 px-2">
-        <span class="badge bg-warning text-dark text-uppercase px-3 py-1 fs-6 fw-bold border border-dark">🏀 TIRO ARCADE</span>
-        <span class="text-white fw-bold fs-5">CANASTAS: @canastas / @intentosMax (Intento @(Math.Min(intentoActual, intentosMax)))</span>
+        <span class="badge bg-warning text-dark text-uppercase px-3 py-1 fs-6 fw-bold border border-dark">🏀 TIRO DE ARRASTRE ARCADE</span>
+        <span class="text-white fw-bold fs-5">CANASTAS: @canastas / @intentosMax (Intento @(Math.Min(intentoActual, intentosMax))/@intentosMax)</span>
     </div>
 
-    <!-- PANTALLA PRINCIPAL DE JUEGO INTERACTIVA -->
+    <!-- PISTA DE JUEGO -->
     <div class="position-relative mx-auto rounded overflow-hidden" 
-         style="width: 100%; height: 300px; border: 3px solid #000; background: #111; touch-action: none; cursor: @(arrastrando ? "grabbing" : "grab");"
-         @onpointerdown="IniciarArrastre"
-         @onpointermove="ActualizarArrastre"
-         @onpointerup="SoltarTiro">
+         style="width: 100%; height: 300px; border: 3px solid #000; background: #111; touch-action: none;">
         
         <CanchaFondo />
 
-        <!-- CANASTA ARCADE A LA DERECHA -->
-        <svg viewBox="0 0 140 180" class="position-absolute end-0" style="width: 130px; height: 170px; top: 40px; pointer-events: none;">
-            <!-- Poste y Tablero -->
+        <!-- CANASTA A LA DERECHA -->
+        <svg viewBox="0 0 140 180" class="position-absolute end-0" style="width: 130px; height: 170px; top: 40px; pointer-events: none; z-index: 5;">
             <line x1="110" y1="10" x2="110" y2="160" stroke="#000" stroke-width="8" />
             <line x1="110" y1="10" x2="110" y2="160" stroke="#cbd5e1" stroke-width="4" />
-            
             <rect x="95" y="15" width="8" height="60" fill="#fff" stroke="#000" stroke-width="2" />
             <rect x="97" y="32" width="4" height="26" fill="none" stroke="#e11d48" stroke-width="2" />
 
-            <!-- Aro Naranja -->
-            <line x1="60" y1="52" x2="95" y2="52" stroke="#ff4500" stroke-width="5" stroke-linecap="round" />
+            <line x1="58" y1="52" x2="95" y2="52" stroke="#ff4500" stroke-width="5" stroke-linecap="round" />
             
-            <!-- Red estilo pixel con animación de choque -->
             <g class="@(netSwish ? "red-swish-anim" : "")">
-                <path d="M 62,54 L 66,80 L 88,80 L 92,54 Z" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="3" />
-                <line x1="66" y1="80" x2="70" y2="92" stroke="#fff" stroke-width="2" />
+                <path d="M 60,54 L 64,80 L 88,80 L 92,54 Z" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="3" />
+                <line x1="64" y1="80" x2="68" y2="92" stroke="#fff" stroke-width="2" />
                 <line x1="88" y1="80" x2="84" y2="92" stroke="#fff" stroke-width="2" />
             </g>
 
-            <!-- Aro delantero -->
-            <ellipse cx="76" cy="52" rx="15" ry="3" fill="none" stroke="#000" stroke-width="3" />
-            <ellipse cx="76" cy="52" rx="14" ry="2.5" fill="none" stroke="#ff4500" stroke-width="2" />
+            <ellipse cx="76" cy="52" rx="16" ry="3.5" fill="none" stroke="#000" stroke-width="3" />
+            <ellipse cx="76" cy="52" rx="15" ry="3" fill="none" stroke="#ff4500" stroke-width="2" />
         </svg>
 
-        <!-- DEFENSOR SCOTT PILGRIM RIVAL (Taponando) -->
-        <div class="position-absolute" style="right: 170px; bottom: 20px; transform: scaleX(-1);">
-            <PixelArtPlayer Estado="@(volando ? "Saltando" : "Idle")" ColorPrimario="#475569" AnchoPx="100" AltoPx="120" />
+        <!-- DEFENSOR: SIN BALÓN Y CON BRAZOS EN MARCA -->
+        <div class="position-absolute" style="right: 170px; bottom: 20px; transform: scaleX(-1); pointer-events: none; z-index: 6;">
+            <PixelArtPlayer Estado="@(volando ? "Saltando" : "Defendiendo")" TieneBalon="false" ColorPrimario="#475569" AnchoPx="100" AltoPx="120" />
         </div>
 
-        <!-- TU JUGADOR SCOTT PILGRIM -->
-        <div class="position-absolute" style="left: 60px; bottom: 20px;">
-            <PixelArtPlayer Estado="@estadoJugador" ColorPrimario="@colorEquipo" AnchoPx="105" AltoPx="125" />
+        <!-- ATACANTE: TU JUGADOR -->
+        <div class="position-absolute" style="left: 60px; bottom: 20px; pointer-events: none; z-index: 6;">
+            <PixelArtPlayer Estado="@estadoJugador" TieneBalon="@(!volando)" ColorPrimario="@colorEquipo" AnchoPx="105" AltoPx="125" />
         </div>
 
-        <!-- LÍNEA DE TRAYECTORIA PROYECTADA EN PUNTOS RETRO -->
+        <!-- TRAYECTORIA EN PARÁBOLA PROYECTADA -->
         @if (arrastrando)
         {
-            <svg viewBox="0 0 600 300" class="position-absolute top-0 start-0 w-100 h-100" style="pointer-events: none;">
-                @for (int p = 1; p <= 6; p++)
+            <svg viewBox="0 0 600 300" class="position-absolute top-0 start-0 w-100 h-100" style="pointer-events: none; z-index: 10;">
+                <line x1="110" y1="180" x2="@cursorX" y2="@cursorY" stroke="#fbbf24" stroke-width="3" stroke-dasharray="4" />
+                @for (int p = 1; p <= 8; p++)
                 {
-                    double t = p * 0.15;
-                    double dotX = 100 + (velocidadX * t * 12);
-                    double dotY = 190 - (velocidadY * t * 10 - 0.5 * 30 * t * t);
-                    <circle cx="@dotX" cy="@dotY" r="@(5 - (p * 0.5))" fill="#fbbf24" stroke="#000" stroke-width="1.5" />
+                    double t = p * 0.12;
+                    double dotX = 110 + (velocidadX * t * 14);
+                    double dotY = 180 - (velocidadY * t * 11 - 0.5 * 32 * t * t);
+                    <circle cx="@dotX" cy="@dotY" r="@(5.5 - (p * 0.4))" fill="#f59e0b" stroke="#000" stroke-width="1.5" />
                 }
             </svg>
         }
 
-        <!-- BALÓN VOLANDO EN PARÁBOLA POR LA PANTALLA -->
+        <!-- BALÓN VOLANDO EN PARÁBOLA -->
         @if (volando)
         {
-            <div class="position-absolute" style="left: @(balonX)px; top: @(balonY)px; transform: translate(-50%, -50%); pointer-events: none;">
+            <div class="position-absolute" style="left: @(balonX)px; top: @(balonY)px; transform: translate(-50%, -50%); pointer-events: none; z-index: 15;">
                 <svg width="28" height="28" viewBox="0 0 28 28" class="balon-volando-giro">
                     <circle cx="14" cy="14" r="12" fill="#e65100" stroke="#000" stroke-width="2.5" />
                     <line x1="2" y1="14" x2="26" y2="14" stroke="#000" stroke-width="2" />
@@ -81,48 +73,37 @@
             </div>
         }
 
-        <!-- CARTEL FLOTANTE DE RESULTADO ARCADE ("SWISH!", "CLANK!") -->
+        <!-- POPUP ARCADE -->
         @if (!string.IsNullOrEmpty(textoArcadePop))
         {
-            <div class="position-absolute top-50 start-50 translate-middle text-center arcade-pop-anim" style="pointer-events: none; z-index: 20;">
+            <div class="position-absolute top-50 start-50 translate-middle text-center arcade-pop-anim" style="pointer-events: none; z-index: 25;">
                 <span class="display-3 fw-bold @colorTextoPop nba-title" style="-webkit-text-stroke: 2px #000; text-shadow: 4px 4px 0 #000;">
                     @textoArcadePop
                 </span>
             </div>
         }
 
-        <!-- GUÍA DE AYUDA SOBRE EL BALÓN -->
-        @if (!arrastrando && !volando && estadoJugador == "Bote")
-        {
-            <div class="position-absolute" style="left: 105px; bottom: 65px; pointer-events: none;">
-                <span class="badge bg-warning text-dark border border-dark fw-bold pulse-guia">
-                    ¡ARRASTRA HACIA ATRÁS Y SUELTA! ➔
-                </span>
-            </div>
-        }
+        <!-- CAPA TRANSPARENTE DE ARRASTRE -->
+        <div class="position-absolute top-0 start-0 w-100 h-100" 
+             style="cursor: @(volando ? "default" : (arrastrando ? "grabbing" : "grab")); z-index: 20;"
+             @onpointerdown="IniciarArrastre"
+             @onpointermove="MoverArrastre"
+             @onpointerup="FinalizarTiro">
+        </div>
     </div>
 
-    <!-- INSTRUCCIONES ABAJO -->
-    <div class="mt-3 text-secondary small fw-bold">
-        🎯 Toca y arrastra el balón hacia abajo/izquierda para graduar el arco de tiro. Suéltalo para lanzar a la canasta.
+    <div class="mt-2 text-warning small fw-bold">
+        🎯 Haz clic sobre la cancha, arrastra hacia abajo e izquierda para elevar la comba y suelta para lanzar.
     </div>
 </div>
 
 <style>
     .balon-volando-giro {
-        animation: anim-rotacion 0.4s infinite linear;
+        animation: anim-rotacion 0.3s infinite linear;
     }
     @@keyframes anim-rotacion {
         from { transform: rotate(0deg); }
         to { transform: rotate(360deg); }
-    }
-
-    .pulse-guia {
-        animation: anim-pulse 0.8s infinite alternate ease-in-out;
-    }
-    @@keyframes anim-pulse {
-        0% { transform: scale(1); }
-        100% { transform: scale(1.08); }
     }
 
     .arcade-pop-anim {
@@ -156,11 +137,13 @@
 
     private double startPointerX;
     private double startPointerY;
-    private double velocidadX = 0;
-    private double velocidadY = 0;
+    private double cursorX = 110;
+    private double cursorY = 180;
+    private double velocidadX = 20;
+    private double velocidadY = 24;
 
-    private double balonX = 100;
-    private double balonY = 190;
+    private double balonX = 110;
+    private double balonY = 180;
 
     private int canastas = 0;
     private int intentoActual = 1;
@@ -182,48 +165,49 @@
         arrastrando = true;
         startPointerX = e.ClientX;
         startPointerY = e.ClientY;
-        velocidadX = 0;
-        velocidadY = 0;
+        cursorX = 110;
+        cursorY = 180;
+        velocidadX = 18;
+        velocidadY = 22;
         estadoJugador = "PreparandoTiro";
         textoArcadePop = "";
     }
 
-    private void ActualizarArrastre(PointerEventArgs e)
+    private void MoverArrastre(PointerEventArgs e)
     {
         if (!arrastrando || volando) return;
-        
-        // Invertido tipo resorte/slingshot
+
         double dx = (startPointerX - e.ClientX) * 0.45;
         double dy = (e.ClientY - startPointerY) * 0.45;
 
-        velocidadX = Math.Clamp(dx, 8, 38);
-        velocidadY = Math.Clamp(dy, 12, 42);
+        cursorX = 110 - dx;
+        cursorY = 180 + dy;
+
+        velocidadX = Math.Clamp(15 + dx, 10, 36);
+        velocidadY = Math.Clamp(18 + dy, 12, 42);
         StateHasChanged();
     }
 
-    private async Task SoltarTiro(PointerEventArgs e)
+    private async Task FinalizarTiro(PointerEventArgs e)
     {
         if (!arrastrando || volando) return;
         arrastrando = false;
         volando = true;
         estadoJugador = "Lanzando";
 
-        // Coordenadas iniciales en las manos del jugador
-        balonX = 100;
+        balonX = 110;
         balonY = 180;
         double vx = velocidadX;
         double vy = -velocidadY;
         double gravedad = 1.35;
 
-        // Bucle de física de parábola
-        for (int i = 0; i < 35; i++)
+        for (int i = 0; i < 32; i++)
         {
-            balonX += vx * 0.55;
-            balonY += vy * 0.55;
+            balonX += vx * 0.58;
+            balonY += vy * 0.58;
             vy += gravedad;
 
-            // Detección del aro (Ubicado en x ~ 530, y ~ 90)
-            if (balonX >= 480 && balonX <= 545 && balonY >= 75 && balonY <= 110)
+            if (balonX >= 485 && balonX <= 545 && balonY >= 70 && balonY <= 112)
             {
                 break;
             }
@@ -232,8 +216,7 @@
             await Task.Delay(16);
         }
 
-        // Evaluar precisión del tiro respecto al centro del aro
-        bool esCanasta = (balonX >= 485 && balonX <= 540 && balonY >= 75 && balonY <= 115);
+        bool esCanasta = (balonX >= 495 && balonX <= 540 && balonY >= 72 && balonY <= 112);
 
         if (esCanasta)
         {
@@ -243,7 +226,7 @@
             textoArcadePop = "SWISH!! 🎯";
             colorTextoPop = "text-success";
             StateHasChanged();
-            await Task.Delay(300);
+            await Task.Delay(280);
             netSwish = false;
         }
         else
@@ -251,10 +234,16 @@
             estadoJugador = "Bote";
             textoArcadePop = "CLANK! ❌";
             colorTextoPop = "text-danger";
-            StateHasChanged();
+            for (int r = 0; r < 6; r++)
+            {
+                balonX -= 3;
+                balonY += 6;
+                StateHasChanged();
+                await Task.Delay(18);
+            }
         }
 
-        await Task.Delay(1100);
+        await Task.Delay(800);
         volando = false;
         textoArcadePop = "";
 

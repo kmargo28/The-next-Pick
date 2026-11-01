@@ -1,0 +1,107 @@
+﻿@namespace TheNextPick.Components
+@using TheNextPick.Engine
+@inject GameStateService GameState
+
+<div class="sports-card p-3 my-2 text-center" style="max-width: 660px; margin: auto; background: #080b11; border: 2px solid #1f2937;">
+    
+    <!-- BANNER SUPERIOR CON LOGO Y TROFEO LARRY O'BRIEN -->
+    <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+        <div class="text-start">
+            <span class="text-danger small fw-bold">■ PLAYOFFS NBA @(2026 + GameState.TemporadaActual)</span>
+            <h2 class="text-white fw-bold mb-0 nba-title">CAMINO AL ANILLO</h2>
+        </div>
+        <div class="text-end">
+            <span class="badge fs-6 px-3 py-1" style="background: #eab308; color: #000; font-weight: 900;">
+                🏆 LARRY O'BRIEN
+            </span>
+        </div>
+    </div>
+
+    <!-- STEPPER OFICIAL DE 4 RONDAS -->
+    <div class="d-flex justify-content-between align-items-center my-3 px-1">
+        <div class="step-item text-center flex-grow-1 @(GameState.RondaIndicePlayoffs >= 1 ? "step-active" : "step-muted")">
+            <span class="step-indicator"></span>
+            <small class="d-block mt-1">1RA RONDA</small>
+        </div>
+        <div class="step-item text-center flex-grow-1 @(GameState.RondaIndicePlayoffs >= 2 ? "step-active" : "step-muted")">
+            <span class="step-indicator"></span>
+            <small class="d-block mt-1">SEMIS CONF</small>
+        </div>
+        <div class="step-item text-center flex-grow-1 @(GameState.RondaIndicePlayoffs >= 3 ? "step-active" : "step-muted")">
+            <span class="step-indicator"></span>
+            <small class="d-block mt-1">FINAL CONF</small>
+        </div>
+        <div class="step-item text-center flex-grow-1 @(GameState.RondaIndicePlayoffs >= 4 ? "step-active" : "step-muted")">
+            <span class="step-indicator"></span>
+            <small class="d-block mt-1">FINALES NBA</small>
+        </div>
+    </div>
+
+    <!-- MINIJUEGOS CON DESTRUCCIÓN Y REBARAJADO FORZADO VÍA @key -->
+    @if (GameState.RondaIndicePlayoffs < 4)
+    {
+        @switch (GameState.FormatoPlayoffTemporada)
+        {
+            case FormatoPlayoffs.PizarraYFinalClutch:
+                <PlayoffPizarraMemoria @key="@($"pizarra-{GameState.RondaIndicePlayoffs}")" 
+                                       Ronda="@GameState.RondaIndicePlayoffs" 
+                                       OnCompletado="ProcesarResultadoMinijuego" />
+                break;
+            case FormatoPlayoffs.SenasYTirosLibres:
+                <PlayoffSenasDT @key="@($"senas-{GameState.RondaIndicePlayoffs}")" 
+                                OnCompletado="ProcesarResultadoMinijuego" />
+                break;
+            case FormatoPlayoffs.TirosLibresYClutch:
+                <PlayoffTirosLibresHostiles @key="@($"tiroslibres-{GameState.RondaIndicePlayoffs}")" 
+                                            OnCompletado="ProcesarResultadoMinijuego" />
+                break;
+            case FormatoPlayoffs.CampanaClutchCompleta:
+                <PlayoffBarraLimite @key="@($"clutch-{GameState.RondaIndicePlayoffs}")" 
+                                    OnCompletado="ProcesarResultadoMinijuego" />
+                break;
+        }
+    }
+    else
+    {
+        <!-- RONDA 4: LAS GRANDES FINALES DE LA NBA -->
+        @if (GameState.FormatoPlayoffTemporada == FormatoPlayoffs.SenasYTirosLibres)
+        {
+            <PlayoffTirosLibresHostiles @key="@($"finales-tiros-{GameState.RondaIndicePlayoffs}")" 
+                                        OnCompletado="ProcesarResultadoMinijuego" />
+        }
+        else
+        {
+            <PlayoffBarraLimite @key="@($"finales-clutch-{GameState.RondaIndicePlayoffs}")" 
+                                OnCompletado="ProcesarResultadoMinijuego" />
+        }
+    }
+</div>
+
+<style>
+    .step-item .step-indicator {
+        display: block;
+        height: 5px;
+        background: #1f2937;
+        border-radius: 2px;
+        margin: 0 4px;
+        transition: all 0.2s;
+    }
+    .step-active .step-indicator {
+        background: #00e676;
+        box-shadow: 0 0 10px #00e676;
+    }
+    .step-active small {
+        color: #fff;
+        font-weight: bold;
+    }
+    .step-muted small {
+        color: #64748b;
+    }
+</style>
+
+@code {
+    private void ProcesarResultadoMinijuego(bool ganado)
+    {
+        GameState.AvanzarRondaPlayoffs(ganado);
+    }
+}

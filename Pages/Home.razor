@@ -7,26 +7,13 @@
 @inject IJSRuntime JS
 @implements IDisposable
 
-<div class="container py-4" style="max-width: 840px;">
+<div class="container py-4" style="max-width: 860px;">
 
     @if (GameState.FaseActual == FaseJuego.Creacion)
     {
         <div class="sports-card p-4 border border-secondary text-center">
-            <div class="d-flex justify-content-center align-items-center gap-3 mb-2">
-                <img src="https://a.espncdn.com/i/teamlogos/leagues/500/nba.png" style="height: 44px;" alt="NBA" />
-                <h1 class="nba-title display-5 text-white mb-0">THE NEXT PICK</h1>
-            </div>
-            <p class="text-secondary small mb-4">Simulador de Carrera NBA 2026-2027</p>
-
-            @if (tienePartidaGuardada)
-            {
-                <div class="d-grid mb-4">
-                    <button class="btn btn-outline-success py-2 fw-bold" @onclick="CargarPartidaGuardada">
-                        Continuar Carrera Guardada
-                    </button>
-                </div>
-                <hr class="border-secondary my-3" />
-            }
+            <h1 class="nba-title display-5 text-white mb-0">THE NEXT PICK</h1>
+            <p class="text-secondary small mb-4">Simulador de Carrera NBA con Consecuencias Reales</p>
 
             <div class="row g-2 mb-3 text-start">
                 <div class="col-8">
@@ -40,10 +27,6 @@
                         <option value="Estados Unidos">🇺🇸 Estados Unidos</option>
                         <option value="España">🇪🇸 España</option>
                         <option value="Argentina">🇦🇷 Argentina</option>
-                        <option value="Francia">🇫🇷 Francia</option>
-                        <option value="Canadá">🇨🇦 Canadá</option>
-                        <option value="República Dominicana">🇩🇴 Rep. Dominicana</option>
-                        <option value="México">🇲🇽 México</option>
                     </select>
                 </div>
             </div>
@@ -64,22 +47,9 @@
                 </div>
             </div>
 
-            <div class="mb-4 text-start">
-                <label class="form-label text-secondary small fw-bold">RITMO DE LA SIMULACIÓN</label>
-                <select class="form-select bg-dark text-white border-secondary" @bind="ritmoInput">
-                    <option value="@RitmoSimulacion.Detallada">Temporada Rápida (4 decisiones + postemporada)</option>
-                    <option value="@RitmoSimulacion.Expres">Modo Exprés (Cada 2 temporadas)</option>
-                </select>
-            </div>
-
-            <div class="d-grid gap-2">
-                <button class="btn btn-warning py-3 fw-bold text-dark" @onclick="IniciarRutaDraft">
-                    Entrar al NBA Draft Combine
-                </button>
-                <button class="btn btn-outline-light py-2" @onclick="IniciarRutaAleatoria">
-                    Sorteo Directo a Franquicia
-                </button>
-            </div>
+            <button class="btn btn-warning py-3 fw-bold text-dark fs-5 w-100" @onclick="IniciarRutaDraft">
+                ENTRAR AL NBA DRAFT COMBINE 🎯
+            </button>
         </div>
     }
     else if (GameState.FaseActual == FaseJuego.DraftCombine)
@@ -88,55 +58,69 @@
     }
     else if (GameState.FaseActual == FaseJuego.EleccionEquipo)
     {
-        <div class="sports-card p-4 text-center">
-            <h2 class="nba-title display-4 text-warning mb-0">NOCHE DEL DRAFT</h2>
-            <p class="text-secondary">Puntos de Combine: <strong class="text-white">@GameState.PuntosCombine</strong></p>
-
-            <div class="p-3 my-3 rounded bg-dark border border-warning">
-                <h4 class="nba-title text-white mb-0 fs-2">SELECCIÓN OFICIAL: PICK #@GameState.PickAsignado</h4>
+        var eqElegido = GameState.EquipoQueTeEligio ?? EquipoNBA.Franquicias[0];
+        <div class="sports-card p-4 text-center my-3 border border-warning" style="max-width: 620px; margin: auto;">
+            <h1 class="nba-title text-warning display-4">NOCHE DEL DRAFT 2026</h1>
+            <div class="my-4 p-4 rounded bg-black border border-warning">
+                <span class="text-secondary small fw-bold text-uppercase d-block mb-2">PICK #@GameState.PickAsignado DEL DRAFT:</span>
+                <img src="@eqElegido.LogoUrl" style="height: 80px; width: 80px; object-fit: contain;" class="my-2" alt="Logo" />
+                <h3 class="text-white fw-bold">¡LOS @eqElegido.Nombre.ToUpper()!</h3>
+                <h4 class="text-warning nba-title fs-2">SELECCIONAN A @(GameState.JugadorActivo?.Nombre?.ToUpper() ?? "PROSPECTA")</h4>
             </div>
-
-            <h6 class="text-secondary small fw-bold mt-4 mb-3">FRANQUICIAS DISPONIBLES:</h6>
-            <div class="row g-2">
-                @foreach (var equipo in GameState.EquiposDisponiblesDraft)
-                {
-                    <div class="col-12">
-                        <button class="btn btn-choice w-100 p-3 d-flex align-items-center justify-content-between"
-                                style="border-left: 5px solid @equipo.ColorPrimario;"
-                                @onclick="() => ElegirEquipo(equipo.Nombre)">
-                            <div class="d-flex align-items-center gap-3">
-                                <img src="@equipo.LogoUrl" style="height: 42px; width: 42px; object-fit: contain;" alt="@equipo.Nombre" />
-                                <div class="text-start">
-                                    <span class="fs-5 text-white d-block">@equipo.Nombre</span>
-                                    <small class="text-secondary">Estrella 26-27: @equipo.EstrellaFranquicia (@equipo.MediaEstrella OVR)</small>
-                                </div>
-                            </div>
-                            <span class="badge bg-secondary">Firmar</span>
-                        </button>
-                    </div>
-                }
+            <button class="btn btn-warning py-3 px-5 fw-bold text-dark fs-4" @onclick="() => GameState.ConfirmarDraftYComenzar()">
+                PONERSE EL JERSEY Y EMPEZAR 🏀
+            </button>
+        </div>
+    }
+    else if (GameState.FaseActual == FaseJuego.MinijuegoTiro)
+    {
+        <MinijuegoArcadeClutch OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
+    }
+    else if (GameState.FaseActual == FaseJuego.AlertaTraspaso)
+    {
+        <div class="sports-card p-4 text-center my-3 border border-danger" style="max-width: 600px; margin: auto;">
+            <span class="badge bg-danger text-uppercase fs-6 px-3 py-1 mb-2">🚨 TRASPASO CONFIRMADO</span>
+            <h2 class="nba-title display-5 text-white mb-2">HAS SIDO TRASPASADO</h2>
+            <div class="alert alert-dark border border-danger text-light my-3 p-3">
+                <p class="mb-0 fs-5">@GameState.NoticiaTraspaso</p>
             </div>
+            <button class="btn btn-danger py-2 px-5 fw-bold text-white fs-5" @onclick="() => GameState.ContinuarTrasTraspaso()">
+                REPORTARSE AL NUEVO CLUB
+            </button>
+        </div>
+    }
+    else if (GameState.FaseActual == FaseJuego.AlertaLesion)
+    {
+        <div class="sports-card p-4 text-center my-3 border border-warning" style="max-width: 600px; margin: auto;">
+            <span class="badge bg-warning text-dark text-uppercase fs-6 px-3 py-1 mb-2">🏥 REPORTE MÉDICO</span>
+            <h2 class="nba-title display-5 text-white mb-2">PARTE DE LESIÓN OFICIAL</h2>
+            <div class="alert alert-dark border border-warning text-warning my-3 p-3">
+                <p class="mb-0 fs-5">@GameState.DiagnosticoLesion</p>
+            </div>
+            <button class="btn btn-warning py-2 px-5 fw-bold text-dark fs-5" @onclick="() => GameState.ContinuarTrasLesion()">
+                INICIAR REHABILITACIÓN
+            </button>
         </div>
     }
     else if (GameState.FaseActual == FaseJuego.TemporadaRegular)
     {
         var eq = EquipoNBA.ObtenerPorNombre(GameState.JugadorActivo?.EquipoActual ?? "");
 
-        <!-- PERFIL DEL JUGADOR Y DÚO DINÁMICO -->
-        <div class="sports-card p-3 mb-3" style="border-top: 3px solid @eq.ColorPrimario;">
+        <div class="sports-card p-3 mb-3" style="border-top: 4px solid @eq.ColorPrimario;">
             <div class="d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-3 p-2 text-center text-dark fw-bold" style="background: #f59e0b; min-width: 55px;">
-                        <div style="font-size: 0.65rem; line-height: 1;">OVR</div>
-                        <div class="fs-4 lh-1">@GameState.JugadorActivo?.OVR</div>
-                    </div>
+                    <PixelArtPlayer Estado="Bote" TieneBalon="true" ColorPrimario="@eq.ColorPrimario" AnchoPx="75" AltoPx="90" />
 
                     <div>
                         <div class="d-flex align-items-center gap-2">
                             <h4 class="text-white mb-0 fw-bold">@GameState.JugadorActivo?.Nombre</h4>
-                            <span class="badge bg-dark border border-secondary text-light small">@GameState.JugadorActivo?.Pais</span>
+                            <span class="badge bg-warning text-dark fw-bold">OVR @GameState.JugadorActivo?.OVR</span>
+                            @if (GameState.EnRiesgoTraspaso)
+                            {
+                                <span class="badge bg-danger text-white fw-bold">TRANSFERIBLE ⚠️</span>
+                            }
                         </div>
-                        <span class="text-secondary small">#@GameState.JugadorActivo?.NumeroDorsal @GameState.JugadorActivo?.Posicion | @eq.Nombre</span>
+                        <span class="text-secondary small">#@GameState.JugadorActivo?.NumeroDorsal @GameState.JugadorActivo?.Posicion | @eq.Nombre (Año @GameState.TemporadaActual)</span>
                     </div>
                 </div>
 
@@ -146,352 +130,82 @@
                 </div>
             </div>
 
-            <!-- DÚO DINÁMICO 2026-2027 & NÉMESIS -->
-            <div class="row g-2 mt-2">
-                <div class="col-6">
-                    <div class="p-2 rounded bg-black border border-secondary text-start small">
-                        <span class="text-secondary" style="font-size: 0.7rem;">⭐ DÚO DINÁMICO (26-27)</span>
-                        <div class="fw-bold text-white">@GameState.EstrellaCompanero</div>
-                        <div class="text-muted" style="font-size: 0.65rem;">Química en cancha: <strong class="text-warning">@GameState.QuimicaEstrella%</strong></div>
-                    </div>
+            <!-- ATRIBUTOS EN TIEMPO REAL -->
+            <div class="row g-1 text-center small my-2">
+                <div class="col-2 p-1 bg-black rounded border border-secondary">
+                    <div class="text-secondary" style="font-size: 0.65rem;">T.EXT</div>
+                    <strong class="text-warning">@GameState.JugadorActivo?.TiroExterior</strong>
                 </div>
-                <div class="col-6">
-                    <div class="p-2 rounded bg-black border border-secondary text-start small">
-                        <span class="text-secondary" style="font-size: 0.7rem;">⚔️ RIVAL DEL DRAFT</span>
-                        <div class="fw-bold text-danger">@GameState.NombreRivalDraft</div>
-                        <div class="text-muted" style="font-size: 0.65rem;">@GameState.EquipoRivalDraft (@GameState.PpgRivalDraft PPG vs @GameState.JugadorActivo?.PromedioPuntos)</div>
-                    </div>
+                <div class="col-2 p-1 bg-black rounded border border-secondary">
+                    <div class="text-secondary" style="font-size: 0.65rem;">T.MED</div>
+                    <strong class="text-warning">@GameState.JugadorActivo?.TiroMedia</strong>
                 </div>
-            </div>
-
-            <!-- APARTADO DE ESTADÍSTICAS GLOBALES -->
-            <div class="card bg-black border-secondary p-2 my-2 rounded">
-                <div class="d-flex justify-content-between px-2 mb-1">
-                    <span class="text-secondary small fw-bold text-uppercase">Estadísticas Globales de Carrera</span>
-                    <span class="text-warning small fw-bold">Partidos: @GameState.JugadorActivo?.PartidosTotales</span>
+                <div class="col-2 p-1 bg-black rounded border border-secondary">
+                    <div class="text-secondary" style="font-size: 0.65rem;">PASE</div>
+                    <strong class="text-info">@GameState.JugadorActivo?.Pase</strong>
                 </div>
-                <div class="row g-1 text-center small">
-                    <div class="col-3 p-1 rounded bg-dark border border-secondary">
-                        <div class="text-secondary" style="font-size: 0.7rem;">PPG</div>
-                        <strong class="text-warning">@GameState.JugadorActivo?.PromedioPuntos</strong>
-                    </div>
-                    <div class="col-3 p-1 rounded bg-dark border border-secondary">
-                        <div class="text-secondary" style="font-size: 0.7rem;">RPG</div>
-                        <strong class="text-info">@GameState.JugadorActivo?.PromedioRebotes</strong>
-                    </div>
-                    <div class="col-3 p-1 rounded bg-dark border border-secondary">
-                        <div class="text-secondary" style="font-size: 0.7rem;">APG</div>
-                        <strong class="text-success">@GameState.JugadorActivo?.PromedioAsistencias</strong>
-                    </div>
-                    <div class="col-3 p-1 rounded bg-dark border border-secondary">
-                        <div class="text-secondary" style="font-size: 0.7rem;">WIN %</div>
-                        <strong class="text-light">@GameState.JugadorActivo?.PorcentajeVictorias%</strong>
-                    </div>
+                <div class="col-2 p-1 bg-black rounded border border-secondary">
+                    <div class="text-secondary" style="font-size: 0.65rem;">DEF</div>
+                    <strong class="text-danger">@GameState.JugadorActivo?.Defensa</strong>
+                </div>
+                <div class="col-2 p-1 bg-black rounded border border-secondary">
+                    <div class="text-secondary" style="font-size: 0.65rem;">REB</div>
+                    <strong class="text-success">@GameState.JugadorActivo?.Rebote</strong>
+                </div>
+                <div class="col-2 p-1 bg-black rounded border border-secondary">
+                    <div class="text-secondary" style="font-size: 0.65rem;">ATLE</div>
+                    <strong class="text-light">@GameState.JugadorActivo?.Atletismo</strong>
                 </div>
             </div>
 
-            <!-- BARRAS DE ESTADO -->
-            <div class="row g-2">
-                <div class="col-3">
-                    <div class="stat-bar-container text-center">
-                        <small class="text-secondary fw-bold">ENERGÍA</small>
-                        <div class="stat-bar-fill energy-glow mt-1" style="width: @GameState.Energia%;"></div>
-                        <span class="small text-white fw-bold">@GameState.Energia%</span>
-                    </div>
+            <PanelInsignias />
+
+            <!-- RECURSOS -->
+            <div class="row g-2 mt-1">
+                <div class="col-4 text-center">
+                    <small class="text-secondary fw-bold">ENERGÍA</small>
+                    <div class="stat-bar-fill energy-glow mt-1" style="width: @GameState.Energia%;"></div>
+                    <span class="small text-white">@GameState.Energia%</span>
                 </div>
-                <div class="col-3">
-                    <div class="stat-bar-container text-center">
-                        <small class="text-secondary fw-bold">DT</small>
-                        <div class="stat-bar-fill dt-glow mt-1" style="width: @GameState.ConfianzaDT%;"></div>
-                        <span class="small text-white fw-bold">@GameState.ConfianzaDT%</span>
-                    </div>
+                <div class="col-4 text-center">
+                    <small class="text-secondary fw-bold">CONFIANZA DT</small>
+                    <div class="stat-bar-fill dt-glow mt-1" style="width: @GameState.ConfianzaDT%;"></div>
+                    <span class="small text-white">@GameState.ConfianzaDT%</span>
                 </div>
-                <div class="col-3">
-                    <div class="stat-bar-container text-center">
-                        <small class="text-secondary fw-bold">QUÍMICA</small>
-                        <div class="stat-bar-fill quimica-glow mt-1" style="width: @GameState.Quimica%;"></div>
-                        <span class="small text-white fw-bold">@GameState.Quimica%</span>
-                    </div>
-                </div>
-                <div class="col-3">
-                    <div class="stat-bar-container text-center">
-                        <small class="text-secondary fw-bold">HYPE</small>
-                        <div class="stat-bar-fill hype-glow mt-1" style="width: @GameState.Hype%;"></div>
-                        <span class="small text-white fw-bold">@GameState.Hype%</span>
-                    </div>
+                <div class="col-4 text-center">
+                    <small class="text-secondary fw-bold">HYPE</small>
+                    <div class="stat-bar-fill hype-glow mt-1" style="width: @GameState.Hype%;"></div>
+                    <span class="small text-white">@GameState.Hype%</span>
                 </div>
             </div>
-
-            <!-- BOTÓN DESPLEGABLE TIENDA DE ESTILO DE VIDA -->
-            <div class="mt-3">
-                <button class="btn btn-outline-warning btn-sm w-100 fw-bold" @onclick="() => mostrarTienda = !mostrarTienda">
-                    💼 TIENDA DE ESTILO DE VIDA Y NEGOCIOS ($@((GameState.DineroDisponible / 1_000_000.0).ToString("0.0"))M DISPONIBLE)
-                </button>
-            </div>
-
-            @if (mostrarTienda)
-            {
-                <div class="p-3 my-2 rounded bg-dark border border-warning text-start">
-                    <h6 class="text-white fw-bold mb-2">Inversiones y Bienestar Personal</h6>
-                    <div class="row g-2">
-                        <div class="col-12 d-flex justify-content-between align-items-center p-2 rounded bg-black">
-                            <div>
-                                <strong class="text-light d-block">Chef Personal y Fisioterapeuta ($1.2M)</strong>
-                                <small class="text-secondary">Reduce en 5 puntos el desgaste físico tras cada partido.</small>
-                            </div>
-                            <button class="btn btn-sm @(GameState.TieneChefPersonal ? "btn-secondary" : "btn-warning")" 
-                                    disabled="@(GameState.TieneChefPersonal || GameState.DineroDisponible < 1_200_000)"
-                                    @onclick="() => GameState.ComprarChefPersonal()">
-                                @(GameState.TieneChefPersonal ? "Comprado" : "Contratar")
-                            </button>
-                        </div>
-                        <div class="col-12 d-flex justify-content-between align-items-center p-2 rounded bg-black">
-                            <div>
-                                <strong class="text-light d-block">Línea de Zapatillas Signature ($2.0M)</strong>
-                                <small class="text-secondary">Aumenta en 30% las ganancias de Hype.</small>
-                            </div>
-                            <button class="btn btn-sm @(GameState.TieneZapatillasExclusivas ? "btn-secondary" : "btn-warning")" 
-                                    disabled="@(GameState.TieneZapatillasExclusivas || GameState.DineroDisponible < 2_000_000)"
-                                    @onclick="() => GameState.ComprarZapatillasExclusivas()">
-                                @(GameState.TieneZapatillasExclusivas ? "Comprado" : "Lanzar")
-                            </button>
-                        </div>
-                        <div class="col-12 d-flex justify-content-between align-items-center p-2 rounded bg-black">
-                            <div>
-                                <strong class="text-light d-block">Inversión en Startup de Bebidas ($1.5M)</strong>
-                                <small class="text-secondary">Genera +$800K extra al final de cada temporada.</small>
-                            </div>
-                            <button class="btn btn-sm @(GameState.TieneInversionStartup ? "btn-secondary" : "btn-warning")" 
-                                    disabled="@(GameState.TieneInversionStartup || GameState.DineroDisponible < 1_500_000)"
-                                    @onclick="() => GameState.ComprarInversionStartup()">
-                                @(GameState.TieneInversionStartup ? "Comprado" : "Invertir")
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            }
         </div>
-
-        @if (GameState.PartidosJugados > 0)
-        {
-            <div class="alert @(GameState.UltimoFueVictoria ? "alert-success" : "alert-danger") py-2 px-3 small border-0 text-center mb-2">
-                @(GameState.UltimoFueVictoria ? "Victoria" : "Derrota") | Actuación: <strong>@GameState.UltimosPuntos Pts, @GameState.UltimosRebotes Reb, @GameState.UltimasAsistencias Ast</strong>
-            </div>
-        }
 
         @if (!string.IsNullOrEmpty(GameState.UltimaNoticia))
         {
-            <div class="alert alert-dark py-2 px-3 small border border-secondary text-center mb-2 text-info">
-                <em>@GameState.UltimaNoticia</em>
+            <div class="alert alert-dark py-2 px-3 small border border-secondary text-center mb-2 text-warning">
+                @GameState.UltimaNoticia
             </div>
         }
 
-        <DecisionCard />
-    }
-    else if (GameState.FaseActual == FaseJuego.AllStarInvitacion)
-    {
-        <!-- PANTALLA OFICIAL DE INVITACIÓN AL ALL-STAR -->
-        <div class="sports-card p-4 text-center my-3 border border-warning" style="max-width: 600px; margin: auto;">
-            <div class="mb-3">
-                <img src="https://a.espncdn.com/i/teamlogos/leagues/500/nba.png" style="height: 48px;" alt="NBA" />
-                <h2 class="nba-title text-warning mt-1 mb-0 fs-1">INVITACIÓN AL ALL-STAR 2027</h2>
-                <span class="badge bg-dark border border-warning text-light small">CONCURSO OFICIAL DE TRIPLES</span>
-            </div>
-
-            <p class="text-light mb-3" style="line-height: 1.6;">
-                La NBA te ha seleccionado formalmente como uno de los 8 mejores tiradores de la liga gracias a tu 
-                <strong class="text-warning">@(GameState.JugadorActivo?.TiroExterior) OVR de tiro</strong>.
-            </p>
-
-            <div class="row g-3 my-2">
-                <div class="col-12 col-md-6">
-                    <div class="p-3 rounded bg-dark border border-warning h-100 d-flex flex-column justify-content-between">
-                        <div>
-                            <h5 class="text-warning fw-bold mb-1">🎯 Aceptar y Competir</h5>
-                            <small class="text-secondary d-block mb-3">Compite por el trofeo oficial, +22% de Hype y ,000 en premios comerciales.</small>
-                        </div>
-                        <button class="btn btn-warning w-100 py-2 fw-bold text-dark" @onclick="() => GameState.ResponderInvitacionAllStar(true)">
-                            PARTICIPAR AHORA
-                        </button>
-                    </div>
-                </div>
-
-                <div class="col-12 col-md-6">
-                    <div class="p-3 rounded bg-dark border border-secondary h-100 d-flex flex-column justify-content-between">
-                        <div>
-                            <h5 class="text-light fw-bold mb-1">🛋️ Rechazar y Descansar</h5>
-                            <small class="text-secondary d-block mb-3">Prioriza la salud de tus piernas para los Playoffs. Recuperas +25% de Energía inmediata.</small>
-                        </div>
-                        <button class="btn btn-outline-light w-100 py-2 fw-bold" @onclick="() => GameState.ResponderInvitacionAllStar(false)">
-                            DESCANSAR (+25⚡)
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
-    else if (GameState.FaseActual == FaseJuego.AllStarTriples)
-    {
-        <ConcursoTriples OnFinalizado="(pts) => GameState.FinalizarAllStarTriples(pts)" />
-    }
-    else if (GameState.FaseActual == FaseJuego.PortadaHito)
-    {
-        <PortadaRevista Titular="@GameState.TitularPortada" 
-                        Subtitulo="@GameState.SubtituloPortada" 
-                        ImagenFondo="@GameState.ImagenPortada" 
-                        OnCerrar="() => GameState.CerrarPortada()" />
-    }
-    else if (GameState.FaseActual == FaseJuego.MinijuegoTiro)
-    {
-        <MinijuegoTiroArrastre OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
-    }
-    else if (GameState.FaseActual == FaseJuego.MinijuegoLectura)
-    {
-        <LecturaJugada OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
-    }
-    else if (GameState.FaseActual == FaseJuego.MinijuegoTiro)
-    {
-        <MinijuegoTiroArrastre OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
-    }
-    else if (GameState.FaseActual == FaseJuego.MinijuegoDuelo)
-    {
-        <DueloUnoContraUno OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
-    }
-    else if (GameState.FaseActual == FaseJuego.PlayoffBossBattle)
-    {
-        <PlayoffBossBattle OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
-    }
-    else if (GameState.FaseActual == FaseJuego.PlayoffTirosLibres)
-    {
-        <PlayoffTirosLibres OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
-    }
-    else if (GameState.FaseActual == FaseJuego.PlayoffReboteBoxOut)
-    {
-        <PlayoffReboteBoxOut OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
-    }
-    else if (GameState.FaseActual == FaseJuego.PlayoffContraataqueDunk)
-    {
-        <PlayoffContraataqueDunk OnFinalizado="(exito) => GameState.ResolverMinijuego(exito)" />
+        <DecisionCardRPG />
     }
     else if (GameState.FaseActual == FaseJuego.Playoffs)
     {
-        <div class="sports-card p-4 text-center">
-            <span class="badge bg-danger text-uppercase px-3 py-1 mb-2">Postemporada NBA</span>
-            <h2 class="nba-title display-5 text-white mb-1">@GameState.NombreRonda(GameState.RondaActualPlayoffs)</h2>
-            <p class="text-secondary">Rival de serie: <strong class="text-white">@GameState.RivalPlayoffs</strong></p>
-
-            <div class="alert alert-dark border border-danger my-3">
-                <span class="fs-5 text-white">Serie al mejor de 3: <strong>@GameState.VictoriasSeriePlayoff - @GameState.DerrotasSeriePlayoff</strong></span>
-            </div>
-
-            @if (!string.IsNullOrEmpty(GameState.UltimaNoticia))
-            {
-                <div class="small text-info mb-4">@GameState.UltimaNoticia</div>
-            }
-
-            <div class="row g-2">
-                <div class="col-12 col-md-6">
-                    <button class="btn btn-warning w-100 py-3 fw-bold text-dark" @onclick="() => GameState.JugarPartidoPlayoff(true)">
-                        Asumir Posesión en Cancha
-                    </button>
-                </div>
-                <div class="col-12 col-md-6">
-                    <button class="btn btn-outline-light w-100 py-3 fw-bold" @onclick="() => GameState.JugarPartidoPlayoff(false)">
-                        Simular con @GameState.EstrellaCompanero
-                    </button>
-                </div>
-            </div>
-        </div>
+        <PlayoffHub />
     }
     else if (GameState.FaseActual == FaseJuego.FinTemporada)
     {
         <div class="sports-card p-4 text-center">
-            <h2 class="nba-title display-4 text-white mb-1">TEMPORADA @GameState.TemporadaActual CONCLUIDA</h2>
+            <h2 class="nba-title display-4 text-white mb-1">TEMPORADA @(GameState.TemporadaActual - 1) CONCLUIDA</h2>
             <p class="text-secondary">Récord: <strong class="text-white">@GameState.Victorias V - @GameState.Derrotas D</strong> | Saldo: <strong class="text-success">$@((GameState.DineroDisponible / 1_000_000.0).ToString("0.0"))M</strong></p>
 
-            <div class="my-3 p-3 bg-dark rounded border border-secondary text-center">
-                <span class="text-secondary small fw-bold text-uppercase d-block mb-2">Palmarés Obtenido</span>
-                @if (GameState.PremiosGanadosTemporada.Any())
-                {
-                    <div class="d-flex flex-wrap justify-content-center gap-2">
-                        @foreach (var premio in GameState.PremiosGanadosTemporada)
-                        {
-                            <span class="badge bg-warning text-dark p-2 fs-6">@premio</span>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <span class="text-muted small">Sin premios alcanzados esta temporada.</span>
-                }
-            </div>
-
-            <div class="card bg-dark border-secondary p-3 my-3 text-start">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div>
-                        <span class="text-white fw-bold d-block">DESARROLLO DE HABILIDADES</span>
-                        <small class="text-secondary">+3 por atributo mejorado</small>
-                    </div>
-                    <span class="badge bg-warning text-dark fs-6 px-3 py-2">Puntos Disponibles: @GameState.PuntosDesarrollo</span>
-                </div>
-                <div class="row g-2">
-                    <div class="col-6 d-flex justify-content-between align-items-center p-2 rounded bg-black border border-secondary">
-                        <span class="small text-white">🎯 T. Exterior: <strong>@GameState.JugadorActivo?.TiroExterior</strong></span>
-                        <button class="btn btn-sm btn-outline-warning fw-bold" disabled="@(GameState.PuntosDesarrollo <= 0 || GameState.JugadorActivo?.TiroExterior >= 99)" @onclick='() => GameState.MejorarAtributo("TiroExterior")'>+3</button>
-                    </div>
-                    <div class="col-6 d-flex justify-content-between align-items-center p-2 rounded bg-black border border-secondary">
-                        <span class="small text-white">🏀 T. Media: <strong>@GameState.JugadorActivo?.TiroMedia</strong></span>
-                        <button class="btn btn-sm btn-outline-warning fw-bold" disabled="@(GameState.PuntosDesarrollo <= 0 || GameState.JugadorActivo?.TiroMedia >= 99)" @onclick='() => GameState.MejorarAtributo("TiroMedia")'>+3</button>
-                    </div>
-                    <div class="col-6 d-flex justify-content-between align-items-center p-2 rounded bg-black border border-secondary">
-                        <span class="small text-white">🤝 Pase: <strong>@GameState.JugadorActivo?.Pase</strong></span>
-                        <button class="btn btn-sm btn-outline-warning fw-bold" disabled="@(GameState.PuntosDesarrollo <= 0 || GameState.JugadorActivo?.Pase >= 99)" @onclick='() => GameState.MejorarAtributo("Pase")'>+3</button>
-                    </div>
-                    <div class="col-6 d-flex justify-content-between align-items-center p-2 rounded bg-black border border-secondary">
-                        <span class="small text-white">🛡️ Defensa: <strong>@GameState.JugadorActivo?.Defensa</strong></span>
-                        <button class="btn btn-sm btn-outline-warning fw-bold" disabled="@(GameState.PuntosDesarrollo <= 0 || GameState.JugadorActivo?.Defensa >= 99)" @onclick='() => GameState.MejorarAtributo("Defensa")'>+3</button>
-                    </div>
-                    <div class="col-6 d-flex justify-content-between align-items-center p-2 rounded bg-black border border-secondary">
-                        <span class="small text-white">📦 Rebote: <strong>@GameState.JugadorActivo?.Rebote</strong></span>
-                        <button class="btn btn-sm btn-outline-warning fw-bold" disabled="@(GameState.PuntosDesarrollo <= 0 || GameState.JugadorActivo?.Rebote >= 99)" @onclick='() => GameState.MejorarAtributo("Rebote")'>+3</button>
-                    </div>
-                    <div class="col-6 d-flex justify-content-between align-items-center p-2 rounded bg-black border border-secondary">
-                        <span class="small text-white">⚡ Atletismo: <strong>@GameState.JugadorActivo?.Atletismo</strong></span>
-                        <button class="btn btn-sm btn-outline-warning fw-bold" disabled="@(GameState.PuntosDesarrollo <= 0 || GameState.JugadorActivo?.Atletismo >= 99)" @onclick='() => GameState.MejorarAtributo("Atletismo")'>+3</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-between mt-4">
-                <button class="btn btn-outline-danger" @onclick="() => GameState.RetirarJugador()">Retirarse</button>
-                <button class="btn btn-warning px-4 fw-bold text-dark" @onclick="() => GameState.AvanzarSiguienteTemporada()">Avanzar de Temporada</button>
-            </div>
-        </div>
-    }
-    else if (GameState.FaseActual == FaseJuego.AgenciaLibre)
-    {
-        <div class="sports-card p-4 text-center">
-            <h2 class="nba-title display-4 text-warning mb-1">AGENCIA LIBRE</h2>
-            <p class="text-secondary small">Vencimiento contractual. Selecciona franquicia:</p>
-
-            <div class="row g-2 my-3">
-                @foreach (var eqLibre in EquipoNBA.Franquicias.Take(4))
-                {
-                    <div class="col-12">
-                        <button class="btn btn-choice w-100 p-3 d-flex align-items-center justify-content-between"
-                                style="border-left: 5px solid @eqLibre.ColorPrimario;"
-                                @onclick="() => GameState.FirmarAgenciaLibre(eqLibre.Nombre)">
-                            <div class="d-flex align-items-center gap-3">
-                                <img src="@eqLibre.LogoUrl" style="height: 40px; width: 40px; object-fit: contain;" alt="@eqLibre.Nombre" />
-                                <div class="text-start">
-                                    <span class="fs-5 text-white d-block">@eqLibre.Nombre</span>
-                                    <small class="text-secondary">Compañero: @eqLibre.EstrellaFranquicia</small>
-                                </div>
-                            </div>
-                            <span class="badge bg-secondary">Firmar</span>
-                        </button>
-                    </div>
-                }
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <button class="btn btn-outline-danger px-4 py-3 fw-bold" @onclick="() => GameState.RetirarJugador()">
+                    RETIRARSE DEL BALONCESTO 🚪
+                </button>
+                <button class="btn btn-warning px-5 py-3 fw-bold text-dark fs-5" @onclick="() => GameState.AvanzarSiguienteTemporada()">
+                    CONTINUAR A LA SIGUIENTE TEMPORADA 🏆
+                </button>
             </div>
         </div>
     }
@@ -499,19 +213,19 @@
     {
         <div class="sports-card p-4 text-center">
             <h1 class="nba-title display-4 text-white mb-0">SALÓN DE LA FAMA</h1>
-            <p class="text-secondary">Balance Histórico de @GameState.JugadorActivo?.Nombre (@GameState.JugadorActivo?.Pais)</p>
+            <p class="text-secondary">Resumen Histórico de @GameState.JugadorActivo?.Nombre</p>
 
             @if (GameState.EnSalonDeLaFama)
             {
                 <div class="p-4 my-3 rounded bg-warning text-dark shadow-lg">
-                    <h2 class="nba-title mb-0 fs-1">ELEGIDO AL SALÓN DE LA FAMA</h2>
-                    <p class="mb-0 fw-semibold">Tu busto de bronce descansará para siempre en Springfield.</p>
+                    <h2 class="nba-title mb-0 fs-1">ELEGIDO AL SALÓN DE LA FAMA 🏆</h2>
+                    <p class="mb-0 fw-semibold">Tu carrera ha sido inmortalizada entre las leyendas de Springfield.</p>
                 </div>
             }
             else
             {
                 <div class="p-3 my-3 rounded bg-dark border border-secondary">
-                    <h5 class="text-white mb-0">Carrera Profesional Concluida</h5>
+                    <h5 class="text-white mb-0">Carrera Profesional Finalizada</h5>
                     <p class="small text-muted mb-0">No se alcanzaron los requerimientos para el Salón de la Fama.</p>
                 </div>
             }
@@ -522,49 +236,26 @@
                 <div class="col-4 p-2 bg-dark rounded border border-secondary">Años: <strong>@GameState.TemporadaActual</strong></div>
             </div>
 
-            <button class="btn btn-warning py-3 px-5 fw-bold text-dark mt-3" @onclick="Reiniciar">
-                Iniciar Nueva Carrera
+            <button class="btn btn-warning py-3 px-5 fw-bold text-dark mt-3" @onclick="() => GameState.IniciarCreacion()">
+                INICIAR NUEVA CARRERA
             </button>
         </div>
     }
 </div>
 
 @code {
-    private const string STORAGE_KEY = "TheNextPick_SaveState";
-    private bool tienePartidaGuardada = false;
-    private bool mostrarTienda = false;
-
-    private string nombreInput = "";
+    private string nombreInput = "Marcus Vance";
     private string paisInput = "Colombia";
-    private int dorsalInput = 7;
+    private int dorsalInput = 11;
     private Posicion posicionInput = Posicion.Base;
     private RitmoSimulacion ritmoInput = RitmoSimulacion.Detallada;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        GameState.OnStateChanged += ActualizarYGuardar;
-        var guardado = await JS.InvokeAsync<string?>("localStorage.getItem", STORAGE_KEY);
-        tienePartidaGuardada = !string.IsNullOrEmpty(guardado);
+        GameState.OnStateChanged += ActualizarVista;
     }
 
-    private async void ActualizarYGuardar()
-    {
-        if (GameState.FaseActual != FaseJuego.Creacion)
-        {
-            var json = GameState.ExportarEstadoJson();
-            await JS.InvokeVoidAsync("localStorage.setItem", STORAGE_KEY, json);
-        }
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task CargarPartidaGuardada()
-    {
-        var json = await JS.InvokeAsync<string?>("localStorage.getItem", STORAGE_KEY);
-        if (!string.IsNullOrEmpty(json))
-        {
-            GameState.ImportarEstadoJson(json);
-        }
-    }
+    private void ActualizarVista() => InvokeAsync(StateHasChanged);
 
     private void IniciarRutaDraft()
     {
@@ -576,38 +267,8 @@
         GameState.IrADraftCombine(jugador, ritmoInput);
     }
 
-    private void IniciarRutaAleatoria()
-    {
-        var jugador = new JugadorBuilder()
-            .ConDatosBasicos(nombreInput, paisInput, dorsalInput, posicionInput)
-            .AsignarAtributosPorPosicion()
-            .Build();
-
-        var eq = EquipoNBA.Franquicias[Random.Shared.Next(EquipoNBA.Franquicias.Count)];
-        GameState.IniciarRutaAleatoria(jugador, eq.Nombre, ritmoInput);
-    }
-
-    private void ElegirEquipo(string equipo)
-    {
-        GameState.SeleccionarEquipoDraft(equipo);
-    }
-
-    private async Task Reiniciar()
-    {
-        await JS.InvokeVoidAsync("localStorage.removeItem", STORAGE_KEY);
-        tienePartidaGuardada = false;
-        GameState.IniciarCreacion();
-    }
-
     public void Dispose()
     {
-        GameState.OnStateChanged -= ActualizarYGuardar;
+        GameState.OnStateChanged -= ActualizarVista;
     }
 }
-
-
-
-
-
-
-

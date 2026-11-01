@@ -1,0 +1,90 @@
+﻿@namespace TheNextPick.Components
+@using TheNextPick.Engine
+@using TheNextPick.Models
+@inject GameStateService GameState
+
+@if (GameState.DilemaRPGActual != null)
+{
+    var d = GameState.DilemaRPGActual;
+
+    <div class="sports-card p-3 my-3 text-start" style="max-width: 620px; margin: auto; background: #0c1017; border: 2px solid #232c3d; box-shadow: 0 10px 30px rgba(0,0,0,0.85);">
+        
+        <!-- HEADER BISELADO CON TAG Y RAREZA ESTILO "EL ÍDOLO" -->
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge px-3 py-1 fw-bold fs-6" style="background: #00e676; color: #000; border-radius: 2px;">
+                    ▌ @d.BannerTag
+                </span>
+                <span class="badge bg-dark border border-secondary text-light small fw-bold">
+                    @d.Rareza.ToString().ToUpper()
+                </span>
+            </div>
+            <span class="text-secondary small fw-bold">DECISIÓN #@GameState.DecisionesTomadasTemporada DE @GameState.TotalDecisionesTemporada</span>
+        </div>
+
+        <!-- TÍTULO Y CONTEXTO -->
+        <h2 class="text-white fw-bold mb-1 nba-title" style="letter-spacing: 0.5px;">@d.Titulo</h2>
+        <p class="text-secondary small mb-3" style="line-height: 1.4;">@d.Contexto</p>
+
+        <!-- IMAGEN TEMÁTICA REFERENCIAL -->
+        @if (!string.IsNullOrEmpty(d.ImageUrl))
+        {
+            <div class="position-relative rounded overflow-hidden mb-3" style="height: 160px; border: 2px solid #1f2937;">
+                <img src="@d.ImageUrl" style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.85);" alt="Contexto" />
+                <div class="position-absolute bottom-0 start-0 w-100 p-2" style="background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);">
+                    <small class="text-light fw-bold">TEMPORADA @GameState.TemporadaActual | OVR @GameState.JugadorActivo?.OVR</small>
+                </div>
+            </div>
+        }
+
+        <!-- OPCIONES EN BLOQUES OSCUROS CON BADGES DE ATRIBUTOS -->
+        <div class="d-flex flex-column gap-2">
+            @for (int i = 0; i < d.Opciones.Count; i++)
+            {
+                var opcion = d.Opciones[i];
+                var indiceRomano = i == 0 ? "I" : (i == 1 ? "II" : "III");
+
+                <div class="option-card p-3 rounded position-relative text-start" 
+                     style="background: #131923; border: 2px solid #2d3748; cursor: pointer; transition: all 0.15s ease-in-out;"
+                     @onclick="() => GameState.TomarDecision(opcion)">
+                    
+                    <div class="d-flex gap-3 align-items-start">
+                        <!-- NUMERAL ROMANO LATERAL -->
+                        <div class="text-secondary fw-bold fs-4" style="min-width: 20px; font-family: monospace;">
+                            @indiceRomano
+                        </div>
+
+                        <div class="flex-grow-1">
+                            <h5 class="text-white fw-bold mb-1 nba-title" style="font-size: 1.15rem;">@opcion.Titulo</h5>
+                            <p class="text-secondary small mb-2">@opcion.Descripcion</p>
+
+                            <!-- PILLS VERDES DE ATRIBUTOS (INSPIRADAS EN LA IMAGEN) -->
+                            <div class="d-flex flex-wrap gap-1 mb-1">
+                                @foreach (var buff in opcion.BadgesPositivas)
+                                {
+                                    <span class="badge px-2 py-1 fw-bold text-dark" style="background: #00e676; font-size: 0.72rem; letter-spacing: 0.3px;">
+                                        @buff
+                                    </span>
+                                }
+                                @foreach (var debuff in opcion.BadgesPeligro)
+                                {
+                                    <span class="badge px-2 py-1 fw-bold" style="background: #dc2626; color: #fff; font-size: 0.72rem;">
+                                        @debuff
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<style>
+    .option-card:hover {
+        border-color: #00e676 !important;
+        transform: translateY(-2px);
+        background: #17202d !important;
+    }
+</style>

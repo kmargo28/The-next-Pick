@@ -1,55 +1,49 @@
 ﻿@namespace TheNextPick.Components
-@using TheNextPick.Models
 @implements IDisposable
 
-<div class="sports-card p-3 my-3 text-center" style="max-width: 480px; margin: auto; background: #0c1017; border: 2px solid #2d3748;">
+<div class="sports-card p-3 my-3 text-center" style="max-width: 580px; margin: auto; background: #0c1017; border: 2px solid #2d3748;">
     <div class="d-flex justify-content-between align-items-center mb-2 px-2">
-        <span class="badge bg-warning text-dark text-uppercase px-2 py-1 small fw-bold">Combine: Salto Vertical</span>
-        <span class="text-white small fw-bold">ALTURA: @alturaPulgadas" (PULGADAS)</span>
+        <span class="badge bg-warning text-dark text-uppercase px-2 py-1 small fw-bold">PRUEBA 1/5: SALTO VERTICAL (VERTEC)</span>
+        <span class="text-white small fw-bold">MARCA: @alturaPulgadas" (@puntosObtenidos / 20 PTS)</span>
     </div>
 
-    <p class="text-secondary small mb-2">Mantén presionado para flexionar rodillas y suelta en el pico máximo de potencia.</p>
-
-    <!-- ESCENA EN SVG DEL SALTO VERTICAL CON VERTEC Y JUGADOR SCOTT PILGRIM -->
-    <div class="position-relative mx-auto rounded overflow-hidden" style="width: 320px; height: 260px; background: #141a24; border: 2px solid #2d3748;">
+    <div class="position-relative mx-auto rounded overflow-hidden" style="width: 100%; height: 260px; border: 2px solid #1f2937; background: #111;">
         <CanchaFondo />
 
-        <!-- Estructura de paletas Vertec (Medidor de salto) -->
-        <svg viewBox="0 0 100 200" class="position-absolute end-0 bottom-0" style="width: 100px; height: 200px; pointer-events: none;">
-            <line x1="60" y1="10" x2="60" y2="190" stroke="#718096" stroke-width="4" />
-            <line x1="40" y1="190" x2="80" y2="190" stroke="#718096" stroke-width="6" />
-            <!-- Paletas horizontales de medición -->
-            @for (int p = 20; p <= 140; p += 10)
+        <!-- Estructura Vertec -->
+        <svg viewBox="0 0 100 220" class="position-absolute end-0 bottom-0" style="width: 110px; height: 220px; pointer-events: none; z-index: 5;">
+            <line x1="60" y1="10" x2="60" y2="210" stroke="#4a5568" stroke-width="6" />
+            <line x1="30" y1="210" x2="90" y2="210" stroke="#2d3748" stroke-width="8" />
+            @for (int p = 20; p <= 170; p += 10)
             {
-                var paletaColor = (p <= (160 - (alturaPulgadas * 3))) ? "#f59e0b" : "#4a5568";
-                <line x1="30" y1="@p" x2="60" y2="@p" stroke="@paletaColor" stroke-width="2.5" />
+                var tocada = (p >= (180 - (alturaPulgadas * 3.5)));
+                <line x1="20" y1="@p" x2="60" y2="@p" stroke="@(tocada ? "#f59e0b" : "#718096")" stroke-width="3" />
             }
         </svg>
 
-        <!-- Jugador animado con salto físico -->
-        <div class="position-absolute" style="left: 100px; bottom: @(15 + (desplazamientoSaltoPx))px; transition: bottom 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);">
-            <PixelArtPlayer Estado="@estadoJugador" ColorPrimario="#e65100" AnchoPx="90" AltoPx="115" />
+        <!-- Jugador sin balón flexionando y saltando -->
+        <div class="position-absolute" style="left: 110px; bottom: @(15 + desplazamientoSaltoPx)px; transition: bottom 0.22s cubic-bezier(0.18, 0.89, 0.32, 1.28); z-index: 6;">
+            <PixelArtPlayer Estado="@estadoJugador" TieneBalon="false" ColorPrimario="#1D428A" AnchoPx="95" AltoPx="120" />
         </div>
 
-        <!-- Indicador de flexión -->
         @if (cargando)
         {
-            <div class="position-absolute bottom-0 start-50 translate-middle-x mb-2 px-3 py-1 rounded bg-black border border-warning small text-warning fw-bold">
-                POTENCIA DE FLEXIÓN: @potenciaCarga%
+            <div class="position-absolute bottom-0 start-50 translate-middle-x mb-2 px-3 py-1 rounded bg-black border border-warning small text-warning fw-bold" style="z-index: 10;">
+                POTENCIA: @potenciaCarga% (ZONA ÓPTIMA: 80-92%)
             </div>
         }
     </div>
 
     @if (!cargando && !saltado)
     {
-        <button class="btn btn-warning py-3 px-5 fw-bold text-dark fs-5 mt-3" @onpointerdown="IniciarFlexion">
+        <button class="btn btn-warning py-3 px-5 fw-bold text-dark fs-5 mt-3 w-100" @onpointerdown="IniciarFlexion">
             MANTENER PARA FLEXIONAR 🦵
         </button>
     }
     else if (cargando)
     {
-        <button class="btn btn-danger py-3 px-5 fw-bold text-white fs-5 mt-3" @onpointerup="Despegar">
-            ¡SOLTAR Y DESPEGAR! 🚀
+        <button class="btn btn-danger py-3 px-5 fw-bold text-white fs-5 mt-3 w-100" @onpointerup="Despegar">
+            ¡SOLTAR EN ZONA VERDE! 🚀
         </button>
     }
 
@@ -62,17 +56,17 @@
     private string estadoJugador = "Idle";
     private int potenciaCarga = 0;
     private int alturaPulgadas = 0;
+    private int puntosObtenidos = 0;
     private int desplazamientoSaltoPx = 0;
     private bool cargando = false;
     private bool saltado = false;
-    private string mensajeGuia = "Presiona para agacharte y acumular fuerza en los cuadríceps.";
+    private string mensajeGuia = "Mantén presionado para acumular fuerza en los cuádriceps y suelta entre el 80% y 92%.";
     private CancellationTokenSource cts = new();
 
     private async Task IniciarFlexion()
     {
         if (saltado) return;
         cargando = true;
-        estadoJugador = "Idle";
         potenciaCarga = 0;
 
         try
@@ -82,7 +76,7 @@
                 potenciaCarga += 4;
                 if (potenciaCarga >= 100) potenciaCarga = 0;
                 StateHasChanged();
-                await Task.Delay(25, cts.Token);
+                await Task.Delay(20, cts.Token);
             }
         }
         catch (TaskCanceledException) { }
@@ -95,33 +89,40 @@
         saltado = true;
         estadoJugador = "Saltando";
 
-        // Óptimo: potencia entre 80% y 95%
-        if (potenciaCarga >= 78 && potenciaCarga <= 95)
+        // Evaluación estricta de salto
+        if (potenciaCarga >= 80 && potenciaCarga <= 92)
         {
-            alturaPulgadas = Random.Shared.Next(39, 44); // Salto élite de la NBA (39-44 pulgadas)
+            alturaPulgadas = Random.Shared.Next(40, 44);
+            puntosObtenidos = 20; // Puntuación perfecta
             desplazamientoSaltoPx = 80;
         }
-        else if (potenciaCarga >= 55)
+        else if (potenciaCarga >= 65 && potenciaCarga <= 98)
         {
             alturaPulgadas = Random.Shared.Next(32, 38);
+            puntosObtenidos = 14;
             desplazamientoSaltoPx = 55;
+        }
+        else if (potenciaCarga >= 45)
+        {
+            alturaPulgadas = Random.Shared.Next(25, 31);
+            puntosObtenidos = 8;
+            desplazamientoSaltoPx = 35;
         }
         else
         {
-            alturaPulgadas = Random.Shared.Next(24, 31);
-            desplazamientoSaltoPx = 30;
+            alturaPulgadas = Random.Shared.Next(18, 24);
+            puntosObtenidos = 3; // Fallo grave de potencia
+            desplazamientoSaltoPx = 15;
         }
 
         StateHasChanged();
-        await Task.Delay(400);
-        estadoJugador = "Celebrando";
-
-        int puntos = alturaPulgadas >= 39 ? 35 : (alturaPulgadas >= 32 ? 25 : 15);
-        mensajeGuia = $"¡Marca oficial: {alturaPulgadas} pulgadas de salto vertical! (+{puntos} pts)";
+        await Task.Delay(350);
+        estadoJugador = puntosObtenidos >= 14 ? "Celebrando" : "Idle";
+        mensajeGuia = $"Salto oficial: {alturaPulgadas} pulgadas (+{puntosObtenidos} PTS).";
         StateHasChanged();
 
-        await Task.Delay(1400);
-        await OnFinalizado.InvokeAsync(puntos);
+        await Task.Delay(1300);
+        await OnFinalizado.InvokeAsync(puntosObtenidos);
     }
 
     public void Dispose()

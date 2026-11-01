@@ -1,0 +1,174 @@
+﻿@namespace TheNextPick.Components
+@using TheNextPick.Engine
+@inject GameStateService GameState
+@implements IDisposable
+
+<div class="sports-card p-3 my-2 text-center" style="max-width: 620px; margin: auto; background: #0c1017; border: 3px solid #b45309;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+        <span class="badge px-3 py-1 fw-bold fs-6" style="background: #ea580c; color: #fff; border-radius: 3px;">
+            🏀 LÍNEA DE TIROS LIBRES
+        </span>
+        <span class="badge bg-black border border-warning text-warning fw-bold">
+            TIRO @(Math.Min(tiroActual, totalTiros))/@totalTiros (ANOTADOS: @canastas)
+        </span>
+    </div>
+
+    <h3 class="text-white fw-bold mb-1 nba-title">@GameState.JugadorActivo?.EquipoActual.ToUpper() vs @GameState.RivalPlayoffs.ToUpper()</h3>
+    <p class="text-secondary small mb-2">
+        La grada rival abuchea sin cesar. Encesta 2 de 3 tiros libres en el ápice de la barra para ganar la serie.
+    </p>
+
+    <!-- CANCHA CON EL ARO Y EL JUGADOR EN LA LÍNEA -->
+    <div class="position-relative mx-auto rounded overflow-hidden" style="width: 100%; height: 230px; border: 2px solid #1f2937;">
+        <CanchaFondo />
+
+        <!-- Aro oficial -->
+        <svg viewBox="0 0 140 180" class="position-absolute end-0" style="width: 120px; height: 160px; top: 25px; pointer-events: none; z-index: 5;">
+            <line x1="110" y1="10" x2="110" y2="160" stroke="#000" stroke-width="8" />
+            <line x1="110" y1="10" x2="110" y2="160" stroke="#cbd5e1" stroke-width="4" />
+            <rect x="95" y="15" width="8" height="60" fill="#fff" stroke="#000" stroke-width="2" />
+            <rect x="97" y="32" width="4" height="26" fill="none" stroke="#e11d48" stroke-width="2" />
+            <line x1="58" y1="52" x2="95" y2="52" stroke="#ff4500" stroke-width="5" stroke-linecap="round" />
+            <ellipse cx="76" cy="52" rx="16" ry="3.5" fill="none" stroke="#000" stroke-width="3" />
+            <ellipse cx="76" cy="52" rx="15" ry="3" fill="none" stroke="#ff4500" stroke-width="2" />
+        </svg>
+
+        @if (balonVolando)
+        {
+            <div class="position-absolute" style="left: @(balonX)px; top: @(balonY)px; transform: translate(-50%, -50%); pointer-events: none; z-index: 15;">
+                <svg width="24" height="24" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" fill="#e65100" stroke="#000" stroke-width="2" />
+                    <line x1="2" y1="12" x2="22" y2="12" stroke="#000" stroke-width="1.5" />
+                    <line x1="12" y1="2" x2="12" y2="22" stroke="#000" stroke-width="1.5" />
+                </svg>
+            </div>
+        }
+
+        <div class="position-absolute" style="left: 75px; bottom: 15px; z-index: 6;">
+            <PixelArtPlayer Estado="@estadoTirador" TieneBalon="@(!balonVolando)" ColorPrimario="#1D428A" AnchoPx="90" AltoPx="115" />
+        </div>
+    </div>
+
+    <!-- MEDIDOR DE TIRO LIBRE -->
+    <div class="position-relative my-3 rounded border border-secondary" style="height: 38px; background: #000; overflow: hidden;">
+        <div class="position-absolute bg-success h-100" style="left: @zonaVerdeMin%; width: @(zonaVerdeMax - zonaVerdeMin)%; box-shadow: 0 0 15px #10b981; opacity: 0.9;"></div>
+        <div class="position-absolute bg-warning h-100" style="left: @posicionAguja%; width: 6px; box-shadow: 0 0 10px #f59e0b;"></div>
+    </div>
+
+    @if (!balonVolando && tiroActual <= totalTiros)
+    {
+        <button class="btn btn-warning py-3 px-5 fw-bold text-dark fs-4 w-100 shadow-lg" @onclick="EjecutarTiroLibre">
+            LANZAR TIRO LIBRE (@tiroActual/@totalTiros) 🏀
+        </button>
+    }
+    else
+    {
+        <button class="btn btn-secondary py-3 px-5 fw-bold fs-4 w-100" disabled>
+            BALÓN EN EL AIRE...
+        </button>
+    }
+
+    <div class="mt-2 text-info small fw-bold">@mensajeFeedback</div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<bool> OnCompletado { get; set; }
+
+    private int tiroActual = 1;
+    private const int totalTiros = 3;
+    private int canastas = 0;
+    private bool balonVolando = false;
+    private string estadoTirador = "Bote";
+
+    private double balonX = 110;
+    private double balonY = 160;
+
+    private double posicionAguja = 0;
+    private bool subiendo = true;
+    private double zonaVerdeMin = 45;
+    private double zonaVerdeMax = 60;
+    private string mensajeFeedback = "Presiona Lanzar justo cuando la aguja cruce la franja verde.";
+    private CancellationTokenSource cts = new();
+
+    protected override void OnInitialized()
+    {
+        int ancho = GameState.SeedPlayoffs <= 2 ? 16 : (GameState.SeedPlayoffs >= 6 ? 10 : 13);
+        zonaVerdeMin = Random.Shared.Next(35, 65);
+        zonaVerdeMax = zonaVerdeMin + ancho;
+        IniciarOscilacion();
+    }
+
+    private void IniciarOscilacion()
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (!cts.Token.IsCancellationRequested)
+                {
+                    posicionAguja += subiendo ? 4 : -4;
+                    if (posicionAguja >= 95) subiendo = false;
+                    if (posicionAguja <= 5) subiendo = true;
+                    await InvokeAsync(StateHasChanged);
+                    await Task.Delay(18, cts.Token);
+                }
+            }
+            catch (OperationCanceledException) { }
+        });
+    }
+
+    private async Task EjecutarTiroLibre()
+    {
+        if (balonVolando) return;
+        estadoTirador = "Saltando";
+        bool esCanasta = (posicionAguja >= zonaVerdeMin && posicionAguja <= zonaVerdeMax);
+        if (esCanasta) canastas++;
+
+        balonVolando = true;
+        balonX = 110;
+        balonY = 150;
+        StateHasChanged();
+
+        double destinoX = esCanasta ? 520 : 475;
+        double destinoY = 95;
+
+        for (int i = 0; i <= 20; i++)
+        {
+            double t = i / 20.0;
+            double alturaArco = 140;
+            balonX = (1 - t) * (1 - t) * 110 + 2 * (1 - t) * t * 315 + t * t * destinoX;
+            balonY = (1 - t) * (1 - t) * 150 + 2 * (1 - t) * t * (150 - alturaArco) + t * t * destinoY;
+            StateHasChanged();
+            await Task.Delay(16);
+        }
+
+        mensajeFeedback = esCanasta ? "¡SWISH! Tiro libre encestado." : "¡CLANK! El balón pegó en el aro.";
+        await Task.Delay(350);
+        balonVolando = false;
+        estadoTirador = "Bote";
+
+        if (tiroActual >= totalTiros)
+        {
+            cts.Cancel();
+            bool serieGanada = canastas >= 2;
+            mensajeFeedback = serieGanada ? "¡SERIE CERRADA DESDE LA LÍNEA DE TIROS LIBRES! 🎯" : "Derrota en la serie por fallos en tiros libres ❌";
+            StateHasChanged();
+            await Task.Delay(1200);
+            await OnCompletado.InvokeAsync(serieGanada);
+        }
+        else
+        {
+            tiroActual++;
+            zonaVerdeMin = Random.Shared.Next(35, 65);
+            zonaVerdeMax = zonaVerdeMin + 12;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        try { cts.Cancel(); } catch { }
+        try { cts.Dispose(); } catch { }
+    }
+}

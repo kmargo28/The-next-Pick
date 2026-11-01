@@ -1,0 +1,437 @@
+﻿@namespace TheNextPick.Components
+@using TheNextPick.Engine
+@using TheNextPick.Models
+@inject GameStateService GameState
+@implements IDisposable
+
+<div class="sports-card p-4 my-3 text-center position-relative" style="max-width: 660px; margin: auto; background: #0c1017; border: 3px solid #1D428A; box-shadow: 0 10px 30px rgba(0,0,0,0.85); user-select: none;">
+    
+    <!-- ENCABEZADO DE POSESIÓN -->
+    <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+        <span class="badge text-uppercase px-3 py-1 fs-6 fw-bold" style="background: #1D428A; color: #FFC72C; border: 1px solid #FFC72C;">
+            🎯 TIRO EN SUSPENSIÓN #11
+        </span>
+        <span class="text-white fw-bold fs-5">CANASTAS: @canastas / @intentosMax (Tiro @(Math.Min(intentoActual, intentosMax))/@intentosMax)</span>
+    </div>
+
+    <!-- ESCENARIO DE JUEGO -->
+    <div class="position-relative mx-auto rounded overflow-hidden" 
+         style="width: 100%; height: 320px; border: 3px solid #1f2937; background: #0d1117; touch-action: none;">
+        
+        <CanchaFondo />
+
+        <!-- CANASTA OFICIAL A LA DERECHA -->
+        <svg viewBox="0 0 140 200" class="position-absolute end-0" style="width: 130px; height: 180px; top: 40px; pointer-events: none; z-index: 5;">
+            <!-- Tablero y poste -->
+            <line x1="110" y1="10" x2="110" y2="180" stroke="#000" stroke-width="8" />
+            <line x1="110" y1="10" x2="110" y2="180" stroke="#cbd5e1" stroke-width="4" />
+            <rect x="95" y="20" width="8" height="65" fill="#fff" stroke="#000" stroke-width="2" />
+            <rect x="97" y="38" width="4" height="28" fill="none" stroke="#e11d48" stroke-width="2" />
+
+            <!-- Aro y Red animada -->
+            <line x1="56" y1="60" x2="95" y2="60" stroke="#ff4500" stroke-width="5" stroke-linecap="round" />
+            <g class="@(netSwish ? "red-swish-anim" : "")">
+                <path d="M 58,62 L 62,90 L 88,90 L 92,62 Z" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="3" />
+                <line x1="62" y1="90" x2="66" y2="102" stroke="#fff" stroke-width="2" />
+                <line x1="88" y1="90" x2="84" y2="102" stroke="#fff" stroke-width="2" />
+            </g>
+            <ellipse cx="75" cy="60" rx="17" ry="3.5" fill="none" stroke="#000" stroke-width="3" />
+            <ellipse cx="75" cy="60" rx="16" ry="3" fill="none" stroke="#ff4500" stroke-width="2" />
+        </svg>
+
+        <!-- DEFENSOR RIVAL CERRANDO LA MARCA -->
+        <div class="position-absolute" style="right: 160px; bottom: 20px; transform: scaleX(-1); pointer-events: none; z-index: 6;">
+            <PixelArtPlayer Estado="@(animandoSalto ? "Saltando" : "Defendiendo")" TieneBalon="false" ColorPrimario="#334155" AnchoPx="100" AltoPx="120" />
+        </div>
+
+        <!-- JUGADOR #11 ARTICULADO (SINCRONIZADO CON EL SALTO) -->
+        <div class="position-absolute" style="left: 90px; bottom: @(20 + elevacionJugadorY)px; transition: @(animandoSalto ? "none" : "bottom 0.15s ease-out"); pointer-events: none; z-index: 7;">
+            <svg viewBox="0 0 60 70" width="115" height="135" style="shape-rendering: crispEdges; overflow: visible;">
+                
+                <!-- Sombra dinámica proporcional a la altura del salto -->
+                <ellipse cx="30" cy="@(64 - elevacionJugadorY)" 
+                         rx="@(Math.Max(5, 14 - (elevacionJugadorY * 0.25)))" 
+                         ry="@(Math.Max(1.5, 3.5 - (elevacionJugadorY * 0.08)))" 
+                         fill="rgba(0,0,0,@(Math.Max(0.12, 0.4 - (elevacionJugadorY * 0.008))))" />
+
+                <g transform="translate(0, 0)">
+                    <!-- PIERNA TRASERA -->
+                    <g transform="@rotacionPiernaTrasera">
+                        <rect x="23" y="44" width="5" height="10" fill="#d49b6a" stroke="#000" stroke-width="1.5" />
+                        <rect x="20" y="54" width="10" height="6" fill="#1D428A" stroke="#000" stroke-width="2" />
+                        <rect x="20" y="58" width="10" height="2" fill="#FFC72C" />
+                    </g>
+
+                    <!-- TORSO / JERSEY WARRIORS CON EL DORSAL 11 -->
+                    <rect x="20" y="26" width="20" height="18" rx="2" fill="#1D428A" stroke="#000" stroke-width="2" />
+                    <rect x="20" y="26" width="3" height="18" fill="#FFC72C" stroke="#000" stroke-width="1" />
+                    <rect x="37" y="26" width="3" height="18" fill="#FFC72C" stroke="#000" stroke-width="1" />
+                    <!-- Número 11 en Pixel Art -->
+                    <rect x="27" y="31" width="2" height="7" fill="#FFC72C" stroke="#000" stroke-width="0.7" />
+                    <rect x="31" y="31" width="2" height="7" fill="#FFC72C" stroke="#000" stroke-width="0.7" />
+
+                    <!-- SHORTS WARRIORS -->
+                    <rect x="20" y="40" width="20" height="7" fill="#1D428A" stroke="#000" stroke-width="2" />
+                    <rect x="29" y="43" width="2" height="4" fill="#000" />
+                    <line x1="20" y1="46" x2="40" y2="46" stroke="#FFC72C" stroke-width="1.5" />
+
+                    <!-- CABEZA CON VINCHA AMARILLA Y PELO ANIME -->
+                    <g transform="@inclinacionCabeza">
+                        <path d="M 17,4 L 43,4 L 47,9 L 49,18 L 45,17 L 43,21 L 39,20 L 37,24 L 27,22 L 25,25 L 20,20 L 15,17 L 13,10 Z" 
+                              fill="#18110b" stroke="#000" stroke-width="2" />
+                        <!-- Vincha Amarilla de los Warriors -->
+                        <rect x="20" y="12" width="20" height="3.5" fill="#FFC72C" stroke="#000" stroke-width="1.5" />
+
+                        <!-- Rostro -->
+                        <rect x="20" y="15" width="20" height="11" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+
+                        <!-- Ojos según estado -->
+                        @if (festejandoNightNight)
+                        {
+                            <!-- Ojos cerrados durmiendo confiado (Night Night) -->
+                            <path d="M 24,19 L 28,21 L 24,20" stroke="#000" stroke-width="2" fill="none" />
+                            <path d="M 32,19 L 36,21 L 32,20" stroke="#000" stroke-width="2" fill="none" />
+                            <path d="M 28,24 Q 30,26 32,24" stroke="#000" stroke-width="1.5" fill="none" />
+                        }
+                        else
+                        {
+                            <rect x="25" y="17" width="4" height="5" fill="#000" />
+                            <rect x="26" y="18" width="1.5" height="2" fill="#fff" />
+                            <rect x="33" y="17" width="4" height="5" fill="#000" />
+                            <rect x="34" y="18" width="1.5" height="2" fill="#fff" />
+                            <rect x="28" y="23" width="4" height="1.5" fill="#000" />
+                        }
+                    </g>
+
+                    <!-- PIERNA DELANTERA CON ZAPATILLAS WARRIORS CHUNKY -->
+                    <g transform="@rotacionPiernaDelantera">
+                        <rect x="32" y="44" width="5" height="10" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+                        <rect x="29" y="54" width="11" height="6" fill="#1D428A" stroke="#000" stroke-width="2" />
+                        <rect x="29" y="58" width="11" height="2" fill="#FFC72C" />
+                    </g>
+
+                    <!-- BRAZOS Y POSICIÓN DEL BALÓN -->
+                    @if (festejandoNightNight)
+                    {
+                        <!-- Manos juntas al lado de la mejilla (Gesto Night Night) -->
+                        <g transform="translate(10, -4) rotate(-35 30 20)">
+                            <rect x="34" y="14" width="6" height="8" rx="2" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+                            <rect x="36" y="12" width="6" height="8" rx="2" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+                        </g>
+                    }
+                    else if (!balonVolando)
+                    {
+                        <!-- Brazos articulados sosteniendo el balón en ascenso o muñequeo -->
+                        <g transform="@anguloBrazoTiro">
+                            <rect x="34" y="20" width="5" height="14" rx="2" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+                            <!-- Muñequera Warriors -->
+                            <rect x="34" y="28" width="5" height="3" fill="#FFC72C" />
+                        </g>
+
+                        <!-- Balón en las manos del jugador -->
+                        <g transform="@posicionBalonManos">
+                            <circle cx="42" cy="18" r="8" fill="#e65100" stroke="#000" stroke-width="2" />
+                            <line x1="34" y1="18" x2="50" y2="18" stroke="#000" stroke-width="1.5" />
+                            <line x1="42" y1="10" x2="42" y2="26" stroke="#000" stroke-width="1.5" />
+                        </g>
+                    }
+                </g>
+            </svg>
+        </div>
+
+        <!-- BALÓN VOLANDO EN PARÁBOLA TRAS SOLTAR -->
+        @if (balonVolando)
+        {
+            <div class="position-absolute" style="left: @(balonVueloX)px; top: @(balonVueloY)px; transform: translate(-50%, -50%); pointer-events: none; z-index: 15;">
+                <svg width="28" height="28" viewBox="0 0 28 28" class="balon-volando-giro">
+                    <circle cx="14" cy="14" r="12" fill="#e65100" stroke="#000" stroke-width="2.5" />
+                    <line x1="2" y1="14" x2="26" y2="14" stroke="#000" stroke-width="2" />
+                    <line x1="14" y1="2" x2="14" y2="26" stroke="#000" stroke-width="2" />
+                </svg>
+            </div>
+        }
+
+        <!-- FEEDBACK POPUP ARCADE (GREEN RELEASE / CLANK) -->
+        @if (!string.IsNullOrEmpty(textoArcadePop))
+        {
+            <div class="position-absolute top-50 start-50 translate-middle text-center arcade-pop-anim" style="pointer-events: none; z-index: 25;">
+                <span class="display-3 fw-bold @colorTextoPop nba-title" style="-webkit-text-stroke: 2px #000; text-shadow: 4px 4px 0 #000;">
+                    @textoArcadePop
+                </span>
+            </div>
+        }
+    </div>
+
+    <!-- MEDIDOR DE TIRO CON FRANJA VERDE SINCRONIZADA -->
+    <div class="my-3 px-2">
+        <div class="d-flex justify-content-between text-secondary small fw-bold mb-1">
+            <span>FLEXIÓN (CARGA)</span>
+            <span class="text-warning">PICO DE SALTO (GREEN RELEASE 🎯)</span>
+            <span>PASADO</span>
+        </div>
+        
+        <div class="position-relative rounded border border-secondary" style="height: 38px; background: #0b0e14; overflow: hidden;">
+            <!-- Franja Verde en el pico exacto del salto (70% - 85%) -->
+            <div class="position-absolute bg-success h-100" style="left: @zonaVerdeMin%; width: @(zonaVerdeMax - zonaVerdeMin)%; box-shadow: 0 0 15px #10b981; opacity: 0.85;"></div>
+            <!-- Aguja de sincronización -->
+            <div class="position-absolute bg-warning h-100" style="left: @progresoTiming%; width: 6px; box-shadow: 0 0 12px #f59e0b;"></div>
+        </div>
+    </div>
+
+    <!-- BOTÓN DE CONTROL GATILLO -->
+    @if (!balonVolando && !festejandoNightNight && intentoActual <= intentosMax)
+    {
+        @if (!cargandoSalto)
+        {
+            <button class="btn btn-warning py-3 px-5 fw-bold text-dark fs-4 w-100 shadow-lg" 
+                    @onpointerdown="IniciarSalto">
+                MANTENER PARA SALTAR 🏀
+            </button>
+        }
+        else
+        {
+            <button class="btn btn-danger py-3 px-5 fw-bold text-white fs-4 w-100 shadow-lg pulse-boton" 
+                    @onpointerup="SoltarTiro">
+                ¡SOLTAR EN LO VERDE! 🎯
+            </button>
+        }
+    }
+    else
+    {
+        <button class="btn btn-secondary py-3 px-5 fw-bold text-muted fs-4 w-100" disabled>
+            @(festejandoNightNight ? "¡NIGHT NIGHT! 😴" : "BALÓN EN TRAYECTORIA...")
+        </button>
+    }
+
+    <div class="mt-2 text-info small fw-bold">@mensajeGuia</div>
+</div>
+
+<style>
+    .balon-volando-giro {
+        animation: anim-rotacion 0.28s infinite linear;
+    }
+    @@keyframes anim-rotacion {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .pulse-boton {
+        animation: anim-pulse-btn 0.2s infinite alternate ease-in-out;
+    }
+    @@keyframes anim-pulse-btn {
+        0% { transform: scale(0.99); }
+        100% { transform: scale(1.01); }
+    }
+
+    .arcade-pop-anim {
+        animation: anim-pop 0.8s forwards cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    @@keyframes anim-pop {
+        0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+        60% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+
+    .red-swish-anim {
+        animation: anim-swish 0.35s ease-out;
+        transform-origin: 75px 60px;
+    }
+    @@keyframes anim-swish {
+        0% { transform: scale(1, 1); }
+        50% { transform: scale(1.3, 1.4) skewX(8deg); }
+        100% { transform: scale(1, 1); }
+    }
+</style>
+
+@code {
+    [Parameter] public EventCallback<bool> OnFinalizado { get; set; }
+
+    private int progresoTiming = 0;
+    private bool cargandoSalto = false;
+    private bool animandoSalto = false;
+    private bool balonVolando = false;
+    private bool festejandoNightNight = false;
+    private bool netSwish = false;
+
+    // Físicas de articulación del jugador #11
+    private double elevacionJugadorY = 0;
+    private string anguloBrazoTiro = "rotate(0 36 22)";
+    private string posicionBalonManos = "translate(0, 0)";
+    private string rotacionPiernaDelantera = "rotate(0 34 44)";
+    private string rotacionPiernaTrasera = "rotate(0 25 44)";
+    private string inclinacionCabeza = "rotate(0 30 26)";
+
+    private double balonVueloX = 140;
+    private double balonVueloY = 160;
+
+    private int canastas = 0;
+    private int intentoActual = 1;
+    private const int intentosMax = 3;
+
+    // Rango verde dependiente del atributo de tiro
+    private int zonaVerdeMin = 70;
+    private int zonaVerdeMax = 84;
+
+    private string textoArcadePop = "";
+    private string colorTextoPop = "text-warning";
+    private string mensajeGuia = "Presiona y mantén presionado. Suelta cuando el jugador alcance el pico más alto del salto.";
+    private CancellationTokenSource cts = new();
+
+    protected override void OnInitialized()
+    {
+        int tiro = GameState.JugadorActivo?.TiroExterior ?? 80;
+        int ancho = Math.Clamp(10 + ((tiro - 70) / 3), 10, 18);
+        zonaVerdeMin = 70;
+        zonaVerdeMax = zonaVerdeMin + ancho;
+    }
+
+    private async Task IniciarSalto()
+    {
+        if (balonVolando || intentoActual > intentosMax) return;
+        cargandoSalto = true;
+        animandoSalto = true;
+        progresoTiming = 0;
+        textoArcadePop = "";
+        festejandoNightNight = false;
+
+        try
+        {
+            while (cargandoSalto && !cts.Token.IsCancellationRequested)
+            {
+                progresoTiming += 3;
+                ActualizarAnimacionFrame(progresoTiming);
+                StateHasChanged();
+
+                if (progresoTiming >= 100)
+                {
+                    // Se pasó de tiempo: tiro forzado tardío
+                    await SoltarTiro();
+                    break;
+                }
+                await Task.Delay(20, cts.Token);
+            }
+        }
+        catch (TaskCanceledException) { }
+    }
+
+    private void ActualizarAnimacionFrame(int progreso)
+    {
+        if (progreso < 20)
+        {
+            // FASE 1: FLEXIÓN PREVIA AL SALTO (CROUCH)
+            elevacionJugadorY = -5;
+            rotacionPiernaDelantera = "rotate(15 34 44)";
+            rotacionPiernaTrasera = "rotate(-15 25 44)";
+            anguloBrazoTiro = "rotate(20 36 22)";
+            posicionBalonManos = "translate(-2, 10)";
+            inclinacionCabeza = "rotate(4 30 26)";
+        }
+        else if (progreso <= 75)
+        {
+            // FASE 2: DESPEGUE Y ELEVACIÓN RUMBO AL PICO
+            double factor = (progreso - 20) / 55.0;
+            elevacionJugadorY = factor * 48; // Sube hasta 48px de altura
+            rotacionPiernaDelantera = "rotate(5 34 44)";
+            rotacionPiernaTrasera = "rotate(-5 25 44)";
+            anguloBrazoTiro = $"rotate({-20 - (factor * 70)} 36 22)"; // Brazos suben sobre la cabeza
+            posicionBalonManos = $"translate({-factor * 6}, {-factor * 28})";
+            inclinacionCabeza = "rotate(-2 30 26)";
+        }
+        else
+        {
+            // FASE 3: FLOTANDO EN EL PICO MÁXIMO (GREEN RELEASE ZONE)
+            elevacionJugadorY = 48;
+            rotacionPiernaDelantera = "rotate(0 34 44)";
+            rotacionPiernaTrasera = "rotate(0 25 44)";
+            anguloBrazoTiro = "rotate(-95 36 22)";
+            posicionBalonManos = "translate(-8, -30)";
+            inclinacionCabeza = "rotate(0 30 26)";
+        }
+    }
+
+    private async Task SoltarTiro()
+    {
+        if (!cargandoSalto) return;
+        cargandoSalto = false;
+
+        // Muñequeo inmediato (Snap de muñeca)
+        anguloBrazoTiro = "rotate(-50 36 22)";
+        bool esVerde = (progresoTiming >= zonaVerdeMin && progresoTiming <= zonaVerdeMax);
+
+        // BALÓN SALE EN PARÁBOLA FÍSICA DESDE LAS MANOS DEL JUGADOR
+        balonVolando = true;
+        balonVueloX = 135;
+        balonVueloY = 160 - elevacionJugadorY;
+        StateHasChanged();
+
+        double destinoX = esVerde ? 520 : (progresoTiming < zonaVerdeMin ? 485 : 555);
+        double destinoY = 100;
+
+        for (int i = 0; i <= 22; i++)
+        {
+            double t = i / 22.0;
+            double alturaArco = 150;
+            balonVueloX = (1 - t) * (1 - t) * 135 + 2 * (1 - t) * t * 320 + t * t * destinoX;
+            balonVueloY = (1 - t) * (1 - t) * (160 - elevacionJugadorY) + 2 * (1 - t) * t * (160 - elevacionJugadorY - alturaArco) + t * t * destinoY;
+            StateHasChanged();
+            await Task.Delay(16);
+        }
+
+        // Aterrizaje del jugador
+        elevacionJugadorY = 0;
+        rotacionPiernaDelantera = "rotate(0 34 44)";
+        rotacionPiernaTrasera = "rotate(0 25 44)";
+
+        if (esVerde)
+        {
+            canastas++;
+            netSwish = true;
+            festejandoNightNight = true; // GESTO NIGHT NIGHT DE CURRY
+            textoArcadePop = "GREEN RELEASE! 🎯";
+            colorTextoPop = "text-success";
+            mensajeGuia = "¡Tiro perfecto en el ápice de la suspensión!";
+            StateHasChanged();
+            await Task.Delay(260);
+            netSwish = false;
+        }
+        else
+        {
+            textoArcadePop = "CLANK! ❌";
+            colorTextoPop = "text-danger";
+            mensajeGuia = progresoTiming < zonaVerdeMin ? "Soltaste antes de tiempo (Tiro corto)." : "Soltaste tarde en la caída.";
+            
+            // Rebote de fallo
+            for (int r = 0; r < 6; r++)
+            {
+                balonVueloY += 7;
+                balonVueloX -= 3;
+                StateHasChanged();
+                await Task.Delay(16);
+            }
+        }
+
+        await Task.Delay(1000);
+        balonVolando = false;
+        animandoSalto = false;
+        textoArcadePop = "";
+
+        if (intentoActual >= intentosMax)
+        {
+            await OnFinalizado.InvokeAsync(canastas >= 2);
+        }
+        else
+        {
+            intentoActual++;
+            festejandoNightNight = false;
+            progresoTiming = 0;
+            ActualizarAnimacionFrame(0);
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+    }
+}

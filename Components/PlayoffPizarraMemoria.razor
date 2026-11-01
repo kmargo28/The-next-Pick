@@ -1,0 +1,193 @@
+﻿@namespace TheNextPick.Components
+@using TheNextPick.Engine
+@inject GameStateService GameState
+
+<div class="sports-card p-3 my-2 text-center" style="max-width: 620px; margin: auto; background: #0a1017; border: 3px solid #166534; box-shadow: 0 0 25px rgba(22,101,52,0.35);">
+    
+    <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+        <span class="badge px-3 py-1 fw-bold fs-6" style="background: #00e676; color: #000; border-radius: 3px;">
+            📋 PIZARRA TÁCTICA
+        </span>
+        <span class="badge bg-black border border-secondary text-warning fw-bold">
+            SEED #@GameState.SeedPlayoffs
+        </span>
+    </div>
+
+    <h3 class="text-white fw-bold mb-1 nba-title">@GameState.JugadorActivo?.EquipoActual.ToUpper() vs @GameState.RivalPlayoffs.ToUpper()</h3>
+    <p class="text-secondary small mb-2">
+        El DT tapó la pizarra. En la cancha tienes que reconocer las jugadas de a pares para ejecutar los esquemas.
+    </p>
+
+    <!-- VIDAS (CORAZONES) Y JUGADAS RESTANTES -->
+    <div class="d-flex justify-content-between align-items-center my-2 px-2">
+        <div>
+            <span class="text-secondary small fw-bold me-1">TE QUEDAN:</span>
+            @for (int v = 0; v < vidasRestantes; v++)
+            {
+                <span style="font-size: 1.15rem; color: #00e676;">💚</span>
+            }
+        </div>
+        <span class="badge bg-black border border-success text-success px-2 py-1 fw-bold">
+            @parejasAcertadas / @totalParejas JUGADAS
+        </span>
+    </div>
+
+    <!-- CUADRÍCULA 4x3 REBARAJADA -->
+    <div class="row g-2 justify-content-center my-3 p-2 rounded" style="background: #061109; border: 2px dashed #15803d;">
+        @for (int i = 0; i < cartas.Count; i++)
+        {
+            var index = i;
+            var c = cartas[index];
+            var descubierta = c.Emparejada || index == primerIndice || index == segundoIndice;
+
+            <div class="col-3">
+                <button class="btn w-100 p-0 rounded tactical-card @(descubierta ? "card-flipped" : "")" 
+                        style="height: 75px; background: @(descubierta ? "#14532d" : "#0f172a"); border: 2px solid @(descubierta ? "#00e676" : "#334155");"
+                        @onclick="() => SeleccionarCarta(index)" disabled="@(bloqueado || c.Emparejada)">
+                    @if (descubierta)
+                    {
+                        <div class="p-1">
+                            <span class="fs-4 d-block">@c.Icono</span>
+                            <span class="badge bg-black text-warning" style="font-size: 0.65rem;">@c.Nombre</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="fs-4" style="color: #ea580c; filter: drop-shadow(0 0 2px #000);">🏀</span>
+                    }
+                </button>
+            </div>
+        }
+    </div>
+
+    <div class="mt-2 text-info small fw-bold">@mensajeFeedback</div>
+</div>
+
+<style>
+    .tactical-card { transition: transform 0.12s ease-in-out; }
+    .card-flipped { transform: scale(1.04); }
+</style>
+
+@code {
+    [Parameter] public int Ronda { get; set; } = 1;
+    [Parameter] public EventCallback<bool> OnCompletado { get; set; }
+
+    private class CartaTactismo
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = "";
+        public string Icono { get; set; } = "📋";
+        public bool Emparejada { get; set; } = false;
+    }
+
+    private List<CartaTactismo> cartas = new();
+    private int vidasRestantes = 5;
+    private int parejasAcertadas = 0;
+    private const int totalParejas = 6;
+    private int? primerIndice = null;
+    private int? segundoIndice = null;
+    private bool bloqueado = false;
+    private int rondaAnterior = -1;
+    private string mensajeFeedback = "Memoriza los esquemas tácticos dibujados en la pizarra.";
+
+    protected override void OnInitialized()
+    {
+        ReiniciarTablero();
+    }
+
+    protected override void OnParametersSet()
+    {
+        // Si la ronda cambió (de Ronda 1 a Semis, o de Semis a Final Conf), forzar nuevo barajado
+        if (Ronda != rondaAnterior)
+        {
+            rondaAnterior = Ronda;
+            ReiniciarTablero();
+        }
+    }
+
+    private void ReiniciarTablero()
+    {
+        vidasRestantes = GameState.SeedPlayoffs <= 2 ? 6 : (GameState.SeedPlayoffs >= 6 ? 4 : 5);
+        parejasAcertadas = 0;
+        primerIndice = null;
+        segundoIndice = null;
+        bloqueado = false;
+        mensajeFeedback = "Nueva serie: memoriza los esquemas tácticos en la pizarra.";
+
+        var barajaBaloncesto = new List<(string, string)>
+        {
+            ("Pick & Roll", "⚡"),
+            ("Alley-Oop", "🚀"),
+            ("Cuernos 24", "🐂"),
+            ("Triángulo", "🔺"),
+            ("Aclarado 1v1", "👑"),
+            ("Fastbreak", "👟")
+        };
+
+        cartas.Clear();
+        int id = 0;
+        foreach (var item in barajaBaloncesto)
+        {
+            cartas.Add(new() { Id = id, Nombre = item.Item1, Icono = item.Item2, Emparejada = false });
+            cartas.Add(new() { Id = id, Nombre = item.Item1, Icono = item.Item2, Emparejada = false });
+            id++;
+        }
+
+        // Distribución 100% aleatoria con nueva semilla
+        cartas = cartas.OrderBy(_ => Random.Shared.Next()).ToList();
+        StateHasChanged();
+    }
+
+    private async Task SeleccionarCarta(int index)
+    {
+        if (bloqueado || primerIndice == index) return;
+
+        if (primerIndice == null)
+        {
+            primerIndice = index;
+            StateHasChanged();
+            return;
+        }
+
+        segundoIndice = index;
+        bloqueado = true;
+        StateHasChanged();
+
+        if (cartas[primerIndice.Value].Id == cartas[segundoIndice.Value].Id)
+        {
+            cartas[primerIndice.Value].Emparejada = true;
+            cartas[segundoIndice.Value].Emparejada = true;
+            parejasAcertadas++;
+            mensajeFeedback = $"¡Esquema memorizado! {cartas[primerIndice.Value].Nombre}.";
+            primerIndice = null;
+            segundoIndice = null;
+            bloqueado = false;
+            StateHasChanged();
+
+            if (parejasAcertadas >= totalParejas)
+            {
+                bloqueado = true;
+                await Task.Delay(1000);
+                await OnCompletado.InvokeAsync(true);
+            }
+        }
+        else
+        {
+            vidasRestantes--;
+            mensajeFeedback = "Error en la ejecución del sistema de juego.";
+            StateHasChanged();
+            await Task.Delay(850);
+            primerIndice = null;
+            segundoIndice = null;
+            bloqueado = false;
+            StateHasChanged();
+
+            if (vidasRestantes <= 0)
+            {
+                bloqueado = true;
+                await Task.Delay(1000);
+                await OnCompletado.InvokeAsync(false);
+            }
+        }
+    }
+}

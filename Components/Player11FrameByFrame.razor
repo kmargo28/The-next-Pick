@@ -1,0 +1,96 @@
+﻿@namespace TheNextPick.Components
+
+<div class="player-8frames-box @(Animando ? "run-shot-anim" : "pose-idle")" 
+     style="width: @(AnchoPx)px; height: @(AltoPx)px; display: inline-block; position: relative; user-select: none;">
+    
+    <svg viewBox="0 0 64 74" width="100%" height="100%" style="shape-rendering: crispEdges; overflow: visible;">
+        <ellipse class="frame-shadow" cx="32" cy="68" rx="14" ry="3.5" fill="rgba(0,0,0,0.4)" />
+
+        <g class="frame-player-body">
+            <g class="f-leg-back">
+                <rect x="23" y="44" width="5" height="10" fill="#d49b6a" stroke="#000" stroke-width="1.5" />
+                <rect x="20" y="54" width="10" height="6" fill="#1D428A" stroke="#000" stroke-width="2" />
+                <rect x="20" y="58" width="10" height="2" fill="#FFC72C" />
+            </g>
+
+            <g class="f-torso">
+                <rect x="22" y="26" width="20" height="18" fill="#1D428A" stroke="#000" stroke-width="2" />
+                <rect x="22" y="26" width="3" height="18" fill="#FFC72C" />
+                <rect x="39" y="26" width="3" height="18" fill="#FFC72C" />
+                <rect x="28" y="31" width="2" height="7" fill="#FFC72C" stroke="#000" stroke-width="0.6" />
+                <rect x="32" y="31" width="2" height="7" fill="#FFC72C" stroke="#000" stroke-width="0.6" />
+                <rect x="22" y="40" width="20" height="7" fill="#1D428A" stroke="#000" stroke-width="2" />
+                <rect x="31" y="43" width="2" height="4" fill="#000" />
+            </g>
+
+            <g class="f-head">
+                <path d="M 18,5 L 44,5 L 48,10 L 49,19 L 45,18 L 43,22 L 39,21 L 37,25 L 27,23 L 24,26 L 20,21 L 15,18 L 14,11 Z" fill="#18110b" stroke="#000" stroke-width="2" />
+                <rect x="21" y="13" width="20" height="3.5" fill="#FFC72C" stroke="#000" stroke-width="1.5" />
+                <rect x="22" y="16" width="18" height="10" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+                <rect x="28" y="17" width="4" height="4" fill="#000" />
+                <rect x="29" y="18" width="1.5" height="1.5" fill="#fff" />
+            </g>
+
+            <g class="f-leg-front">
+                <rect x="32" y="44" width="5" height="10" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+                <rect x="29" y="54" width="11" height="6" fill="#1D428A" stroke="#000" stroke-width="2" />
+                <rect x="29" y="58" width="11" height="2" fill="#FFC72C" />
+            </g>
+
+            <g class="f-arm-shoot">
+                <rect x="34" y="22" width="5" height="14" rx="2" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+                <rect x="34" y="29" width="5" height="3" fill="#FFC72C" />
+            </g>
+
+            <g class="f-ball">
+                <circle cx="42" cy="22" r="7.5" fill="#e65100" stroke="#000" stroke-width="2" />
+                <line x1="34.5" y1="22" x2="49.5" y2="22" stroke="#000" stroke-width="1.5" />
+                <line x1="42" y1="14.5" x2="42" y2="29.5" stroke="#000" stroke-width="1.5" />
+            </g>
+        </g>
+    </svg>
+</div>
+
+<style>
+    .frame-player-body { transform-origin: 32px 64px; }
+    .f-head { transform-origin: 32px 25px; }
+    .f-arm-shoot { transform-origin: 36px 24px; }
+    .f-leg-front { transform-origin: 34px 44px; }
+    .f-leg-back { transform-origin: 25px 44px; }
+    .f-ball { transform-origin: 42px 22px; }
+
+    .run-shot-anim .frame-player-body {
+        animation: anim-8frames-shot 0.9s steps(1) forwards;
+    }
+    .run-shot-anim .frame-shadow {
+        animation: anim-8frames-shadow 0.9s steps(1) forwards;
+    }
+
+    @@keyframes anim-8frames-shot {
+        0% { transform: translateY(0); }
+        14% { transform: translateY(5px) scale(1.05, 0.93); }
+        28% { transform: translateY(-12px) scale(0.96, 1.06); }
+        42% { transform: translateY(-28px); }
+        57% { transform: translateY(-42px); }
+        71% { transform: translateY(-38px); }
+        85% { transform: translateY(-16px); }
+        100% { transform: translateY(3px) scale(1.04, 0.95); }
+    }
+
+    @@keyframes anim-8frames-shadow {
+        0%   { transform: scale(1.0); opacity: 0.45; }
+        14%  { transform: scale(1.15); opacity: 0.55; }
+        28%  { transform: scale(0.75); opacity: 0.3; }
+        42%  { transform: scale(0.5); opacity: 0.2; }
+        57%  { transform: scale(0.35); opacity: 0.15; }
+        71%  { transform: scale(0.4); opacity: 0.18; }
+        85%  { transform: scale(0.7); opacity: 0.3; }
+        100% { transform: scale(1.2); opacity: 0.55; }
+    }
+</style>
+
+@code {
+    [Parameter] public bool Animando { get; set; } = false;
+    [Parameter] public int AnchoPx { get; set; } = 120;
+    [Parameter] public int AltoPx { get; set; } = 140;
+}

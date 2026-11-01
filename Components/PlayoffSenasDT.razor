@@ -1,0 +1,172 @@
+﻿@namespace TheNextPick.Components
+@using TheNextPick.Engine
+@inject GameStateService GameState
+@implements IDisposable
+
+<div class="sports-card p-3 my-2 text-center" style="max-width: 620px; margin: auto; background: #0c1017; border: 2px solid #232c3d;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+        <span class="badge px-3 py-1 fw-bold fs-6" style="background: #e11d48; color: #fff; border-radius: 2px;">
+            LA SEÑA DEL DT
+        </span>
+        <span class="badge bg-black border border-secondary text-warning fw-bold">
+            SEED #@GameState.SeedPlayoffs
+        </span>
+    </div>
+
+    <h3 class="text-white fw-bold mb-1 nba-title">@GameState.JugadorActivo?.EquipoActual.ToUpper() vs @GameState.RivalPlayoffs.ToUpper()</h3>
+    <p class="text-secondary small mb-2">
+        Mira la seña del DT y repítela EN ORDEN: la clavas y ganas el partido. En eliminatorias un error te deja afuera[cite: 9].
+    </p>
+
+    <!-- ESTADO DEL JUGADOR -->
+    <div class="mb-2">
+        @if (mostrandoPatron)
+        {
+            <span class="badge bg-warning text-dark fw-bold px-3 py-1">ATENTO: EL DT ESTÁ DANDO LA SEÑA...</span>
+        }
+        else if (turnoUsuario)
+        {
+            <span class="badge px-3 py-1 fw-bold" style="background: #00e676; color: #000;">TU TURNO: REPÍTELA (@pasoUsuario / @secuencia.Count)[cite: 9]</span>
+        }
+    </div>
+
+    <!-- CUADRÍCULA 4x4 (16 PANELES DE COLORES) -->
+    <div class="p-3 mx-auto rounded bg-black border border-secondary" style="max-width: 380px;">
+        <div class="row g-2">
+            @for (int p = 0; p < 16; p++)
+            {
+                var panelId = p;
+                var iluminado = (panelId == panelIluminado);
+                var colorBase = colores[panelId % colores.Length];
+
+                <div class="col-3">
+                    <button class="btn w-100 rounded panel-btn @(iluminado ? "panel-flash" : "")" 
+                            style="height: 65px; background: @(iluminado ? "#fff" : colorBase); border: 2px solid #000; opacity: @(iluminado ? "1.0" : "0.55");"
+                            @onclick="() => PulsarPanel(panelId)" disabled="@(!turnoUsuario)">
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (!iniciado)
+    {
+        <button class="btn w-100 py-3 mt-3 fw-bold text-dark fs-5" 
+                style="background: #00e676; border-radius: 4px;"
+                @onclick="ComenzarDesafio">
+            EMPEZAR[cite: 9]
+        </button>
+    }
+
+    <div class="mt-2 text-info small fw-bold">@mensajeFeedback</div>
+</div>
+
+<style>
+    .panel-btn { transition: all 0.08s ease-in-out; }
+    .panel-flash { transform: scale(1.08); box-shadow: 0 0 25px #ffffff; z-index: 10; opacity: 1 !important; }
+</style>
+
+@code {
+    [Parameter] public EventCallback<bool> OnCompletado { get; set; }
+
+    private readonly string[] colores = new[]
+    {
+        "#881337", "#7c2d12", "#713f12", "#365314",
+        "#14532d", "#064e3b", "#134e4a", "#164e63",
+        "#0c4a6e", "#1e3a8a", "#312e81", "#4c1d95",
+        "#581c87", "#701a75", "#831843", "#4c0519"
+    };
+
+    private List<int> secuencia = new();
+    private int pasoUsuario = 0;
+    private int panelIluminado = -1;
+    private bool iniciado = false;
+    private bool mostrandoPatron = false;
+    private bool turnoUsuario = false;
+    private string mensajeFeedback = "Pulsa Empezar para observar la pizarra del entrenador.";
+    private CancellationTokenSource cts = new();
+
+    private async Task ComenzarDesafio()
+    {
+        iniciado = true;
+        secuencia.Clear();
+        pasoUsuario = 0;
+
+        // Longitud de la secuencia según ronda y Seed
+        int longitud = 4 + GameState.RondaIndicePlayoffs;
+        if (GameState.SeedPlayoffs >= 6) longitud += 1; // Más difícil si eres puesto bajo
+
+        for (int i = 0; i < longitud; i++)
+        {
+            secuencia.Add(Random.Shared.Next(0, 16));
+        }
+
+        await MostrarSecuencia();
+    }
+
+    private async Task MostrarSecuencia()
+    {
+        mostrandoPatron = true;
+        turnoUsuario = false;
+        mensajeFeedback = "Observa la secuencia de los 16 esquemas...";
+        StateHasChanged();
+        await Task.Delay(600);
+
+        int velocidadFlash = Math.Max(240, 520 - (GameState.RondaIndicePlayoffs * 50));
+
+        foreach (var id in secuencia)
+        {
+            panelIluminado = id;
+            StateHasChanged();
+            await Task.Delay(velocidadFlash, cts.Token);
+            panelIluminado = -1;
+            StateHasChanged();
+            await Task.Delay(180, cts.Token);
+        }
+
+        mostrandoPatron = false;
+        turnoUsuario = true;
+        pasoUsuario = 0;
+        mensajeFeedback = "¡Tu turno! Repite la secuencia en el mismo orden.";
+        StateHasChanged();
+    }
+
+    private async Task PulsarPanel(int id)
+    {
+        if (!turnoUsuario) return;
+
+        panelIluminado = id;
+        StateHasChanged();
+        await Task.Delay(120);
+        panelIluminado = -1;
+        StateHasChanged();
+
+        if (id == secuencia[pasoUsuario])
+        {
+            pasoUsuario++;
+            if (pasoUsuario >= secuencia.Count)
+            {
+                turnoUsuario = false;
+                mensajeFeedback = "¡SEÑA EJECUTADA CON ÉXITO! LA JUGADA FUE CANASTA 🎯";
+                StateHasChanged();
+                await Task.Delay(1200);
+                await OnCompletado.InvokeAsync(true);
+            }
+        }
+        else
+        {
+            turnoUsuario = false;
+            mensajeFeedback = "¡ERROR EN LA SEÑA! Balón perdido y derrota en la serie ❌";
+            StateHasChanged();
+            await Task.Delay(1200);
+            await OnCompletado.InvokeAsync(false);
+        }
+    }
+
+    public void Dispose()
+    {
+        try { cts.Cancel(); } catch { }
+        try { cts.Dispose(); } catch { }
+    }
+}

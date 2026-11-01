@@ -4,56 +4,133 @@
 @inject GameStateService GameState
 @implements IDisposable
 
-<div class="sports-card p-4 my-3 text-center" style="max-width: 580px; margin: auto; background: #0c1017; border: 2px solid #2d3748;">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <span class="badge bg-warning text-dark text-uppercase px-2 py-1 small fw-bold">NBA All-Star 2027</span>
+<div class="sports-card p-4 my-3 text-center position-relative" style="max-width: 620px; margin: auto; background: #0c1017; border: 3px solid #f59e0b; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+    
+    <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+        <span class="badge bg-warning text-dark text-uppercase px-3 py-1 fs-6 fw-bold border border-dark">⭐ 3-POINT CONTEST</span>
         <span class="text-white fw-bold fs-5">PUNTOS: @puntosTotales / 30</span>
     </div>
 
-    <h4 class="text-white fw-bold mb-1">Concurso de Triples Oficial</h4>
-    <p class="text-secondary small mb-2">Carro @(carroActual + 1) de 5 | Tiro @(tiroEnCarro + 1) de 5 @(tiroEnCarro == 4 ? "⭐ (MONEY BALL x2)" : "")</p>
+    <p class="text-secondary small mb-2">Carro @(carroActual + 1) de 5 | Balón @(tiroEnCarro + 1) de 5 @(tiroEnCarro == 4 ? "🔥 (MONEY BALL x2)" : "")</p>
 
-    <!-- DUELA DE TRIPLES CON GRADAS -->
-    <div class="position-relative mx-auto rounded overflow-hidden my-2" style="width: 100%; height: 200px; border: 2px solid #2d3748;">
+    <!-- PISTA CON ARO, TIRADOR Y CARRO -->
+    <div class="position-relative mx-auto rounded overflow-hidden my-2" style="width: 100%; height: 230px; border: 2px solid #2d3748;">
         <CanchaFondo />
 
-        <!-- Tirador Scott Pilgrim -->
-        <div class="position-absolute" style="left: 80px; bottom: 10px;">
-            <PixelArtPlayer Estado="@estadoTirador" ColorPrimario="@colorEquipo" AnchoPx="85" AltoPx="110" />
+        <!-- CANASTA ARCADE A LA DERECHA -->
+        <svg viewBox="0 0 140 180" class="position-absolute end-0" style="width: 120px; height: 160px; top: 40px; pointer-events: none; z-index: 5;">
+            <line x1="110" y1="10" x2="110" y2="160" stroke="#000" stroke-width="8" />
+            <line x1="110" y1="10" x2="110" y2="160" stroke="#cbd5e1" stroke-width="4" />
+            <rect x="95" y="15" width="8" height="60" fill="#fff" stroke="#000" stroke-width="2" />
+            <rect x="97" y="32" width="4" height="26" fill="none" stroke="#e11d48" stroke-width="2" />
+
+            <line x1="58" y1="52" x2="95" y2="52" stroke="#ff4500" stroke-width="5" stroke-linecap="round" />
+            
+            <g class="@(netSwish ? "red-swish-anim" : "")">
+                <path d="M 60,54 L 64,80 L 88,80 L 92,54 Z" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="3" />
+                <line x1="64" y1="80" x2="68" y2="92" stroke="#fff" stroke-width="2" />
+                <line x1="88" y1="80" x2="84" y2="92" stroke="#fff" stroke-width="2" />
+            </g>
+
+            <ellipse cx="76" cy="52" rx="16" ry="3.5" fill="none" stroke="#000" stroke-width="3" />
+            <ellipse cx="76" cy="52" rx="15" ry="3" fill="none" stroke="#ff4500" stroke-width="2" />
+        </svg>
+
+        <!-- BALÓN VOLANDO EN PARÁBOLA HACIA EL ARO -->
+        @if (balonVolando)
+        {
+            <div class="position-absolute" style="left: @(balonX)px; top: @(balonY)px; transform: translate(-50%, -50%); pointer-events: none; z-index: 15;">
+                <svg width="24" height="24" viewBox="0 0 24 24" class="balon-volando-giro">
+                    <circle cx="12" cy="12" r="10" fill="@(esMoneyBall ? "#3b82f6" : "#e65100")" stroke="#000" stroke-width="2" />
+                    <line x1="2" y1="12" x2="22" y2="12" stroke="#000" stroke-width="1.5" />
+                    <line x1="12" y1="2" x2="12" y2="22" stroke="#000" stroke-width="1.5" />
+                </svg>
+            </div>
+        }
+
+        <!-- TIRADOR SCOTT PILGRIM -->
+        <div class="position-absolute" style="left: 80px; bottom: 15px; z-index: 6;">
+            <PixelArtPlayer Estado="@estadoTirador" TieneBalon="@(!balonVolando)" ColorPrimario="@colorEquipo" AnchoPx="90" AltoPx="115" />
         </div>
 
-        <!-- Carro de balones -->
-        <div class="position-absolute" style="left: 155px; bottom: 20px;">
-            <div class="bg-secondary rounded p-1 d-flex gap-1 border border-light">
+        <!-- CARRO DE BALONES REAL -->
+        <div class="position-absolute" style="left: 160px; bottom: 25px; z-index: 7;">
+            <div class="p-1 rounded bg-dark border border-secondary d-flex gap-1">
                 @for (int b = 0; b < (5 - tiroEnCarro); b++)
                 {
-                    <div class="rounded-circle" style="width: 10px; height: 10px; background: @(b == 0 && tiroEnCarro == 4 ? "#f59e0b" : "#e65100");"></div>
+                    var money = (b == (4 - tiroEnCarro));
+                    <div class="rounded-circle border border-dark" style="width: 12px; height: 12px; background: @(money ? "#3b82f6" : "#e65100");"></div>
                 }
             </div>
         </div>
+
+        <!-- POPUP ARCADE -->
+        @if (!string.IsNullOrEmpty(textoPop))
+        {
+            <div class="position-absolute top-50 start-50 translate-middle text-center arcade-pop-anim" style="pointer-events: none; z-index: 25;">
+                <span class="display-3 fw-bold @colorPop nba-title" style="-webkit-text-stroke: 2px #000; text-shadow: 4px 4px 0 #000;">
+                    @textoPop
+                </span>
+            </div>
+        }
     </div>
 
-    <!-- BARRA CON ANCHO ESCALABLE SEGÚN ATRIBUTO DE TIRO -->
+    <!-- BARRA VERDE DINÁMICA SEGÚN OVERALL -->
     <div class="position-relative my-3 rounded border border-secondary" style="height: 38px; background: #0b0e14; overflow: hidden;">
         <div class="position-absolute bg-success opacity-75 h-100" style="left: @zonaVerdeInicio%; width: @anchoVerde%;"></div>
-        <div class="position-absolute bg-warning h-100" style="left: @posicionBarra%; width: 5px; box-shadow: 0 0 10px #f59e0b;"></div>
+        <div class="position-absolute bg-warning h-100" style="left: @posicionBarra%; width: 6px; box-shadow: 0 0 10px #f59e0b;"></div>
     </div>
 
     @if (!activo && !finalizado)
     {
-        <button class="btn btn-warning py-3 px-5 fw-bold text-dark fs-5 mt-2" @onclick="IniciarRonda">
-            COMENZAR RONDA (TIRO @(GameState.JugadorActivo?.TiroExterior))
+        <button class="btn btn-warning py-3 px-5 fw-bold text-dark fs-5 mt-1" @onclick="IniciarRonda">
+            INICIAR RONDA (TIRO @(GameState.JugadorActivo?.TiroExterior)) ⏱️
         </button>
     }
-    else if (activo)
+    else if (activo && !balonVolando)
     {
-        <button class="btn btn-danger py-3 px-5 fw-bold fs-5 mt-1" @onclick="LanzarTriple">
-            ¡LANZAR!
+        <button class="btn btn-danger py-3 px-5 fw-bold fs-5 mt-1 text-white" @onclick="LanzarTriple">
+            ¡LANZAR! 🎯
+        </button>
+    }
+    else
+    {
+        <button class="btn btn-secondary py-3 px-5 fw-bold fs-5 mt-1" disabled>
+            BALÓN EN EL AIRE...
         </button>
     }
 
     <p class="mt-2 text-info fw-semibold small mb-0">@mensajeFeedback</p>
 </div>
+
+<style>
+    .balon-volando-giro {
+        animation: anim-rotacion 0.3s infinite linear;
+    }
+    @@keyframes anim-rotacion {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .arcade-pop-anim {
+        animation: anim-pop 0.7s forwards cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    @@keyframes anim-pop {
+        0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+        60% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+
+    .red-swish-anim {
+        animation: anim-swish 0.35s ease-out;
+        transform-origin: 76px 54px;
+    }
+    @@keyframes anim-swish {
+        0% { transform: scale(1, 1); }
+        50% { transform: scale(1.3, 1.4) skewX(8deg); }
+        100% { transform: scale(1, 1); }
+    }
+</style>
 
 @code {
     [Parameter] public EventCallback<int> OnFinalizado { get; set; }
@@ -65,13 +142,22 @@
     private int puntosTotales = 0;
     private bool activo = false;
     private bool finalizado = false;
-    private string mensajeFeedback = "Alineate en la esquina para iniciar.";
+    private bool balonVolando = false;
+    private bool netSwish = false;
+    private bool esMoneyBall = false;
+
+    private double balonX = 110;
+    private double balonY = 170;
 
     private int posicionBarra = 0;
     private bool subiendo = true;
-    private int zonaVerdeInicio = 68;
-    private int anchoVerde = 7;
+    private int zonaVerdeInicio = 65;
+    private int anchoVerde = 8;
     private int velocidadBarra = 6;
+
+    private string textoPop = "";
+    private string colorPop = "text-warning";
+    private string mensajeFeedback = "Alineate en la esquina de 3 puntos para iniciar.";
     private CancellationTokenSource? cts;
 
     protected override void OnInitialized()
@@ -79,10 +165,9 @@
         var eq = EquipoNBA.ObtenerPorNombre(GameState.JugadorActivo?.EquipoActual ?? "");
         colorEquipo = eq.ColorPrimario;
 
-        // DIFICULTAD ESCALADA SEGÚN EL OVERALL DE TIRO:
-        // A mayor tiro, mayor zona verde y movimiento más legible
+        // Cuanto mayor sea tu Tiro Exterior (+87), más ancha y controlable es la barra
         int tiro = GameState.JugadorActivo?.TiroExterior ?? 87;
-        anchoVerde = Math.Clamp(6 + (tiro - 87), 6, 16);
+        anchoVerde = Math.Clamp(7 + (tiro - 87), 7, 16);
         velocidadBarra = Math.Max(4, 7 - ((tiro - 87) / 4));
     }
 
@@ -90,8 +175,8 @@
     {
         activo = true;
         cts = new();
-        estadoTirador = "Saltando";
-        mensajeFeedback = "Presiona en la franja verde con precisión.";
+        estadoTirador = "Bote";
+        mensajeFeedback = "Presiona LANZAR cuando la aguja toque la franja verde.";
 
         try
         {
@@ -109,27 +194,69 @@
 
     private async Task LanzarTriple()
     {
+        if (balonVolando) return;
+        esMoneyBall = (tiroEnCarro == 4);
         estadoTirador = "Lanzando";
+
         bool acierto = posicionBarra >= zonaVerdeInicio && posicionBarra <= (zonaVerdeInicio + anchoVerde);
-        bool esMoneyBall = (tiroEnCarro == 4);
         int puntosTiro = acierto ? (esMoneyBall ? 2 : 1) : 0;
         puntosTotales += puntosTiro;
 
-        mensajeFeedback = acierto 
-            ? (esMoneyBall ? "¡MONEY BALL ADENTRO! (+2 pts)" : "¡Triple encestado! (+1 pt)") 
-            : "Tiro errado al hierro.";
+        // VUELO EN PARÁBOLA DEL BALÓN
+        balonVolando = true;
+        balonX = 120;
+        balonY = 160;
+        StateHasChanged();
+
+        double destinoX = acierto ? 520 : (posicionBarra < zonaVerdeInicio ? 485 : 555);
+        double destinoY = 95;
+
+        for (int i = 0; i <= 20; i++)
+        {
+            double t = i / 20.0;
+            double alturaArco = 160;
+            balonX = (1 - t) * (1 - t) * 120 + 2 * (1 - t) * t * 320 + t * t * destinoX;
+            balonY = (1 - t) * (1 - t) * 160 + 2 * (1 - t) * t * (160 - alturaArco) + t * t * destinoY;
+            StateHasChanged();
+            await Task.Delay(16);
+        }
+
+        if (acierto)
+        {
+            netSwish = true;
+            textoPop = esMoneyBall ? "+2 MONEY BALL!! 🔥" : "+1 SWISH! 🎯";
+            colorPop = "text-success";
+            StateHasChanged();
+            await Task.Delay(250);
+            netSwish = false;
+        }
+        else
+        {
+            textoPop = "CLANK! ❌";
+            colorPop = "text-danger";
+            for (int r = 0; r < 6; r++)
+            {
+                balonY += 6;
+                balonX -= 3;
+                StateHasChanged();
+                await Task.Delay(16);
+            }
+        }
+
+        await Task.Delay(400);
+        balonVolando = false;
+        textoPop = "";
 
         tiroEnCarro++;
         if (tiroEnCarro >= 5)
         {
             tiroEnCarro = 0;
             carroActual++;
-            zonaVerdeInicio = Random.Shared.Next(35, 78);
+            zonaVerdeInicio = Random.Shared.Next(35, 75); // Cambio de ángulo en cada rack
         }
 
+        estadoTirador = "Bote";
         StateHasChanged();
-        await Task.Delay(150);
-        estadoTirador = "Saltando";
 
         if (carroActual >= 5)
         {
@@ -137,7 +264,7 @@
             finalizado = true;
             cts?.Cancel();
             estadoTirador = puntosTotales >= 19 ? "Celebrando" : "Bote";
-            mensajeFeedback = $"Ronda completada con {puntosTotales} puntos.";
+            mensajeFeedback = $"¡Concurso completado con {puntosTotales} puntos oficiales!";
             StateHasChanged();
 
             await Task.Delay(1400);

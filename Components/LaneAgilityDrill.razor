@@ -1,135 +1,147 @@
 ﻿@namespace TheNextPick.Components
 @implements IDisposable
 
-<div class="sports-card p-3 my-3 text-center" style="max-width: 480px; margin: auto; background: #0c1017; border: 1px solid rgba(255, 255, 255, 0.15);">
+<div class="sports-card p-3 my-3 text-center" style="max-width: 580px; margin: auto; background: #0c1017; border: 2px solid #2d3748;">
     <div class="d-flex justify-content-between align-items-center mb-2 px-2">
-        <span class="badge bg-warning text-dark text-uppercase px-2 py-1 small fw-bold">Combine: Agilidad en Llave</span>
-        <span class="text-white small fw-bold">TIEMPO: @tiempoRestante.ToString("0.0") s</span>
+        <span class="badge bg-primary text-uppercase px-2 py-1 small fw-bold">PRUEBA 3/5: LANE AGILITY (CONOS)</span>
+        <span class="text-white small fw-bold">CONOS: @conosTocados / 8 | TIEMPO: @((int)tiempoRestante)s</span>
     </div>
 
-    <p class="text-secondary small mb-2">Toca los conos en la secuencia táctica iluminada antes de que acabe el reloj.</p>
+    <!-- PISTA CON 4 CONOS -->
+    <div class="position-relative mx-auto rounded overflow-hidden" style="width: 100%; height: 240px; border: 2px solid #1f2937;">
+        <CanchaFondo />
 
-    <!-- DUELA DE CONOS EN SVG JUGABLE -->
-    <div class="position-relative mx-auto rounded overflow-hidden" style="width: 320px; height: 320px; background: #141a24; border: 2px solid #2d3748;">
-        <svg viewBox="0 0 320 320" style="width: 100%; height: 100%;">
-            <!-- Llave de pintura -->
-            <rect x="70" y="30" width="180" height="260" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" />
-            <circle cx="160" cy="30" r="50" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2" />
-            <circle cx="160" cy="290" r="50" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2" />
+        <!-- 4 Conos interactivos -->
+        <button class="btn p-0 position-absolute cono-btn @(conoObjetivo == 0 ? "cono-activo" : "")" 
+                style="left: 60px; top: 40px;" @onclick="() => TocarCono(0)">
+            🔶 <span class="badge bg-dark border border-warning text-warning d-block">CONO 1</span>
+        </button>
+        <button class="btn p-0 position-absolute cono-btn @(conoObjetivo == 1 ? "cono-activo" : "")" 
+                style="right: 60px; top: 40px;" @onclick="() => TocarCono(1)">
+            🔶 <span class="badge bg-dark border border-warning text-warning d-block">CONO 2</span>
+        </button>
+        <button class="btn p-0 position-absolute cono-btn @(conoObjetivo == 2 ? "cono-activo" : "")" 
+                style="right: 60px; bottom: 30px;" @onclick="() => TocarCono(2)">
+            🔶 <span class="badge bg-dark border border-warning text-warning d-block">CONO 3</span>
+        </button>
+        <button class="btn p-0 position-absolute cono-btn @(conoObjetivo == 3 ? "cono-activo" : "")" 
+                style="left: 60px; bottom: 30px;" @onclick="() => TocarCono(3)">
+            🔶 <span class="badge bg-dark border border-warning text-warning d-block">CONO 4</span>
+        </button>
 
-            <!-- Líneas de trayectoria del circuito -->
-            <path d="M 70,290 L 70,30 L 250,30 L 250,290 Z" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6" opacity="0.4" />
-
-            <!-- Cono 1: Inferior Izquierdo -->
-            <g transform="translate(70, 290)" style="cursor: pointer;" @onclick="() => TocarCono(0)">
-                <circle cx="0" cy="0" r="22" fill="@(conoObjetivo == 0 ? "#f59e0b" : "#2d3748")" stroke="#fff" stroke-width="2" />
-                <polygon points="0,-12 10,8 -10,8" fill="#e65100" />
-                <text x="0" y="4" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">1</text>
-            </g>
-
-            <!-- Cono 2: Superior Izquierdo -->
-            <g transform="translate(70, 30)" style="cursor: pointer;" @onclick="() => TocarCono(1)">
-                <circle cx="0" cy="0" r="22" fill="@(conoObjetivo == 1 ? "#f59e0b" : "#2d3748")" stroke="#fff" stroke-width="2" />
-                <polygon points="0,-12 10,8 -10,8" fill="#e65100" />
-                <text x="0" y="4" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">2</text>
-            </g>
-
-            <!-- Cono 3: Superior Derecho -->
-            <g transform="translate(250, 30)" style="cursor: pointer;" @onclick="() => TocarCono(2)">
-                <circle cx="0" cy="0" r="22" fill="@(conoObjetivo == 2 ? "#f59e0b" : "#2d3748")" stroke="#fff" stroke-width="2" />
-                <polygon points="0,-12 10,8 -10,8" fill="#e65100" />
-                <text x="0" y="4" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">3</text>
-            </g>
-
-            <!-- Cono 4: Inferior Derecho -->
-            <g transform="translate(250, 290)" style="cursor: pointer;" @onclick="() => TocarCono(3)">
-                <circle cx="0" cy="0" r="22" fill="@(conoObjetivo == 3 ? "#f59e0b" : "#2d3748")" stroke="#fff" stroke-width="2" />
-                <polygon points="0,-12 10,8 -10,8" fill="#e65100" />
-                <text x="0" y="4" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">4</text>
-            </g>
-        </svg>
-
-        @if (!iniciado)
-        {
-            <div class="position-absolute top-50 start-50 translate-middle text-center w-100 p-3 bg-black bg-opacity-75">
-                <button class="btn btn-warning py-2 px-4 fw-bold text-dark fs-5" @onclick="IniciarPrueba">
-                    INICIAR CIRCUITO
-                </button>
-            </div>
-        }
+        <!-- Atleta desplazándose -->
+        <div class="position-absolute start-50 top-50 translate-middle" style="z-index: 6;">
+            <PixelArtPlayer Estado="Defendiendo" TieneBalon="false" ColorPrimario="#1D428A" AnchoPx="80" AltoPx="100" />
+        </div>
     </div>
+
+    @if (!activo && !finalizado)
+    {
+        <button class="btn btn-warning py-3 px-5 fw-bold text-dark fs-5 mt-3 w-100" @onclick="IniciarCircuito">
+            INICIAR CIRCUITO DE AGILIDAD ⏱️
+        </button>
+    }
+    else if (activo)
+    {
+        <div class="mt-3 text-warning fw-bold fs-5">¡TOCA EL CONO ILUMINADO! ➔ CONO @(conoObjetivo + 1)</div>
+    }
 
     <div class="mt-2 text-info fw-semibold small">@mensajeGuia</div>
 </div>
 
+<style>
+    .cono-btn { font-size: 32px; transition: transform 0.1s; }
+    .cono-activo { transform: scale(1.25); filter: drop-shadow(0 0 10px #f59e0b); }
+</style>
+
 @code {
     [Parameter] public EventCallback<int> OnFinalizado { get; set; }
 
+    private int conosTocados = 0;
     private int conoObjetivo = 0;
-    private int vueltasCompletadas = 0;
-    private double tiempoRestante = 10.0;
-    private bool iniciado = false;
+    private bool activo = false;
     private bool finalizado = false;
-    private string mensajeGuia = "Presiona 'Iniciar Circuito' y sigue la secuencia de conos 1 -> 2 -> 3 -> 4.";
+    private double tiempoRestante = 14.0;
+    private int fallos = 0;
+    private string mensajeGuia = "Sigue la secuencia de conos iluminados antes de que expire el tiempo.";
     private CancellationTokenSource cts = new();
 
-    private async Task IniciarPrueba()
+    private async Task IniciarCircuito()
     {
-        iniciado = true;
+        activo = true;
+        conosTocados = 0;
         conoObjetivo = 0;
-        tiempoRestante = 9.0;
-        mensajeGuia = "¡Toca el Cono 1 para arrancar el sprint!";
+        fallos = 0;
 
-        try
+        _ = Task.Run(async () =>
         {
-            while (tiempoRestante > 0 && !finalizado && !cts.Token.IsCancellationRequested)
+            while (activo && tiempoRestante > 0 && !cts.Token.IsCancellationRequested)
             {
+                tiempoRestante -= 0.1;
+                await InvokeAsync(StateHasChanged);
                 await Task.Delay(100, cts.Token);
-                tiempoRestante = Math.Max(0, tiempoRestante - 0.1);
-                StateHasChanged();
             }
 
-            if (!finalizado)
+            if (tiempoRestante <= 0 && activo)
             {
-                await ConcluirPrueba();
+                await InvokeAsync(TerminarCircuitoPorTiempo);
             }
-        }
-        catch (TaskCanceledException) { }
+        });
     }
 
-    private async void TocarCono(int indice)
+    private void TocarCono(int indice)
     {
-        if (!iniciado || finalizado) return;
+        if (!activo || finalizado) return;
 
         if (indice == conoObjetivo)
         {
-            conoObjetivo++;
-            if (conoObjetivo > 3)
+            conosTocados++;
+            if (conosTocados >= 8)
             {
-                conoObjetivo = 0;
-                vueltasCompletadas++;
+                TerminarExito();
+                return;
             }
-            StateHasChanged();
-
-            if (vueltasCompletadas >= 2)
-            {
-                await ConcluirPrueba();
-            }
+            // Siguiente cono aleatorio que no sea el mismo
+            int nuevo;
+            do { nuevo = Random.Shared.Next(0, 4); } while (nuevo == conoObjetivo);
+            conoObjetivo = nuevo;
         }
+        else
+        {
+            fallos++;
+            tiempoRestante = Math.Max(0, tiempoRestante - 1.5); // Penalización de tiempo por error
+        }
+        StateHasChanged();
     }
 
-    private async Task ConcluirPrueba()
+    private async void TerminarExito()
     {
         finalizado = true;
+        activo = false;
         cts.Cancel();
 
-        int puntos = vueltasCompletadas >= 2 ? 35 : (vueltasCompletadas == 1 ? 20 : 10);
-        mensajeGuia = vueltasCompletadas >= 2 
-            ? $"¡Agilidad de elite! Circuito terminado en tiempo récord (+{puntos} pts)." 
-            : $"Circuito completado (+{puntos} pts).";
+        int puntos = 20 - (fallos * 3);
+        if (tiempoRestante > 6.0) puntos += 2;
+        puntos = Math.Clamp(puntos, 3, 20);
+
+        mensajeGuia = $"¡Circuito completado con {fallos} errores! (+{puntos} PTS).";
         StateHasChanged();
 
-        await Task.Delay(1400);
+        await Task.Delay(1300);
+        await OnFinalizado.InvokeAsync(puntos);
+    }
+
+    private async Task TerminarCircuitoPorTiempo()
+    {
+        finalizado = true;
+        activo = false;
+        cts.Cancel();
+
+        int puntos = Math.Clamp(conosTocados * 2 - fallos, 0, 10);
+        mensajeGuia = $"¡Tiempo agotado! Solo tocaste {conosTocados} conos (+{puntos} PTS).";
+        StateHasChanged();
+
+        await Task.Delay(1300);
         await OnFinalizado.InvokeAsync(puntos);
     }
 

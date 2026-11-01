@@ -1,0 +1,255 @@
+﻿@namespace TheNextPick.Components
+@using TheNextPick.Engine
+@using TheNextPick.Models
+@inject GameStateService GameState
+@implements IDisposable
+
+<div class="sports-card p-3 my-3 text-center position-relative" 
+     style="max-width: 660px; margin: auto; background: #0b0e14; border: 3px solid #1D428A; box-shadow: 0 10px 35px rgba(0,0,0,0.9); user-select: none;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+        <span class="badge px-3 py-1 fs-6 fw-bold" style="background: #1D428A; color: #FFC72C; border: 2px solid #FFC72C;">
+            ⚡ CLUTCH MOMENT #11
+        </span>
+        <span class="text-white fw-bold fs-5">CANASTAS: @canastas / @intentosMax (Tiro @(Math.Min(intentoActual, intentosMax))/@intentosMax)</span>
+    </div>
+
+    <!-- PISTA DE JUEGO -->
+    <div class="position-relative mx-auto rounded overflow-hidden" 
+         style="width: 100%; height: 320px; border: 3px solid #1f2937; background: #090c10;">
+        
+        <CanchaFondo />
+
+        <!-- CANASTA ARCADE -->
+        <svg viewBox="0 0 140 200" class="position-absolute end-0" style="width: 130px; height: 180px; top: 35px; pointer-events: none; z-index: 5;">
+            <line x1="110" y1="10" x2="110" y2="180" stroke="#000" stroke-width="8" />
+            <line x1="110" y1="10" x2="110" y2="180" stroke="#cbd5e1" stroke-width="4" />
+            <rect x="95" y="20" width="8" height="65" fill="#fff" stroke="#000" stroke-width="2" />
+            <rect x="97" y="38" width="4" height="28" fill="none" stroke="#e11d48" stroke-width="2" />
+
+            <line x1="56" y1="60" x2="95" y2="60" stroke="#ff4500" stroke-width="5" stroke-linecap="round" />
+            <g class="@(sacudirRed ? "red-swish-anim" : "")">
+                <path d="M 58,62 L 62,92 L 88,92 L 92,62 Z" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="3" />
+                <line x1="62" y1="92" x2="66" y2="104" stroke="#fff" stroke-width="2" />
+                <line x1="88" y1="92" x2="84" y2="104" stroke="#fff" stroke-width="2" />
+            </g>
+            <ellipse cx="75" cy="60" rx="17" ry="3.5" fill="none" stroke="#000" stroke-width="3" />
+            <ellipse cx="75" cy="60" rx="16" ry="3" fill="none" stroke="#ff4500" stroke-width="2" />
+        </svg>
+
+        <!-- DEFENSOR RIVAL EN POSTURA DEFENSIVA -->
+        <div class="position-absolute" style="right: 170px; bottom: 20px; transform: scaleX(-1); pointer-events: none; z-index: 6;">
+            <PixelArtPlayer Estado="@(balonVolando ? "Saltando" : "Defendiendo")" TieneBalon="false" ColorPrimario="#475569" AnchoPx="100" AltoPx="120" />
+        </div>
+
+        <!-- TU JUGADOR #11 -->
+        <div class="position-absolute" style="left: 80px; bottom: 20px; pointer-events: none; z-index: 7;">
+            <PixelArtPlayer Estado="@poseJugador" TieneBalon="@(!balonVolando)" ColorPrimario="#1D428A" AnchoPx="105" AltoPx="125" />
+        </div>
+
+        <!-- BALÓN VOLANDO EN PARÁBOLA -->
+        @if (balonVolando)
+        {
+            <div class="position-absolute" style="left: @(balonVueloX)px; top: @(balonVueloY)px; transform: translate(-50%, -50%); pointer-events: none; z-index: 15;">
+                <svg width="28" height="28" viewBox="0 0 28 28">
+                    <circle cx="14" cy="14" r="12" fill="#e65100" stroke="#000" stroke-width="2.5" />
+                    <line x1="2" y1="14" x2="26" y2="14" stroke="#000" stroke-width="2" />
+                    <line x1="14" y1="2" x2="14" y2="26" stroke="#000" stroke-width="2" />
+                </svg>
+            </div>
+        }
+
+        <!-- ONOMATOPEYA FLOTANTE CÓMIC -->
+        @if (!string.IsNullOrEmpty(textoOnomatopeya))
+        {
+            <div class="position-absolute top-50 start-50 translate-middle text-center" style="z-index: 40; pointer-events: none;">
+                <span class="display-3 fw-bold @colorOnomatopeya nba-title" style="-webkit-text-stroke: 3px #000; text-shadow: 5px 5px 0 #000;">
+                    @textoOnomatopeya
+                </span>
+            </div>
+        }
+    </div>
+
+    <!-- MEDIDOR DE TIRO -->
+    <div class="my-3 px-2">
+        <div class="d-flex justify-content-between text-secondary small fw-bold mb-1">
+            <span>FLEXIÓN</span>
+            <span class="text-warning">PICO DE SUSPENSIÓN (GREEN 🎯)</span>
+            <span>CAÍDA</span>
+        </div>
+        <div class="position-relative rounded border border-secondary" style="height: 38px; background: #000; overflow: hidden;">
+            <div class="position-absolute bg-success h-100" style="left: @zonaVerdeMin%; width: @(zonaVerdeMax - zonaVerdeMin)%; box-shadow: 0 0 16px #10b981; opacity: 0.9;"></div>
+            <div class="position-absolute bg-warning h-100" style="left: @progresoBarra%; width: 6px; box-shadow: 0 0 12px #f59e0b;"></div>
+        </div>
+    </div>
+
+    <!-- BOTONES -->
+    @if (!balonVolando && intentoActual <= intentosMax)
+    {
+        @if (!cargando)
+        {
+            <button class="btn btn-warning py-3 px-5 fw-bold text-dark fs-4 w-100 shadow-lg" @onpointerdown="IniciarTiro">
+                MANTENER PARA SALTAR 🏀
+            </button>
+        }
+        else
+        {
+            <button class="btn btn-danger py-3 px-5 fw-bold text-white fs-4 w-100 shadow-lg" @onpointerup="SoltarTiro">
+                ¡SOLTAR EN LO VERDE! 🎯
+            </button>
+        }
+    }
+    else
+    {
+        <button class="btn btn-secondary py-3 px-5 fw-bold text-muted fs-4 w-100" disabled>
+            @(poseJugador == "Celebrando" ? "¡NIGHT NIGHT! 😴" : "BALÓN EN VUELO...")
+        </button>
+    }
+
+    <div class="mt-2 text-info small fw-bold">@mensajeFeedback</div>
+</div>
+
+<style>
+    .red-swish-anim {
+        animation: red-snap 0.35s ease-out;
+        transform-origin: 75px 60px;
+    }
+    @@keyframes red-snap {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.3, 1.4) skewX(8deg); }
+        100% { transform: scale(1); }
+    }
+</style>
+
+@code {
+    [Parameter] public EventCallback<bool> OnFinalizado { get; set; }
+
+    private string poseJugador = "Bote";
+    private int progresoBarra = 0;
+    private bool cargando = false;
+    private bool balonVolando = false;
+    private bool sacudirRed = false;
+
+    private double balonVueloX = 135;
+    private double balonVueloY = 160;
+
+    private int canastas = 0;
+    private int intentoActual = 1;
+    private const int intentosMax = 3;
+
+    private int zonaVerdeMin = 68;
+    private int zonaVerdeMax = 82;
+
+    private string textoOnomatopeya = "";
+    private string colorOnomatopeya = "text-warning";
+    private string mensajeFeedback = "Mantén presionado para elevar el salto y suelta justo en la franja verde.";
+    private CancellationTokenSource cts = new();
+
+    protected override void OnInitialized()
+    {
+        int tiro = GameState.JugadorActivo?.TiroExterior ?? 80;
+        int ancho = Math.Clamp(10 + ((tiro - 70) / 3), 10, 18);
+        zonaVerdeMin = 68;
+        zonaVerdeMax = zonaVerdeMin + ancho;
+    }
+
+    private async Task IniciarTiro()
+    {
+        if (balonVolando || intentoActual > intentosMax) return;
+        cargando = true;
+        progresoBarra = 0;
+        poseJugador = "Saltando";
+        textoOnomatopeya = "";
+
+        try
+        {
+            while (cargando && !cts.Token.IsCancellationRequested)
+            {
+                progresoBarra += 3;
+                if (progresoBarra >= 100)
+                {
+                    await SoltarTiro();
+                    break;
+                }
+                StateHasChanged();
+                await Task.Delay(20, cts.Token);
+            }
+        }
+        catch (TaskCanceledException) { }
+    }
+
+    private async Task SoltarTiro()
+    {
+        if (!cargando) return;
+        cargando = false;
+
+        bool esVerde = (progresoBarra >= zonaVerdeMin && progresoBarra <= zonaVerdeMax);
+
+        balonVolando = true;
+        balonVueloX = 135;
+        balonVueloY = 130;
+        StateHasChanged();
+
+        double destinoX = esVerde ? 520 : (progresoBarra < zonaVerdeMin ? 485 : 555);
+        double destinoY = 95;
+
+        for (int i = 0; i <= 22; i++)
+        {
+            double t = i / 22.0;
+            double alturaArco = 160;
+            balonVueloX = (1 - t) * (1 - t) * 135 + 2 * (1 - t) * t * 320 + t * t * destinoX;
+            balonVueloY = (1 - t) * (1 - t) * 130 + 2 * (1 - t) * t * (130 - alturaArco) + t * t * destinoY;
+            StateHasChanged();
+            await Task.Delay(16);
+        }
+
+        if (esVerde)
+        {
+            canastas++;
+            sacudirRed = true;
+            poseJugador = "Celebrando";
+            textoOnomatopeya = "SWISH!! 🎯";
+            colorOnomatopeya = "text-success";
+            mensajeFeedback = "¡GREEN RELEASE! Canasta limpia perfecta.";
+            StateHasChanged();
+            await Task.Delay(260);
+            sacudirRed = false;
+        }
+        else
+        {
+            textoOnomatopeya = "CLANK! ❌";
+            colorOnomatopeya = "text-danger";
+            mensajeFeedback = progresoBarra < zonaVerdeMin ? "Tiro corto. Faltó elevación." : "Tiro largo en la caída.";
+            poseJugador = "Bote";
+
+            for (int r = 0; r < 6; r++)
+            {
+                balonVueloY += 7;
+                balonVueloX -= 3;
+                StateHasChanged();
+                await Task.Delay(16);
+            }
+        }
+
+        await Task.Delay(1000);
+        balonVolando = false;
+        textoOnomatopeya = "";
+
+        if (intentoActual >= intentosMax)
+        {
+            await OnFinalizado.InvokeAsync(canastas >= 2);
+        }
+        else
+        {
+            intentoActual++;
+            poseJugador = "Bote";
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+    }
+}

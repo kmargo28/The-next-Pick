@@ -1,0 +1,166 @@
+﻿@namespace TheNextPick.Components
+@using TheNextPick.Engine
+@inject GameStateService GameState
+@implements IDisposable
+
+<div class="sports-card p-4 my-2 text-center" style="max-width: 620px; margin: auto; background: #080c14; border: 3px solid #1D428A; box-shadow: 0 0 25px rgba(29,66,138,0.4);">
+    
+    <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+        <span class="badge px-3 py-1 fw-bold fs-6" style="background: #e11d48; color: #fff; border-radius: 3px;">
+            🏀 SHOT CLOCK CLUTCH
+        </span>
+        <span class="badge bg-black border border-warning text-warning fw-bold">
+            SEED #@GameState.SeedPlayoffs @(GameState.SeedPlayoffs <= 2 ? "(LOCAL)" : "(VISITANTE)")
+        </span>
+    </div>
+
+    <h2 class="text-white fw-bold mb-1 nba-title">@GameState.JugadorActivo?.EquipoActual.ToUpper() vs @GameState.RivalPlayoffs.ToUpper()</h2>
+    <p class="text-secondary small mb-2">
+        Frena la aguja en la zona verde del aro antes de que suene la chicharra. Si fallas por poco, se define en <strong>Tiempo Extra (Overtime)</strong>.
+    </p>
+
+    @if (enOvertime)
+    {
+        <div class="alert alert-danger py-1 px-3 mb-2 small fw-bold">
+            🚨 ¡OVERTIME DEFINITIVO! BARRA MILIMÉTRICA 🚨
+        </div>
+    }
+
+    <div class="position-relative mx-auto rounded my-3 overflow-hidden border border-2 border-danger" 
+         style="width: 100%; height: 95px; background: radial-gradient(circle at 50% 50%, #1e110a 0%, #06080c 90%);">
+        
+        <div class="position-absolute w-100 h-100" style="opacity: 0.15; background: repeating-linear-gradient(90deg, #b45309 0px, #b45309 2px, transparent 2px, transparent 30px);"></div>
+
+        <div class="position-absolute h-100 d-flex align-items-center justify-content-center" 
+             style="left: @zonaVerdeMin%; width: @(zonaVerdeMax - zonaVerdeMin)%; background: rgba(0, 230, 118, 0.85); box-shadow: 0 0 20px #00e676;">
+            <span style="font-size: 26px; filter: drop-shadow(0 0 4px #000);">🏀</span>
+        </div>
+
+        <div class="position-absolute h-100" 
+             style="left: @posicionAguja%; width: 8px; background: #00f0ff; box-shadow: 0 0 16px #00f0ff; transform: translateX(-50%); z-index: 5;">
+        </div>
+
+        <div class="position-absolute bottom-0 end-0 p-1 me-2 mb-1 bg-black border border-danger text-danger fw-bold font-monospace" style="font-size: 0.75rem;">
+            24s CLOCK
+        </div>
+    </div>
+
+    @if (oscilando)
+    {
+        <button class="btn w-100 py-3 fw-bold fs-4 text-dark shadow-lg" 
+                style="background: #00f0ff; border: 2px solid #fff; letter-spacing: 2px;"
+                @onclick="FrenarAguja">
+            PARAR
+        </button>
+    }
+    else
+    {
+        <div class="alert @(acertado ? "alert-success text-success" : "alert-danger text-danger") py-2 fw-bold fs-5 mb-0">
+            @mensajeResultado
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public EventCallback<bool> OnCompletado { get; set; }
+
+    private double posicionAguja = 0;
+    private bool subiendo = true;
+    private bool oscilando = true;
+    private bool enOvertime = false;
+    private bool acertado = false;
+    private string mensajeResultado = "";
+
+    private double zonaVerdeMin = 40;
+    private double zonaVerdeMax = 60;
+    private int velocidadMs = 18;
+    private CancellationTokenSource cts = new();
+
+    protected override void OnInitialized()
+    {
+        ConfigurarDificultad();
+        IniciarOscilacion();
+    }
+
+    private void ConfigurarDificultad()
+    {
+        int anchoBase = 18 - (GameState.RondaIndicePlayoffs * 2);
+        if (GameState.SeedPlayoffs <= 2) anchoBase += 4;
+        else if (GameState.SeedPlayoffs >= 6) anchoBase -= 3;
+
+        anchoBase = Math.Clamp(anchoBase, 7, 24);
+        zonaVerdeMin = Random.Shared.Next(30, 70);
+        zonaVerdeMax = zonaVerdeMin + anchoBase;
+
+        velocidadMs = Math.Clamp(18 - (GameState.RondaIndicePlayoffs * 2), 9, 20);
+    }
+
+    private void IniciarOscilacion()
+    {
+        oscilando = true;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (oscilando && !cts.Token.IsCancellationRequested)
+                {
+                    posicionAguja += subiendo ? 4 : -4;
+                    if (posicionAguja >= 98) subiendo = false;
+                    if (posicionAguja <= 2) subiendo = true;
+                    await InvokeAsync(StateHasChanged);
+                    await Task.Delay(velocidadMs, cts.Token);
+                }
+            }
+            catch (OperationCanceledException) { }
+        });
+    }
+
+    private async Task FrenarAguja()
+    {
+        if (!oscilando) return;
+        oscilando = false;
+        cts.Cancel();
+
+        if (posicionAguja >= zonaVerdeMin && posicionAguja <= zonaVerdeMax)
+        {
+            acertado = true;
+            mensajeResultado = "¡CANASTA EN LA BOCINA! ¡VICTORIA! 🎯";
+            StateHasChanged();
+            await Task.Delay(1300);
+            await OnCompletado.InvokeAsync(true);
+        }
+        else
+        {
+            double distancia = Math.Min(Math.Abs(posicionAguja - zonaVerdeMin), Math.Abs(posicionAguja - zonaVerdeMax));
+            if (!enOvertime && distancia <= 10.0)
+            {
+                enOvertime = true;
+                mensajeResultado = "¡EMPATADOS CON LA CHICHARRA! TIEMPO EXTRA.";
+                StateHasChanged();
+                await Task.Delay(1400);
+
+                cts = new();
+                zonaVerdeMin = 48;
+                zonaVerdeMax = 56;
+                velocidadMs = Math.Max(8, velocidadMs - 3);
+                posicionAguja = 0;
+                IniciarOscilacion();
+            }
+            else
+            {
+                acertado = false;
+                mensajeResultado = "¡FALLO EN EL LANZAMIENTO! DERROTA EN LA SERIE ❌";
+                StateHasChanged();
+                await Task.Delay(1300);
+                await OnCompletado.InvokeAsync(false);
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        oscilando = false;
+        try { cts.Cancel(); } catch { }
+        try { cts.Dispose(); } catch { }
+    }
+}

@@ -9,8 +9,23 @@ public class Jugador
     public string EquipoActual { get; set; } = "Agente Libre";
     public int Edad { get; set; } = 19;
     public int AniosEnLiga { get; set; } = 0;
+    public int AniosEnEquipoActual { get; set; } = 1;
 
-    // Atributos base (40 - 99)
+    // Arquetipo de posición
+    public string Arquetipo { get; set; } = "Creador de Juego";
+
+    // Estatus de Franquicia y Contrato
+    public bool EsJugadorFranquicia { get; set; } = false;
+    public TipoContrato TipoContrato { get; set; } = TipoContrato.Rookie;
+    public int AniosRestantesContrato { get; set; } = 4;
+    public int SalarioContrato { get; set; } = 4_500_000;
+
+    // Sistema de Lesiones
+    public TipoLesion LesionActual { get; set; } = TipoLesion.Ninguna;
+    public int PartidosRestantesLesion { get; set; } = 0;
+    public bool EstaLesionado => LesionActual != TipoLesion.Ninguna && PartidosRestantesLesion > 0;
+
+    // 6 Atributos Oficiales (40 - 99)
     public int TiroExterior { get; set; }
     public int TiroMedia { get; set; }
     public int Pase { get; set; }
@@ -21,11 +36,10 @@ public class Jugador
     // Media general (OVR)
     public int OVR => Math.Clamp((int)Math.Round((TiroExterior + TiroMedia + Pase + Defensa + Rebote + Atletismo) / 6.0), 40, 99);
 
-    // Estadísticas globales de carrera
+    // Métricas de Carrera
     public int PuntosTotales { get; set; } = 0;
     public int RebotesTotales { get; set; } = 0;
     public int AsistenciasTotales { get; set; } = 0;
-    public int RobosTotales { get; set; } = 0;
     public int PartidosTotales { get; set; } = 0;
     public int VictoriasTotales { get; set; } = 0;
     public int DerrotasTotales { get; set; } = 0;
@@ -54,47 +68,52 @@ public class JugadorBuilder
         switch (_jugador.Posicion)
         {
             case Posicion.Base:
-                _jugador.TiroExterior = 76;
-                _jugador.TiroMedia = 74;
-                _jugador.Pase = 82;
+                _jugador.Arquetipo = "Base Organizador y Francotirador";
+                _jugador.TiroExterior = 82;
+                _jugador.TiroMedia = 78;
+                _jugador.Pase = 86;
                 _jugador.Defensa = 68;
-                _jugador.Rebote = 48;
-                _jugador.Atletismo = 78;
+                _jugador.Rebote = 42;
+                _jugador.Atletismo = 84;
                 break;
 
             case Posicion.Escolta:
-                _jugador.TiroExterior = 80;
-                _jugador.TiroMedia = 78;
-                _jugador.Pase = 70;
-                _jugador.Defensa = 70;
-                _jugador.Rebote = 52;
-                _jugador.Atletismo = 76;
+                _jugador.Arquetipo = "Anotador Puro de 3 Niveles";
+                _jugador.TiroExterior = 86;
+                _jugador.TiroMedia = 82;
+                _jugador.Pase = 72;
+                _jugador.Defensa = 72;
+                _jugador.Rebote = 50;
+                _jugador.Atletismo = 80;
                 break;
 
             case Posicion.Alero:
-                _jugador.TiroExterior = 74;
-                _jugador.TiroMedia = 75;
-                _jugador.Pase = 68;
-                _jugador.Defensa = 76;
-                _jugador.Rebote = 70;
-                _jugador.Atletismo = 77;
+                _jugador.Arquetipo = "Alero All-Around (Two-Way)";
+                _jugador.TiroExterior = 78;
+                _jugador.TiroMedia = 76;
+                _jugador.Pase = 72;
+                _jugador.Defensa = 78;
+                _jugador.Rebote = 72;
+                _jugador.Atletismo = 78;
                 break;
 
             case Posicion.AlaPivot:
-                _jugador.TiroExterior = 62;
-                _jugador.TiroMedia = 72;
-                _jugador.Pase = 58;
-                _jugador.Defensa = 78;
-                _jugador.Rebote = 80;
+                _jugador.Arquetipo = "Ala-Pívot Defensivo y de Poste";
+                _jugador.TiroExterior = 66;
+                _jugador.TiroMedia = 76;
+                _jugador.Pase = 62;
+                _jugador.Defensa = 82;
+                _jugador.Rebote = 84;
                 _jugador.Atletismo = 74;
                 break;
 
             case Posicion.Pivot:
+                _jugador.Arquetipo = "Pívot Protector del Aro";
                 _jugador.TiroExterior = 45;
-                _jugador.TiroMedia = 64;
-                _jugador.Pase = 54;
-                _jugador.Defensa = 84;
-                _jugador.Rebote = 86;
+                _jugador.TiroMedia = 66;
+                _jugador.Pase = 58;
+                _jugador.Defensa = 88;
+                _jugador.Rebote = 90;
                 _jugador.Atletismo = 70;
                 break;
         }
@@ -103,4 +122,3 @@ public class JugadorBuilder
 
     public Jugador Build() => _jugador;
 }
-

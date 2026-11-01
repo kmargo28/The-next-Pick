@@ -49,6 +49,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEZWNpc2lvbkNhcmQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Descargas/The Next Pick/The-next-Pick/Components/DecisionCardRPG.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEZWNpc2lvbkNhcmRSUEcucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Descargas/The Next Pick/The-next-Pick/Components/DraftCombine.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEcmFmdENvbWJpbmUucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
@@ -65,6 +69,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xMZWN0dXJhSnVnYWRhLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Descargas/The Next Pick/The-next-Pick/Components/MinijuegoArcadeClutch.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xNaW5panVlZ29BcmNhZGVDbHV0Y2gucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Descargas/The Next Pick/The-next-Pick/Components/MinijuegoArena.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xNaW5panVlZ29BcmVuYS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
@@ -77,8 +85,24 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xNaW5panVlZ29UaXJvUGl4ZWwucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Descargas/The Next Pick/The-next-Pick/Components/MinijuegoTiroSuspension.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xNaW5panVlZ29UaXJvU3VzcGVuc2lvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Descargas/The Next Pick/The-next-Pick/Components/PanelInsignias.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYW5lbEluc2lnbmlhcy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Descargas/The Next Pick/The-next-Pick/Components/PixelArtPlayer.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQaXhlbEFydFBsYXllci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Descargas/The Next Pick/The-next-Pick/Components/Player11FrameByFrame.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQbGF5ZXIxMUZyYW1lQnlGcmFtZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Descargas/The Next Pick/The-next-Pick/Components/PlayoffBarraLimite.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQbGF5b2ZmQmFycmFMaW1pdGUucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/Descargas/The Next Pick/The-next-Pick/Components/PlayoffBossBattle.razor]
@@ -89,12 +113,28 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQbGF5b2ZmQ29udHJhYXRhcXVlRHVuay5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Descargas/The Next Pick/The-next-Pick/Components/PlayoffHub.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQbGF5b2ZmSHViLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Descargas/The Next Pick/The-next-Pick/Components/PlayoffPizarraMemoria.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQbGF5b2ZmUGl6YXJyYU1lbW9yaWEucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Descargas/The Next Pick/The-next-Pick/Components/PlayoffReboteBoxOut.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQbGF5b2ZmUmVib3RlQm94T3V0LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Descargas/The Next Pick/The-next-Pick/Components/PlayoffSenasDT.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQbGF5b2ZmU2VuYXNEVC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Descargas/The Next Pick/The-next-Pick/Components/PlayoffTirosLibres.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQbGF5b2ZmVGlyb3NMaWJyZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Descargas/The Next Pick/The-next-Pick/Components/PlayoffTirosLibresHostiles.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQbGF5b2ZmVGlyb3NMaWJyZXNIb3N0aWxlcy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/Descargas/The Next Pick/The-next-Pick/Components/PortadaRevista.razor]
@@ -105,8 +145,16 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xSZWFjdGlvbkxpZ2h0c0RyaWxsLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Descargas/The Next Pick/The-next-Pick/Components/RuedaDePrensa.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xSdWVkYURlUHJlbnNhLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Descargas/The Next Pick/The-next-Pick/Components/SprintTresCuartos.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTcHJpbnRUcmVzQ3VhcnRvcy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Descargas/The Next Pick/The-next-Pick/Components/TiroEstacionarioCombine.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xUaXJvRXN0YWNpb25hcmlvQ29tYmluZS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/Descargas/The Next Pick/The-next-Pick/Components/VerticalLeapDrill.razor]
