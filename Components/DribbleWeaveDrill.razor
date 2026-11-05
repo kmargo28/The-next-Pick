@@ -1,0 +1,175 @@
+﻿@namespace TheNextPick.Components
+@implements IDisposable
+
+<div class="sports-card p-3 my-2 text-center" style="max-width: 580px; margin: auto; background: #0c1017; border: 2px solid #2d3748;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+        <span class="badge px-3 py-1 fw-bold fs-6" style="background: #eab308; color: #000;">
+            ⚡ CIRCUITO DE BOTE Y SLALOM
+        </span>
+        <span class="badge bg-black border border-warning text-warning fw-bold fs-6">
+            POSTE: @(Math.Min(posteActual, 6)) / 6 | TIEMPO: @((int)tiempoRestante)s
+        </span>
+    </div>
+
+    <!-- PISTA DE SLALOM CON ESTACAS EN ZIGZAG -->
+    <div class="position-relative mx-auto rounded my-3 overflow-hidden border border-secondary" 
+         style="width: 100%; height: 230px; background: radial-gradient(circle at 50% 50%, #171f2c 0%, #080c14 90%);">
+        <CanchaFondo />
+
+        <!-- 6 POSTES METÁLICOS CON LUZ ACTIVA -->
+        <div class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-around align-items-center" style="z-index: 5;">
+            @for (int p = 0; p < 6; p++)
+            {
+                var posteId = p;
+                var esElActivo = (posteId == posteActual && activo);
+                var superado = (posteId < posteActual);
+                var exigeIzq = (posteId % 2 == 0);
+
+                <div class="text-center" style="transform: translateY(@(posteId % 2 == 0 ? "-20px" : "25px"));">
+                    <!-- Poste vertical -->
+                    <div class="rounded-pill mx-auto mb-1 shadow" 
+                         style="width: 10px; height: 75px; background: @(esElActivo ? "#f59e0b" : (superado ? "#10b981" : "#475569")); border: 2px solid #000;">
+                    </div>
+                    <!-- Indicador de mano exigida -->
+                    <span class="badge @(esElActivo ? "bg-warning text-dark fw-bold" : "bg-dark text-muted") small">
+                        @(exigeIzq ? "IZQ ⬅️" : "DER ➡️")
+                    </span>
+                </div>
+            }
+        </div>
+
+        <!-- JUGADOR DRIBLEANDO A TRAVÉS DE LA DUELA -->
+        <div class="position-absolute" style="left: @posicionJugadorXPx; bottom: @posicionJugadorYPx; transition: all 0.12s ease-out; z-index: 8;">
+            <PixelArtPlayer Estado="Bote" TieneBalon="true" ColorPrimario="#1D428A" AnchoPx="85" AltoPx="110" />
+        </div>
+    </div>
+
+    <!-- CONTROLES DE CROSSOVER -->
+    @if (!activo && !finalizado)
+    {
+        <button class="btn arcade-btn-3d btn-warning w-100 py-3 fw-bold text-dark fs-5" @onclick="IniciarSlalom">
+            ENTRAR A LA PISTA DE BOTE ⏱️
+        </button>
+    }
+    else if (activo)
+    {
+        <div class="d-flex gap-2">
+            <button class="btn arcade-btn-3d btn-danger w-50 py-3 fw-bold text-white fs-4" @onclick="() => EjecutarCrossover(true)">
+                CROSSOVER IZQ ⬅️
+            </button>
+            <button class="btn arcade-btn-3d btn-warning w-50 py-3 fw-bold text-dark fs-4" @onclick="() => EjecutarCrossover(false)">
+                CROSSOVER DER ➡️
+            </button>
+        </div>
+    }
+    else
+    {
+        <button class="btn btn-secondary w-100 py-3 fw-bold fs-5 text-muted" disabled>
+            PRUEBA COMPLETADA
+        </button>
+    }
+
+    <div class="mt-2 text-info small fw-bold">@mensajeFeedback</div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<int> OnFinalizado { get; set; }
+
+    private int posteActual = 0;
+    private int aciertos = 0;
+    private double tiempoRestante = 12.0;
+    private bool activo = false;
+    private bool finalizado = false;
+
+    private string posicionJugadorXPx = "30px";
+    private string posicionJugadorYPx = "25px";
+    private string mensajeFeedback = "Realiza el crossover hacia la mano indicada en cada poste.";
+    private CancellationTokenSource cts = new();
+
+    private void IniciarSlalom()
+    {
+        activo = true;
+        posteActual = 0;
+        aciertos = 0;
+        tiempoRestante = 12.0;
+        ActualizarPosicionVisual();
+        IniciarCronometro();
+    }
+
+    private void IniciarCronometro()
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (activo && tiempoRestante > 0 && !cts.Token.IsCancellationRequested)
+                {
+                    tiempoRestante -= 0.1;
+                    await InvokeAsync(StateHasChanged);
+                    await Task.Delay(100, cts.Token);
+                }
+
+                if (activo && tiempoRestante <= 0)
+                {
+                    await InvokeAsync(ConcluirPrueba);
+                }
+            }
+            catch (OperationCanceledException) { }
+        });
+    }
+
+    private async Task EjecutarCrossover(bool fueIzq)
+    {
+        if (!activo || finalizado) return;
+
+        bool manoEsperadaIzq = (posteActual % 2 == 0);
+        if (fueIzq == manoEsperadaIzq)
+        {
+            aciertos++;
+            mensajeFeedback = "¡Crossover limpio! Derrape y cambio de ritmo ⚡";
+        }
+        else
+        {
+            mensajeFeedback = "¡Bote forzado! Pérdida de inercia lateral ⚠️";
+        }
+
+        posteActual++;
+        ActualizarPosicionVisual();
+        StateHasChanged();
+
+        if (posteActual >= 6)
+        {
+            await ConcluirPrueba();
+        }
+    }
+
+    private void ActualizarPosicionVisual()
+    {
+        int x = 30 + (posteActual * 75);
+        int y = (posteActual % 2 == 0) ? 45 : 15;
+        posicionJugadorXPx = $"{x}px";
+        posicionJugadorYPx = $"{y}px";
+    }
+
+    private async Task ConcluirPrueba()
+    {
+        activo = false;
+        finalizado = true;
+        try { cts.Cancel(); } catch { }
+
+        int puntos = Math.Clamp((aciertos * 3) + (tiempoRestante > 4.0 ? 2 : 0), 0, 20);
+        mensajeFeedback = $"Circuito finalizado: {aciertos}/6 postes limpios (+{puntos} PTS).";
+        StateHasChanged();
+
+        await Task.Delay(1100);
+        await OnFinalizado.InvokeAsync(puntos);
+    }
+
+    public void Dispose()
+    {
+        activo = false;
+        try { cts.Cancel(); } catch { }
+        try { cts.Dispose(); } catch { }
+    }
+}

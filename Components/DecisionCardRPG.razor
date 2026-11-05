@@ -1,90 +1,190 @@
 ﻿@namespace TheNextPick.Components
-@using TheNextPick.Engine
 @using TheNextPick.Models
+@using TheNextPick.Engine
 @inject GameStateService GameState
 
 @if (GameState.DilemaRPGActual != null)
 {
     var d = GameState.DilemaRPGActual;
 
-    <div class="sports-card p-3 my-3 text-start" style="max-width: 620px; margin: auto; background: #0c1017; border: 2px solid #232c3d; box-shadow: 0 10px 30px rgba(0,0,0,0.85);">
+    <div class="decision-card-container mx-auto my-3 card-anim-entry @ClaseRareza(d.Rareza)" 
+         style="max-width: 680px; border: 2px solid @d.ColorBordeHex; border-radius: 12px; background: #080c14; overflow: hidden;">
         
-        <!-- HEADER BISELADO CON TAG Y RAREZA ESTILO "EL ÍDOLO" -->
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge px-3 py-1 fw-bold fs-6" style="background: #00e676; color: #000; border-radius: 2px;">
-                    ▌ @d.BannerTag
-                </span>
-                <span class="badge bg-dark border border-secondary text-light small fw-bold">
-                    @d.Rareza.ToString().ToUpper()
+        <!-- CABECERA -->
+        @if (d.TieneRareza)
+        {
+            <div class="d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom border-dark gap-2" 
+                 style="background: linear-gradient(90deg, #090e18 0%, @d.ColorBadgeBg 120%);">
+                
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge px-3 py-1 fw-bold fs-6 shadow text-uppercase" 
+                          style="background: @d.ColorBadgeBg; color: #fff; letter-spacing: 1px;">
+                        @IconoRareza(d.Rareza) @d.Rareza.ToString().ToUpper()
+                    </span>
+
+                    <span class="badge bg-black border border-secondary text-warning fw-bold font-monospace px-2 py-1" style="font-size: 0.75rem;">
+                        🎲 EVENTO RARO (@d.PorcentajeProbabilidad% PROB)
+                    </span>
+                </div>
+
+                <span class="badge bg-dark border border-secondary text-info small font-monospace">
+                    @d.ContextoTipo.ToString().ToUpper()
                 </span>
             </div>
-            <span class="text-secondary small fw-bold">DECISIÓN #@GameState.DecisionesTomadasTemporada DE @GameState.TotalDecisionesTemporada</span>
-        </div>
+        }
+        else
+        {
+            <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom border-dark" 
+                 style="background: #0f1726;">
+                
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-secondary text-white fw-bold px-2 py-1 small">
+                        DECISIÓN DE TEMPORADA
+                    </span>
+                    <span class="text-secondary small fw-bold">@d.BannerTag</span>
+                </div>
 
-        <!-- TÍTULO Y CONTEXTO -->
-        <h2 class="text-white fw-bold mb-1 nba-title" style="letter-spacing: 0.5px;">@d.Titulo</h2>
-        <p class="text-secondary small mb-3" style="line-height: 1.4;">@d.Contexto</p>
+                <span class="text-muted small font-monospace">@d.ContextoTipo.ToString().ToUpper()</span>
+            </div>
+        }
 
-        <!-- IMAGEN TEMÁTICA REFERENCIAL -->
+        <!-- BANNER FOTOGRÁFICO ESPECÍFICO DEL EVENTO -->
         @if (!string.IsNullOrEmpty(d.ImageUrl))
         {
-            <div class="position-relative rounded overflow-hidden mb-3" style="height: 160px; border: 2px solid #1f2937;">
-                <img src="@d.ImageUrl" style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.85);" alt="Contexto" />
-                <div class="position-absolute bottom-0 start-0 w-100 p-2" style="background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);">
-                    <small class="text-light fw-bold">TEMPORADA @GameState.TemporadaActual | OVR @GameState.JugadorActivo?.OVR</small>
+            <div class="position-relative w-100 overflow-hidden" style="height: 175px; background: #000; border-bottom: 2px solid #1e293b;">
+                <img src="@d.ImageUrl" alt="@d.Titulo" 
+                     style="width: 100%; height: 100%; object-fit: cover; object-position: center; filter: brightness(0.82) contrast(1.1);" />
+                
+                <!-- Degradado inferior para fusionar la foto con el fondo de la carta -->
+                <div class="position-absolute bottom-0 start-0 w-100 p-2 d-flex justify-content-between align-items-end" 
+                     style="background: linear-gradient(0deg, rgba(8,12,20,1) 0%, rgba(8,12,20,0.6) 45%, transparent 100%);">
+                    <span class="badge bg-black bg-opacity-75 border border-secondary text-light small">
+                        📸 @d.BannerTag
+                    </span>
+                    <span class="badge bg-black bg-opacity-75 border border-secondary text-warning small font-monospace">
+                        ID: #@d.Id
+                    </span>
                 </div>
             </div>
         }
 
-        <!-- OPCIONES EN BLOQUES OSCUROS CON BADGES DE ATRIBUTOS -->
-        <div class="d-flex flex-column gap-2">
-            @for (int i = 0; i < d.Opciones.Count; i++)
-            {
-                var opcion = d.Opciones[i];
-                var indiceRomano = i == 0 ? "I" : (i == 1 ? "II" : "III");
+        <!-- CONTENIDO Y NARRATIVA -->
+        <div class="p-3 p-md-4 text-start">
+            <h3 class="text-white fw-bold nba-title mb-2 fs-4" style="text-shadow: 0 0 10px rgba(0,0,0,0.8);">
+                @d.Titulo
+            </h3>
+            
+            <p class="text-light mb-4 fs-6" style="line-height: 1.5; color: #cbd5e1 !important;">
+                @d.Contexto
+            </p>
 
-                <div class="option-card p-3 rounded position-relative text-start" 
-                     style="background: #131923; border: 2px solid #2d3748; cursor: pointer; transition: all 0.15s ease-in-out;"
-                     @onclick="() => GameState.TomarDecision(opcion)">
-                    
-                    <div class="d-flex gap-3 align-items-start">
-                        <!-- NUMERAL ROMANO LATERAL -->
-                        <div class="text-secondary fw-bold fs-4" style="min-width: 20px; font-family: monospace;">
-                            @indiceRomano
-                        </div>
+            <!-- OPCIONES DE RESPUESTA -->
+            <div class="row g-3">
+                @foreach (var opcion in d.Opciones)
+                {
+                    <div class="col-12 col-md-6">
+                        <div class="p-3 rounded h-100 d-flex flex-column justify-content-between decision-option-box" 
+                             style="background: #0f1726; border: 2px solid #1e293b;">
+                            
+                            <div>
+                                <h5 class="text-white fw-bold mb-2 fs-6">@opcion.Titulo</h5>
+                                <p class="small text-secondary mb-3" style="font-size: 0.8rem; line-height: 1.35;">
+                                    @opcion.Descripcion
+                                </p>
 
-                        <div class="flex-grow-1">
-                            <h5 class="text-white fw-bold mb-1 nba-title" style="font-size: 1.15rem;">@opcion.Titulo</h5>
-                            <p class="text-secondary small mb-2">@opcion.Descripcion</p>
+                                <div class="d-flex flex-wrap gap-1 mb-2">
+                                    @foreach (var b in opcion.BadgesPositivas)
+                                    {
+                                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 small" style="font-size: 0.68rem;">
+                                            @b
+                                        </span>
+                                    }
+                                </div>
 
-                            <!-- PILLS VERDES DE ATRIBUTOS (INSPIRADAS EN LA IMAGEN) -->
-                            <div class="d-flex flex-wrap gap-1 mb-1">
-                                @foreach (var buff in opcion.BadgesPositivas)
-                                {
-                                    <span class="badge px-2 py-1 fw-bold text-dark" style="background: #00e676; font-size: 0.72rem; letter-spacing: 0.3px;">
-                                        @buff
-                                    </span>
-                                }
-                                @foreach (var debuff in opcion.BadgesPeligro)
-                                {
-                                    <span class="badge px-2 py-1 fw-bold" style="background: #dc2626; color: #fff; font-size: 0.72rem;">
-                                        @debuff
-                                    </span>
-                                }
+                                <div class="d-flex flex-wrap gap-1 mb-3">
+                                    @foreach (var p in opcion.BadgesPeligro)
+                                    {
+                                        <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50 small" style="font-size: 0.68rem;">
+                                            @p
+                                        </span>
+                                    }
+                                </div>
                             </div>
+
+                            <button class="btn arcade-btn-3d w-100 py-2 fw-bold text-dark fs-6 mt-2" 
+                                    style="background: @(d.TieneRareza ? d.ColorBordeHex : "#FFC72C");"
+                                    @onclick="() => ElegirOpcion(opcion)">
+                                ELEGIR ESTA VÍA ⚡
+                            </button>
                         </div>
                     </div>
-                </div>
-            }
+                }
+            </div>
         </div>
+
     </div>
 }
 
 <style>
-    .option-card:hover {
-        border-color: #00e676 !important;
+    .decision-card-container {
+        position: relative;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    .card-anim-entry {
+        animation: card-slide-in 0.25s ease-out;
+    }
+    @@keyframes card-slide-in {
+        0% { transform: translateY(10px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+    }
+
+    .rareza-normal {
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    }
+    .rareza-rara {
+        box-shadow: 0 0 25px rgba(0, 240, 255, 0.35);
+    }
+    .rareza-epica {
+        box-shadow: 0 0 30px rgba(192, 132, 252, 0.45);
+    }
+    .rareza-legendaria {
+        box-shadow: 0 0 35px rgba(255, 199, 44, 0.65);
+        animation: legendary-glow 2s infinite alternate;
+    }
+    @@keyframes legendary-glow {
+        0% { box-shadow: 0 0 20px rgba(255, 199, 44, 0.45); }
+        100% { box-shadow: 0 0 40px rgba(255, 199, 44, 0.8); }
+    }
+
+    .decision-option-box {
+        transition: transform 0.12s ease-out, border-color 0.12s ease-out;
+    }
+    .decision-option-box:hover {
+        border-color: #64748b !important;
         transform: translateY(-2px);
-        background: #17202d !important;
     }
 </style>
+
+@code {
+    private void ElegirOpcion(OpcionDecisionRPG opcion)
+    {
+        GameState.TomarDecision(opcion);
+    }
+
+    private string ClaseRareza(RarezaCarta r) => r switch
+    {
+        RarezaCarta.Rara => "rareza-rara",
+        RarezaCarta.Epica => "rareza-epica",
+        RarezaCarta.Legendaria => "rareza-legendaria",
+        _ => "rareza-normal"
+    };
+
+    private string IconoRareza(RarezaCarta r) => r switch
+    {
+        RarezaCarta.Rara => "🔷",
+        RarezaCarta.Epica => "🔮",
+        RarezaCarta.Legendaria => "👑",
+        _ => ""
+    };
+}

@@ -2,63 +2,143 @@
 @using TheNextPick.Engine
 @inject GameStateService GameState
 
-<div class="sports-card p-4 text-center my-3" style="max-width: 660px; margin: auto; background: #0c1017; border: 2px solid #2d3748;">
-    <div class="mb-3">
-        <h1 class="nba-title text-white mt-1 mb-0 display-5">NBA DRAFT COMBINE</h1>
-        <span class="badge bg-warning text-dark fs-6 px-3 py-1 fw-bold mt-1">PUNTUACIÓN TOTAL: @puntosTotales / 100 PTS</span>
+<div class="sports-card p-3 p-md-4 text-center my-2" style="max-width: 680px; margin: auto; background: #080c14; border: 3px solid #1D428A; box-shadow: 0 0 30px rgba(29,66,138,0.35);">
+    
+    <!-- ENCABEZADO CON DRAFT STOCK TICKER EN VIVO -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 px-2 pb-2 border-bottom border-secondary">
+        <div class="text-start">
+            <span class="badge bg-warning text-dark fw-bold px-2 py-1 small">NBA DRAFT COMBINE</span>
+            <h3 class="nba-title text-white mb-0 fs-3">PRUEBA @(Math.Min(etapaActual, 5)) DE 5</h3>
+        </div>
+
+        <div class="text-end">
+            <div class="stock-badge py-1 px-3 rounded fw-bold text-dark small" style="background: @ColorStock();">
+                @TextoStock()
+            </div>
+            <div class="text-white small fw-bold mt-1">PUNTOS: @puntosAcumulados / 100 PTS</div>
+        </div>
     </div>
 
-    @if (etapa == 1)
+    <!-- NOTAS EN VIVO DE LOS SCOUTS -->
+    <div class="alert alert-dark py-1 px-3 small border border-secondary text-secondary d-flex justify-content-between align-items-center mb-3">
+        <span>📋 <strong>NOTAS DE SCOUTS:</strong> @MensajeScout()</span>
+        <span class="badge bg-black border border-warning text-warning">PUNTOS RITMO: @((puntosAcumulados / (double)Math.Max(1, etapaActual - 1) * 5).ToString("0"))/100</span>
+    </div>
+
+    <!-- BANCO ALEATORIO DE 9 PRUEBAS COMBINE -->
+    @if (etapaActual <= 5 && pruebasSeleccionadas.Count == 5)
     {
-        <VerticalLeapDrill OnFinalizado="(pts) => AvanzarPrueba(pts, 2)" />
+        var pruebaId = pruebasSeleccionadas[etapaActual - 1];
+
+        @switch (pruebaId)
+        {
+            case 1:
+                <VerticalLeapDrill OnFinalizado="ProcesarPuntajePrueba" />
+                break;
+            case 2:
+                <SprintTresCuartos OnFinalizado="ProcesarPuntajePrueba" />
+                break;
+            case 3:
+                <LaneAgilityDrill OnFinalizado="ProcesarPuntajePrueba" />
+                break;
+            case 4:
+                <ReactionLightsDrill OnFinalizado="ProcesarPuntajePrueba" />
+                break;
+            case 5:
+                <TiroEstacionarioCombine OnFinalizado="ProcesarPuntajePrueba" />
+                break;
+            case 6:
+                <BenchPressDrill OnFinalizado="ProcesarPuntajePrueba" />
+                break;
+            case 7:
+                <PassingTargetDrill OnFinalizado="ProcesarPuntajePrueba" />
+                break;
+            case 8:
+                <DribbleWeaveDrill OnFinalizado="ProcesarPuntajePrueba" />
+                break;
+            case 9:
+                <PullUpSpeedJumperDrill OnFinalizado="ProcesarPuntajePrueba" />
+                break;
+        }
     }
-    else if (etapa == 2)
+    else
     {
-        <SprintTresCuartos OnFinalizado="(pts) => AvanzarPrueba(pts, 3)" />
-    }
-    else if (etapa == 3)
-    {
-        <LaneAgilityDrill OnFinalizado="(pts) => AvanzarPrueba(pts, 4)" />
-    }
-    else if (etapa == 4)
-    {
-        <ReactionLightsDrill OnFinalizado="(pts) => AvanzarPrueba(pts, 5)" />
-    }
-    else if (etapa == 5)
-    {
-        <TiroEstacionarioCombine OnFinalizado="(pts) => AvanzarPrueba(pts, 6)" />
-    }
-    else if (etapa == 6)
-    {
-        <div class="p-4 rounded bg-dark border border-warning text-center">
-            <span class="badge bg-warning text-dark fw-bold fs-6 mb-2">EVALUACIÓN DE SCOUTS COMPLETADA</span>
-            <h2 class="text-white fw-bold mb-2">Marca Final: @puntosTotales / 100 Puntos</h2>
-            <p class="text-secondary small mb-4">
-                @(puntosTotales >= 85 ? "Rendimiento histórico de Top Pick. Tu nombre suena con fuerza en el #1 del Draft." :
-                  puntosTotales >= 65 ? "Buen rendimiento físico de primera ronda de lotería." :
-                  puntosTotales >= 40 ? "Rendimiento promedio de final de primera ronda." :
-                  "Rendimiento deficiente. Los scouts te proyectan para la segunda ronda del Draft.")
-            </p>
-            <button class="btn btn-success py-3 px-5 fw-bold text-white fs-4 w-100" @onclick="FinalizarDraftDefinitivo">
-                ESCUCHAR LA CEREMONIA DEL DRAFT 🏆
+        <!-- BOLETÍN FINAL DE EVALUACIÓN -->
+        <div class="p-4 rounded bg-black border border-warning text-center my-3">
+            <span class="badge bg-warning text-dark fw-bold fs-6 mb-2">FICHA OFICIAL DE EVALUACIÓN</span>
+            <h2 class="text-white fw-bold mb-1 display-6 nba-title">PROMEDIO: @puntosAcumulados / 100 PTS</h2>
+            <div class="stock-badge py-2 px-4 rounded fw-bold text-dark fs-5 my-3 d-inline-block" style="background: @ColorStock();">
+                @TextoStock()
+            </div>
+
+            <!-- NOTAS POR ATRIBUTOS -->
+            <div class="row g-2 text-center my-3 small">
+                <div class="col-4 p-2 bg-dark rounded border border-secondary">
+                    <span class="text-secondary d-block">POTENCIA / SALTO</span>
+                    <strong class="text-warning fs-5">@(puntosAcumulados >= 80 ? "A+" : (puntosAcumulados >= 60 ? "B" : "C"))</strong>
+                </div>
+                <div class="col-4 p-2 bg-dark rounded border border-secondary">
+                    <span class="text-secondary d-block">VELOCIDAD & MANEJO</span>
+                    <strong class="text-info fs-5">@(puntosAcumulados >= 75 ? "A" : (puntosAcumulados >= 50 ? "B-" : "D"))</strong>
+                </div>
+                <div class="col-4 p-2 bg-dark rounded border border-secondary">
+                    <span class="text-secondary d-block">PULSO & TIRO</span>
+                    <strong class="text-success fs-5">@(puntosAcumulados >= 85 ? "A+" : (puntosAcumulados >= 65 ? "B+" : "C-"))</strong>
+                </div>
+            </div>
+
+            <button class="btn arcade-btn-3d btn-success py-3 px-5 fw-bold text-white fs-4 w-100 mt-2" @onclick="IrAGreenRoom">
+                ENTRAR A LA GREEN ROOM DEL DRAFT 🏆
             </button>
         </div>
     }
+
 </div>
 
 @code {
-    private int etapa = 1;
-    private int puntosTotales = 0;
+    private List<int> pruebasSeleccionadas = new();
+    private int etapaActual = 1;
+    private int puntosAcumulados = 0;
 
-    private void AvanzarPrueba(int puntosPrueba, int siguienteEtapa)
+    protected override void OnInitialized()
     {
-        puntosTotales += puntosPrueba;
-        etapa = siguienteEtapa;
+        // Banco de 9 pruebas oficiales de Combine
+        var banco = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+        pruebasSeleccionadas = banco.OrderBy(_ => Random.Shared.Next()).Take(5).ToList();
+    }
+
+    private void ProcesarPuntajePrueba(int pts)
+    {
+        puntosAcumulados += pts;
+        etapaActual++;
         StateHasChanged();
     }
 
-    private void FinalizarDraftDefinitivo()
+    private string TextoStock()
     {
-        GameState.FinalizarCombine(puntosTotales);
+        if (puntosAcumulados >= 85) return "📈 LOTERÍA TOP 3 (#1 - #3)";
+        if (puntosAcumulados >= 68) return "📊 LOTERÍA ALTA (#4 - #10)";
+        if (puntosAcumulados >= 48) return "📉 PRIMERA RONDA (#11 - #30)";
+        return "⚠️ SEGUNDA RONDA (#31 - #60)";
+    }
+
+    private string ColorStock()
+    {
+        if (puntosAcumulados >= 85) return "#00e676";
+        if (puntosAcumulados >= 68) return "#38bdf8";
+        if (puntosAcumulados >= 48) return "#facc15";
+        return "#f87171";
+    }
+
+    private string MensajeScout()
+    {
+        if (puntosAcumulados >= 60) return "Los ejecutivos de lotería toman notas con gran interés.";
+        if (puntosAcumulados >= 35) return "Scouts debatiendo tu rol como suplente en primera ronda.";
+        return "Preocupación en la grada por falta de consistencia física.";
+    }
+
+    private void IrAGreenRoom()
+    {
+        GameState.FinalizarCombine(puntosAcumulados);
     }
 }

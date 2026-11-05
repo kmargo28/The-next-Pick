@@ -1,0 +1,179 @@
+﻿@namespace TheNextPick.Components
+@using TheNextPick.Engine
+@using TheNextPick.Models
+@inject GameStateService GameState
+
+<div class="sports-card p-3 p-md-4 text-center my-3" style="max-width: 660px; margin: auto; background: #080c14; border: 3px solid #1D428A; box-shadow: 0 0 35px rgba(0,0,0,0.85);">
+    
+    @if (faseCeremonia == 1)
+    {
+        <!-- ETAPA 1: LA GREEN ROOM & LLAMADA DEL AGENTE -->
+        <span class="badge px-3 py-1 fw-bold fs-6 mb-2" style="background: #10b981; color: #000;">
+            GREEN ROOM • BARCLAYS CENTER
+        </span>
+        <h2 class="text-white fw-bold nba-title display-6 mb-1">MESA DE PROSPECTOS</h2>
+        <p class="text-secondary small mb-3">La lotería está en marcha. Estás sentado junto a tu familia mientras las cámaras de ESPN enfocan tu mesa.</p>
+
+        <!-- MESA DE GALA CON TELÉFONO VIBRANDO -->
+        <div class="position-relative mx-auto rounded p-4 my-3 border border-secondary" 
+             style="background: radial-gradient(circle at 50% 40%, #1e293b 0%, #090d16 85%); min-height: 250px;">
+            
+            <!-- Sprite con traje formal en la Green Room -->
+            <div class="my-2">
+                <PixelArtPlayer Estado="Idle" TieneBalon="false" ColorPrimario="#0f172a" NumeroDorsal="@(GameState.JugadorActivo?.NumeroDorsal ?? 11)" AnchoPx="105" AltoPx="130" />
+            </div>
+
+            <!-- Teléfono vibrando -->
+            <div class="phone-vibrate-box d-inline-block p-3 rounded-circle shadow-lg mt-2" 
+                 style="background: #10b981; border: 3px solid #fff; cursor: pointer;"
+                 @onclick="AtenderLlamada">
+                <span class="fs-2">📱</span>
+            </div>
+            <div class="text-warning small fw-bold mt-2 blink-text">
+                ¡LLAMADA ENTRANTE DE TU AGENTE...!
+            </div>
+        </div>
+
+        <button class="btn arcade-btn-3d btn-success py-3 px-5 fw-bold text-white fs-4 w-100" @onclick="AtenderLlamada">
+            CONTESTAR TELÉFONO 📱
+        </button>
+    }
+    else if (faseCeremonia == 2)
+    {
+        <!-- ETAPA 2: DIÁLOGO DEL AGENTE TRAS COLGAR -->
+        var eq = GameState.EquipoQueTeEligio ?? EquipoNBA.Franquicias[0];
+
+        <span class="badge px-3 py-1 fw-bold fs-6 mb-2 bg-warning text-dark">
+            LLAMADA CONFIDENCIAL
+        </span>
+        <h2 class="text-white fw-bold nba-title display-6 mb-2">"¡PREPÁRATE, ERES TÚ!"</h2>
+
+        <div class="alert alert-dark text-start p-3 my-3 border border-warning" style="background: #0f172a;">
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <span class="fs-1">📞</span>
+                <div>
+                    <h5 class="text-warning fw-bold mb-0">Rich Paul (Tu Agente)</h5>
+                    <small class="text-secondary">Llamada desde la mesa directiva</small>
+                </div>
+            </div>
+            <p class="text-light fs-5 mb-0" style="line-height: 1.4;">
+                <em>"¡Marcus! Acabo de hablar con el General Manager de <strong>@eq.Nombre</strong>. Te van a seleccionar en el Pick #@GameState.PickAsignado. Ponte de pie, abraza a tus padres y camina hacia el estrado."</em>
+            </p>
+        </div>
+
+        <button class="btn arcade-btn-3d btn-warning py-3 px-5 fw-bold text-dark fs-4 w-100 mt-2" @onclick="SubirAlPodio">
+            CAMINAR AL PODIO DEL COMISIONADO 🚶‍♂️
+        </button>
+    }
+    else if (faseCeremonia == 3)
+    {
+        <!-- ETAPA 3: EL PODIO DEL COMISIONADO CON GORRA OFICIAL -->
+        var eq = GameState.EquipoQueTeEligio ?? EquipoNBA.Franquicias[0];
+
+        <span class="badge px-3 py-1 fw-bold fs-6 mb-2" style="background: @eq.ColorPrimario; color: #fff; border: 2px solid #FFC72C;">
+            ANUNCIO OFICIAL DEL COMISIONADO
+        </span>
+
+        <h1 class="nba-title text-warning display-5 mb-2">PICK #@GameState.PickAsignado DEL DRAFT</h1>
+
+        <div class="p-4 rounded my-3 border shadow-lg" style="background: #090d16; border-color: @eq.ColorPrimario !important;">
+            <p class="text-secondary small text-uppercase mb-2">"With the @GameState.PickAsignado.ToString() pick in the 2026 NBA Draft..."</p>
+            
+            <img src="@eq.LogoUrl" style="height: 75px; width: 75px; object-fit: contain;" class="my-2" alt="Logo" />
+            <h2 class="text-white fw-bold mb-1">¡LOS @eq.Nombre.ToUpper()!</h2>
+            <h3 class="nba-title text-warning fs-3 mb-3">SELECCIONAN A @(GameState.JugadorActivo?.Nombre?.ToUpper() ?? "PROSPECTA")</h3>
+
+            <!-- Sprite con la gorra oficial puesta -->
+            <div class="my-3">
+                <PixelArtPlayer Estado="Celebrando" TieneBalon="false" ColorPrimario="@eq.ColorPrimario" NumeroDorsal="@(GameState.JugadorActivo?.NumeroDorsal ?? 11)" AnchoPx="120" AltoPx="145" />
+            </div>
+
+            <span class="badge bg-black border border-light text-light px-3 py-1 fw-bold">
+                CONTRATO ROOKIE: $@((GameState.SalarioAnual / 1_000_000.0).ToString("0.0"))M ANUALES
+            </span>
+        </div>
+
+        <button class="btn arcade-btn-3d btn-info py-3 px-5 fw-bold text-dark fs-4 w-100 mt-2" @onclick="VerRedesSociales">
+            VER REACCIONES EN REDES SOCIALES 💬
+        </button>
+    }
+    else if (faseCeremonia == 4)
+    {
+        <!-- ETAPA 4: FEED DE REDES SOCIALES (TWITTER / MOCK DRAFT REACTION) -->
+        var eq = GameState.EquipoQueTeEligio ?? EquipoNBA.Franquicias[0];
+
+        <span class="badge bg-black border border-secondary text-info px-3 py-1 fw-bold fs-6 mb-2">
+            FEED DE REDES SOCIALES (EN VIVO)
+        </span>
+        <h2 class="text-white fw-bold nba-title display-6 mb-2">REACCIONES DE LA LIGA</h2>
+
+        <div class="d-flex flex-column gap-2 text-start my-3">
+            <!-- Tweet de Analista Oficial -->
+            <div class="p-3 rounded bg-dark border border-secondary">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong class="text-white small">Adrian Wojnarowski (Spoof) <span class="text-info">✔</span></strong>
+                    <span class="text-muted" style="font-size: 0.65rem;">hace 2 min</span>
+                </div>
+                <p class="small text-light mb-0">
+                    "Los @eq.Nombre consiguen a un talento con techo altísimo en el Pick #@GameState.PickAsignado. Si su tiro se consolida, tienen a su jugador franquicia de la década."
+                </p>
+            </div>
+
+            <!-- Tweet de Fanático Eufórico -->
+            <div class="p-3 rounded bg-dark border border-success">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong class="text-white small">@eq.Nombre Fans Daily 🏀</strong>
+                    <span class="text-muted" style="font-size: 0.65rem;">hace 1 min</span>
+                </div>
+                <p class="small text-light mb-0">
+                    "¡VAMOOOOS! ¡Por fin la directiva no la arruina en el Draft! Ya encargué mi camiseta #@(GameState.JugadorActivo?.NumeroDorsal ?? 11). El futuro empieza hoy."
+                </p>
+            </div>
+
+            <!-- Tweet de Hater / Detractor -->
+            <div class="p-3 rounded bg-dark border border-danger">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong class="text-white small">NBA Draft Skeptic ❌</strong>
+                    <span class="text-muted" style="font-size: 0.65rem;">ahora</span>
+                </div>
+                <p class="small text-light mb-0">
+                    "Pick desperdiciado. Demasiada prensa para pocas garantías físicas. En dos temporadas lo mandan a la G-League."
+                </p>
+            </div>
+        </div>
+
+        <button class="btn arcade-btn-3d btn-warning py-3 px-5 fw-bold text-dark fs-4 w-100 mt-2" @onclick="ConfirmarYEmpezar">
+            FIRMAR CONTRATO Y COMENZAR TEMPORADA 🏀
+        </button>
+    }
+
+</div>
+
+<style>
+    .phone-vibrate-box {
+        animation: phone-buzz 0.4s infinite ease-in-out;
+    }
+    @@keyframes phone-buzz {
+        0% { transform: rotate(0deg) scale(1); }
+        25% { transform: rotate(-12deg) scale(1.1); }
+        50% { transform: rotate(12deg) scale(1.1); }
+        75% { transform: rotate(-8deg) scale(1.05); }
+        100% { transform: rotate(0deg) scale(1); }
+    }
+    .blink-text {
+        animation: anim-blink 1s infinite alternate;
+    }
+    @@keyframes anim-blink {
+        0% { opacity: 0.3; }
+        100% { opacity: 1; }
+    }
+</style>
+
+@code {
+    private int faseCeremonia = 1;
+
+    private void AtenderLlamada() => faseCeremonia = 2;
+    private void SubirAlPodio() => faseCeremonia = 3;
+    private void VerRedesSociales() => faseCeremonia = 4;
+    private void ConfirmarYEmpezar() => GameState.ConfirmarDraftYComenzar();
+}

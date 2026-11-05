@@ -33,6 +33,18 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Descargas/The Next Pick/The-next-Pick/Components/AllStarWeekendHub.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBbGxTdGFyV2Vla2VuZEh1Yi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Descargas/The Next Pick/The-next-Pick/Components/BarraProgresoTemporada.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xCYXJyYVByb2dyZXNvVGVtcG9yYWRhLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Descargas/The Next Pick/The-next-Pick/Components/BenchPressDrill.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xCZW5jaFByZXNzRHJpbGwucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Descargas/The Next Pick/The-next-Pick/Components/CanchaFondo.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xDYW5jaGFGb25kby5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
@@ -45,6 +57,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xDb25jdXJzb1RyaXBsZXMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Descargas/The Next Pick/The-next-Pick/Components/ConcursoTriplesAllStar.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xDb25jdXJzb1RyaXBsZXNBbGxTdGFyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Descargas/The Next Pick/The-next-Pick/Components/DecisionCard.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEZWNpc2lvbkNhcmQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
@@ -55,6 +71,14 @@ build_metadata.AdditionalFiles.CssScope =
 
 [D:/Descargas/The Next Pick/The-next-Pick/Components/DraftCombine.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEcmFmdENvbWJpbmUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Descargas/The Next Pick/The-next-Pick/Components/DraftNightCeremony.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEcmFmdE5pZ2h0Q2VyZW1vbnkucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Descargas/The Next Pick/The-next-Pick/Components/DribbleWeaveDrill.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEcmliYmxlV2VhdmVEcmlsbC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/Descargas/The Next Pick/The-next-Pick/Components/DueloUnoContraUno.razor]
@@ -91,6 +115,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [D:/Descargas/The Next Pick/The-next-Pick/Components/PanelInsignias.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYW5lbEluc2lnbmlhcy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Descargas/The Next Pick/The-next-Pick/Components/PassingTargetDrill.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYXNzaW5nVGFyZ2V0RHJpbGwucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/Descargas/The Next Pick/The-next-Pick/Components/PixelArtPlayer.razor]
@@ -141,6 +169,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQb3J0YWRhUmV2aXN0YS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Descargas/The Next Pick/The-next-Pick/Components/PullUpSpeedJumperDrill.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQdWxsVXBTcGVlZEp1bXBlckRyaWxsLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Descargas/The Next Pick/The-next-Pick/Components/ReactionLightsDrill.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xSZWFjdGlvbkxpZ2h0c0RyaWxsLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
@@ -159,6 +191,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [D:/Descargas/The Next Pick/The-next-Pick/Components/VerticalLeapDrill.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xWZXJ0aWNhbExlYXBEcmlsbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Descargas/The Next Pick/The-next-Pick/Components/VitrinaPremiosModal.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xWaXRyaW5hUHJlbWlvc01vZGFsLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/Descargas/The Next Pick/The-next-Pick/Pages/Counter.razor]

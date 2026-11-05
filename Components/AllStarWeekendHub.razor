@@ -1,0 +1,185 @@
+﻿@namespace TheNextPick.Components
+@using TheNextPick.Engine
+@inject GameStateService GameState
+
+<div class="sports-card p-3 p-md-4 text-center my-3" style="max-width: 680px; margin: auto; background: #080c14; border: 3px solid #FFC72C; box-shadow: 0 0 35px rgba(255,199,44,0.35);">
+    
+    @if (!eventoEnJuego && !eventoFinalizado)
+    {
+        <!-- SELECCIÓN DE EVENTOS DEL FIN DE SEMANA -->
+        <span class="badge px-3 py-2 fw-bold fs-6 mb-2" style="background: #FFC72C; color: #000;">
+            ⭐ ALL-STAR WEEKEND @(2026 + GameState.TemporadaActual)
+        </span>
+        <h1 class="text-white fw-bold nba-title display-5 mb-1">EL FIN DE SEMANA DE LAS ESTRELLAS</h1>
+        <p class="text-secondary small mb-3">
+            La liga se detiene para coronar a los mejores talentos del planeta. Selecciona tu participación en el fin de semana:
+        </p>
+
+        <div class="row g-3 my-2 text-start">
+            <!-- OPCIÓN 1: RISING STARS (AÑOS 1 Y 2) -->
+            <div class="col-12 col-md-6">
+                <div class="p-3 rounded bg-dark border @(GameState.TemporadaActual <= 2 ? "border-warning" : "border-secondary opacity-50") h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <span class="badge bg-warning text-dark fw-bold mb-1">VIERNES</span>
+                        <h5 class="text-white fw-bold mb-1">RISING STARS CHALLENGE</h5>
+                        <p class="small text-secondary mb-3">Duelo estelar entre los novatos y jugadores de 2º año con mayor proyección de la NBA.</p>
+                    </div>
+
+                    @if (GameState.TemporadaActual <= 2)
+                    {
+                        <button class="btn arcade-btn-3d btn-warning w-100 fw-bold text-dark py-2" @onclick="JugarRisingStars">
+                            DISPUTAR PARTIDO ESTELAR 🌟
+                        </button>
+                    }
+                    else
+                    {
+                        <span class="badge bg-black text-muted p-2">EVENTO EXCLUSIVO AÑOS 1 Y 2</span>
+                    }
+                </div>
+            </div>
+
+            <!-- OPCIÓN 2: CONCURSO DE TRIPLES (TIRO EXTERIOR >= 78) -->
+            <div class="col-12 col-md-6">
+                <div class="p-3 rounded bg-dark border @(GameState.JugadorActivo?.TiroExterior >= 78 ? "border-info" : "border-secondary opacity-50") h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <span class="badge bg-info text-dark fw-bold mb-1">SÁBADO DE NOCHE</span>
+                        <h5 class="text-white fw-bold mb-1">3-POINT CONTEST</h5>
+                        <p class="small text-secondary mb-3">5 carros perimetrales y balones Money Ball ante los mejores francotiradores del circuito.</p>
+                    </div>
+
+                    @if (GameState.JugadorActivo?.TiroExterior >= 78)
+                    {
+                        <button class="btn arcade-btn-3d btn-info w-100 fw-bold text-dark py-2" @onclick="JugarTriples">
+                            ENTRAR AL CONCURSO 🎯
+                        </button>
+                    }
+                    else
+                    {
+                        <span class="badge bg-black text-muted p-2">REQUIERE 78+ EN TIRO EXTERIOR</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- SALTAR DIRECTO SIN JUGAR -->
+        <button class="btn arcade-btn-3d btn-outline-secondary w-100 py-3 fw-bold text-white fs-5 mt-3" @onclick="ConcluirFinDeSemana">
+            PASAR EL FIN DE SEMANA DESCANSANDO Y CONTINUAR 🌴
+        </button>
+    }
+    else if (eventoEnJuego)
+    {
+        <!-- PANTALLA ACTIVA DEL MINIJUEGO ELEGIDO -->
+        @if (tipoEvento == "Triples")
+        {
+            <ConcursoTriplesAllStar OnFinalizado="ProcesarResultadoTriples" />
+        }
+        else if (tipoEvento == "RisingStars")
+        {
+            <MinijuegoArcadeClutch OnFinalizado="ProcesarResultadoRisingStars" />
+        }
+    }
+    else if (eventoFinalizado)
+    {
+        <!-- RESULTADOS DEFINITIVOS (NO PERMITE VOLVER A JUGAR) -->
+        <div class="p-4 rounded bg-black border border-warning text-center my-3">
+            <span class="badge bg-warning text-dark fw-bold fs-6 mb-2">⭐ BALANCE OFICIAL DEL ALL-STAR</span>
+            <h2 class="text-white fw-bold nba-title display-6 mb-2">@tituloResultado</h2>
+            
+            <div class="alert alert-dark text-light border border-secondary my-3 p-3">
+                <p class="fs-5 mb-0">@detalleResultado</p>
+            </div>
+
+            <div class="row g-2 text-center my-3">
+                <div class="col-6 p-2 bg-dark rounded border border-warning text-warning fw-bold">
+                    HYPE: +@hypeGanado pts
+                </div>
+                <div class="col-6 p-2 bg-dark rounded border border-success text-success fw-bold">
+                    REPUTACIÓN: +10 DT
+                </div>
+            </div>
+
+            <!-- ÚNICO BOTÓN: CONTINUAR LA TEMPORADA -->
+            <button class="btn arcade-btn-3d btn-warning py-3 px-5 fw-bold text-dark fs-4 w-100 mt-2" @onclick="ConcluirFinDeSemana">
+                AVANZAR A LA RECTA FINAL DE LA TEMPORADA 🚀
+            </button>
+        </div>
+    }
+
+</div>
+
+@code {
+    private bool eventoEnJuego = false;
+    private bool eventoFinalizado = false;
+    private string tipoEvento = "";
+
+    private string tituloResultado = "";
+    private string detalleResultado = "";
+    private int hypeGanado = 0;
+
+    private void JugarTriples()
+    {
+        tipoEvento = "Triples";
+        eventoEnJuego = true;
+    }
+
+    private void JugarRisingStars()
+    {
+        tipoEvento = "RisingStars";
+        eventoEnJuego = true;
+    }
+
+    private void ProcesarResultadoTriples(int puntos)
+    {
+        eventoEnJuego = false;
+        eventoFinalizado = true;
+
+        if (puntos >= 18)
+        {
+            hypeGanado = 30;
+            tituloResultado = "¡CAMPEÓN DEL CONCURSO DE TRIPLES! 🏆";
+            detalleResultado = $"Anotaste {puntos} puntos en una exhibición legendaria. Tu nombre queda grabado en el palmarés de la liga.";
+            GameState.PremiosGanadosTemporada.Add("Campeón del Concurso de Triples All-Star");
+        }
+        else
+        {
+            hypeGanado = 10;
+            tituloResultado = "PARTICIPACIÓN DESTACADA EN TRIPLES";
+            detalleResultado = $"Finalizaste con {puntos} puntos. Aunque no alcanzaste el trofeo, tu tiro exterior generó respeto en la prensa.";
+        }
+
+        GameState.Hype = Math.Clamp(GameState.Hype + hypeGanado, 0, 100);
+        GameState.ConfianzaDT = Math.Clamp(GameState.ConfianzaDT + 10, 0, 100);
+        GameState.UltimaNoticia = detalleResultado;
+        StateHasChanged();
+    }
+
+    private void ProcesarResultadoRisingStars(bool ganado)
+    {
+        eventoEnJuego = false;
+        eventoFinalizado = true;
+
+        if (ganado)
+        {
+            hypeGanado = 25;
+            tituloResultado = "¡MVP DEL RISING STARS CHALLENGE! ⭐";
+            detalleResultado = "Lideraste a tu conferencia con una actuación clutch decisiva en el tramo final del partido de promesas.";
+            GameState.PremiosGanadosTemporada.Add("MVP del Rising Stars Challenge");
+        }
+        else
+        {
+            hypeGanado = 10;
+            tituloResultado = "EXPERIENCIA ESTELAR EN EL RISING STARS";
+            detalleResultado = "Disputaste minutos valiosos en televisión abierta junto a las mejores promesas jóvenes de la competición.";
+        }
+
+        GameState.Hype = Math.Clamp(GameState.Hype + hypeGanado, 0, 100);
+        GameState.ConfianzaDT = Math.Clamp(GameState.ConfianzaDT + 10, 0, 100);
+        GameState.UltimaNoticia = detalleResultado;
+        StateHasChanged();
+    }
+
+    private void ConcluirFinDeSemana()
+    {
+        GameState.ContinuarTrasAllStar();
+    }
+}

@@ -1,0 +1,225 @@
+﻿@namespace TheNextPick.Components
+@implements IDisposable
+
+<div class="sports-card p-3 my-2 text-center" style="max-width: 580px; margin: auto; background: #0c1017; border: 2px solid #2d3748;">
+    
+    <!-- CABECERA DE LA PRUEBA -->
+    <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+        <span class="badge px-3 py-1 fw-bold fs-6" style="background: #e11d48; color: #fff;">
+            🏋️ PRESS DE BANCA (185 LBS / 84 KG)
+        </span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-secondary small fw-bold">FATIGA:</span>
+            @for (int f = 0; f < 3; f++)
+            {
+                <span style="font-size: 1rem;">@(f < fallos ? "❌" : "🟢")</span>
+            }
+        </div>
+    </div>
+
+    <!-- PISTA Y BANCO OLÍMPICO DE PESAS -->
+    <div class="position-relative mx-auto rounded my-3 overflow-hidden border border-secondary" 
+         style="width: 100%; height: 240px; background: radial-gradient(circle at 50% 50%, #171f2c 0%, #080c14 90%);">
+        
+        <svg viewBox="0 0 300 200" class="position-absolute top-0 start-50 translate-middle-x" style="width: 100%; height: 100%; pointer-events: none;">
+            <!-- Soportes de acero del banco -->
+            <rect x="52" y="30" width="8" height="160" fill="#334155" stroke="#000" stroke-width="2" />
+            <rect x="240" y="30" width="8" height="160" fill="#334155" stroke="#000" stroke-width="2" />
+            <!-- Cojín del banco -->
+            <rect x="95" y="125" width="110" height="45" rx="4" fill="#0f172a" stroke="#000" stroke-width="2" />
+
+            <!-- BARRA MÓVIL (Con desplazamiento en entero para evitar comas) -->
+            <g transform="translate(0, @desplazamientoBarraPx)">
+                <!-- Barra de acero cromada -->
+                <rect x="25" y="65" width="250" height="7" rx="2" fill="#cbd5e1" stroke="#000" stroke-width="1.5" />
+                <rect x="135" y="64" width="30" height="9" fill="#94a3b8" />
+                <!-- Discos de 45 lbs (185 lbs en total con barra) -->
+                <rect x="34" y="36" width="14" height="65" rx="2" fill="#1e293b" stroke="#000" stroke-width="2" />
+                <rect x="252" y="36" width="14" height="65" rx="2" fill="#1e293b" stroke="#000" stroke-width="2" />
+            </g>
+
+            <!-- Atleta acostado empujando -->
+            <circle cx="150" cy="115" r="16" fill="#f5c492" stroke="#000" stroke-width="1.5" />
+            <rect x="138" y="105" width="24" height="4" fill="#FFC72C" />
+        </svg>
+
+        <!-- Indicador flotante de repeticiones -->
+        <div class="position-absolute top-0 start-50 translate-middle-x mt-2 badge bg-black border border-warning text-warning fs-5 px-3 py-1 shadow">
+            REPETICIONES: @repeticiones / 18
+        </div>
+
+        @if (mostrandoExito)
+        {
+            <div class="position-absolute top-50 start-50 translate-middle badge bg-success fs-4 px-3 py-2 shadow-lg anim-pop">
+                ¡+1 REPETICIÓN! ⚡
+            </div>
+        }
+    </div>
+
+    <!-- MEDIDOR DE EMPUJE CADENCIADO -->
+    <div class="position-relative my-3 rounded border border-secondary" style="height: 38px; background: #000; overflow: hidden;">
+        <div class="position-absolute bg-success h-100" 
+             style="left: @((int)zonaVerdeMin)%; width: @((int)(zonaVerdeMax - zonaVerdeMin))%; box-shadow: 0 0 15px #10b981; opacity: 0.9;"></div>
+        <div class="position-absolute bg-warning h-100" 
+             style="left: @((int)posicionAguja)%; width: 6px; box-shadow: 0 0 12px #f59e0b;"></div>
+    </div>
+
+    <!-- BOTONES ARCADE 3D -->
+    @if (!activo && !finalizado)
+    {
+        <button class="btn arcade-btn-3d btn-warning w-100 py-3 fw-bold text-dark fs-5" @onclick="IniciarPrueba">
+            ACOSTARSE EN EL BANCO Y COMENZAR 🏋️
+        </button>
+    }
+    else if (activo)
+    {
+        <button class="btn arcade-btn-3d btn-danger w-100 py-3 fw-bold text-white fs-4" @onclick="EmpujarRepeticion" disabled="@bloqueoClic">
+            ¡EMPUJAR! (REP #@(repeticiones + 1)) ⚡
+        </button>
+    }
+    else
+    {
+        <button class="btn btn-secondary w-100 py-3 fw-bold fs-5 text-muted" disabled>
+            PRUEBA CONCLUIDA
+        </button>
+    }
+
+    <div class="mt-2 text-info small fw-bold">@mensajeFeedback</div>
+</div>
+
+<style>
+    .anim-pop {
+        animation: pop-bounce 0.25s ease-out;
+    }
+    @@keyframes pop-bounce {
+        0% { transform: translate(-50%, -50%) scale(0.7); }
+        70% { transform: translate(-50%, -50%) scale(1.15); }
+        100% { transform: translate(-50%, -50%) scale(1.0); }
+    }
+</style>
+
+@code {
+    [Parameter] public EventCallback<int> OnFinalizado { get; set; }
+
+    private int repeticiones = 0;
+    private int fallos = 0;
+    private bool activo = false;
+    private bool finalizado = false;
+    private bool bloqueoClic = false;
+    private bool mostrandoExito = false;
+
+    private int posicionAguja = 0;
+    private bool subiendo = true;
+    private int desplazamientoBarraPx = 0;
+
+    private int zonaVerdeMin = 40;
+    private int zonaVerdeMax = 65;
+    private int velocidadMs = 18;
+
+    private string mensajeFeedback = "Presiona Empujar justo cuando la aguja cruce la zona verde.";
+    private CancellationTokenSource cts = new();
+
+    private void IniciarPrueba()
+    {
+        activo = true;
+        repeticiones = 0;
+        fallos = 0;
+        posicionAguja = 0;
+        subiendo = true;
+        zonaVerdeMin = 40;
+        zonaVerdeMax = 65;
+        velocidadMs = 18;
+        IniciarLoopFisica();
+    }
+
+    private void IniciarLoopFisica()
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (activo && !cts.Token.IsCancellationRequested)
+                {
+                    posicionAguja += subiendo ? 4 : -4;
+                    if (posicionAguja >= 96) subiendo = false;
+                    if (posicionAguja <= 4) subiendo = true;
+
+                    // Mapeo entero seguro para la barra
+                    desplazamientoBarraPx = (posicionAguja * 35) / 100;
+
+                    await InvokeAsync(StateHasChanged);
+                    await Task.Delay(velocidadMs, cts.Token);
+                }
+            }
+            catch (OperationCanceledException) { }
+        });
+    }
+
+    private async Task EmpujarRepeticion()
+    {
+        if (!activo || bloqueoClic) return;
+        bloqueoClic = true;
+
+        bool acierto = posicionAguja >= zonaVerdeMin && posicionAguja <= zonaVerdeMax;
+
+        if (acierto)
+        {
+            repeticiones++;
+            mostrandoExito = true;
+            mensajeFeedback = $"¡Repetición #{repeticiones} válida!";
+            StateHasChanged();
+
+            // Calibración de fatiga: reduce la zona verde gradualmente
+            int ancho = Math.Max(10, 24 - (repeticiones / 2));
+            zonaVerdeMin = Random.Shared.Next(30, 68);
+            zonaVerdeMax = zonaVerdeMin + ancho;
+            velocidadMs = Math.Max(10, 18 - (repeticiones / 3));
+
+            await Task.Delay(220);
+            mostrandoExito = false;
+
+            if (repeticiones >= 18)
+            {
+                await FinalizarPrueba();
+                return;
+            }
+        }
+        else
+        {
+            fallos++;
+            mensajeFeedback = $"¡Fallo de bloqueo! ({fallos}/3 strikes).";
+            StateHasChanged();
+            await Task.Delay(300);
+
+            if (fallos >= 3)
+            {
+                await FinalizarPrueba();
+                return;
+            }
+        }
+
+        bloqueoClic = false;
+        StateHasChanged();
+    }
+
+    private async Task FinalizarPrueba()
+    {
+        activo = false;
+        finalizado = true;
+        try { cts.Cancel(); } catch { }
+
+        int puntos = Math.Clamp(repeticiones + 2, 0, 20);
+        mensajeFeedback = $"Prueba concluida: {repeticiones} repeticiones oficiales (+{puntos} PTS).";
+        StateHasChanged();
+
+        await Task.Delay(1100);
+        await OnFinalizado.InvokeAsync(puntos);
+    }
+
+    public void Dispose()
+    {
+        activo = false;
+        try { cts.Cancel(); } catch { }
+        try { cts.Dispose(); } catch { }
+    }
+}

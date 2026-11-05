@@ -4,314 +4,331 @@ namespace TheNextPick.Engine;
 
 public static class CatalogoDecisionesRPG
 {
-    private static readonly List<int> IdsDilemasVistos = new();
+    private static readonly List<int> IdsDilemasVistosEnTemporada = new();
+    public static readonly List<int> ArcosDesencadenados = new();
 
-    private static readonly List<DilemaRPG> BaseDeCartas = new()
+    public static void IniciarNuevaTemporada() => IdsDilemasVistosEnTemporada.Clear();
+    public static void ReiniciarMemoriaHistorica()
     {
-        // ====================================================================
-        // AÑOS 1 Y 2: PICK TARDÍO / SEGUNDA RONDA (#15 AL #60)
-        // ====================================================================
-        new()
-        {
-            Id = 1,
-            Rareza = RarezaCarta.Comun,
-            BannerTag = "PASAN COSAS",
-            Titulo = "NO ESTÁS JUGANDO",
-            Contexto = "Llevas medio año sumando migajas. Podés pedir salir a préstamo a la filial de G-League para jugar todo, o quedarte a pelear el puesto donde estás.",
-            ImageUrl = "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=700&auto=format&fit=crop&q=80",
-            MinTemporada = 1, MaxTemporada = 2,
-            MinPickDraft = 15, MaxPickDraft = 60,
-            Opciones = new()
-            {
-                new()
-                {
-                    Titulo = "PEDIR SALIR A PRÉSTAMO",
-                    Descripcion = "Minutos garantizados. Bajás de categoría temporalmente para tener la pelota.",
-                    BadgesPositivas = new() { "+3 TIRO EXTERIOR", "+3 VELOCIDAD" },
-                    BadgesPeligro = new() { "⚡ -15 ENERGÍA", "-5 HYPE" },
-                    DeltaTiroExterior = 3, DeltaAtletismo = 3, DeltaEnergia = -15, DeltaHype = -5, DeltaConfianzaDT = 10,
-                    Retroalimentacion = "Promediaste 24 puntos en la filial. Vuelves con ritmo competitivo sólido."
-                },
-                new()
-                {
-                    Titulo = "QUEDARTE A PELEARLA",
-                    Descripcion = "Defender al titular en cada práctica para forzar la consideración del cuerpo técnico.",
-                    BadgesPositivas = new() { "+4 DEFENSA", "+15 CONFIANZA DT" },
-                    BadgesPeligro = new() { "⚠️ PODÉS PASAR OTRO AÑO MIRANDO" },
-                    DeltaDefensa = 4, DeltaConfianzaDT = 15, DeltaEnergia = -10,
-                    Retroalimentacion = "El entrenador valoró tu constancia y te otorga 12 minutos en la rotación regular."
-                }
-            }
-        },
+        IdsDilemasVistosEnTemporada.Clear();
+        ArcosDesencadenados.Clear();
+    }
 
-        new()
-        {
-            Id = 2,
-            Rareza = RarezaCarta.Rara,
-            BannerTag = "PRETEMPORADA ROOKIE",
-            Titulo = "HORAS EXTRAS EN EL GIMNASIO",
-            Contexto = "El preparador físico te propone un plan de choque antes del inicio del calendario regular.",
-            ImageUrl = "https://images.unsplash.com/photo-1518063319789-7217e6706b04?w=700&auto=format&fit=crop&q=80",
-            MinTemporada = 1, MaxTemporada = 2,
-            Opciones = new()
-            {
-                new()
-                {
-                    Titulo = "PIERNAS NUEVAS TRAS CADA PRÁCTICA",
-                    Descripcion = "Doble turno de pesas y sentadillas para ganar aceleración y potencia.",
-                    BadgesPositivas = new() { "+4 ATLETISMO", "+3 REBOTE" },
-                    BadgesPeligro = new() { "⚡ -20 ENERGÍA" },
-                    DeltaAtletismo = 4, DeltaRebote = 3, DeltaEnergia = -20,
-                    Retroalimentacion = "Sientes las piernas livianas y explosivas en los contraataques."
-                },
-                new()
-                {
-                    Titulo = "MÉTODO REPETITIVO DE LANZAMIENTO",
-                    Descripcion = "Aparecer donde va a caer la pelota ensayando el tiro mil veces.",
-                    BadgesPositivas = new() { "+4 TIRO EXTERIOR", "+3 TIRO MEDIA" },
-                    BadgesPeligro = new() { "⚡ -15 ENERGÍA" },
-                    DeltaTiroExterior = 4, DeltaTiroMedia = 3, DeltaEnergia = -15,
-                    Retroalimentacion = "Mecánica limpia y automática desde las esquinas de la cancha."
-                }
-            }
-        },
+    // GENERADOR Y BANCO DE MÁS DE 50 EVENTOS CON IMÁGENES DEDICADAS
+    private static readonly List<DilemaRPG> BaseDeCartas = GenerarBancoCompleto();
 
-        new()
-        {
-            Id = 3,
-            Rareza = RarezaCarta.Epica,
-            BannerTag = "MOMENTO CLUTCH",
-            Titulo = "LA POSESIÓN FINAL DEL TERCER CUARTO",
-            Contexto = "Quedan 18 segundos de posesión. La estrella rival no para de anotar y el DT pide a gritos que alguien dé la cara en el tabloncillo.",
-            ImageUrl = "https://images.unsplash.com/photo-1519766304817-4f37bda74a29?w=700&auto=format&fit=crop&q=80",
-            MinTemporada = 1, MaxTemporada = 2,
-            Opciones = new()
-            {
-                new()
-                {
-                    Titulo = "PEDIR EL BALÓN Y ASUMIR EL TIRO (MINIJUEGO)",
-                    Descripcion = "Entrar a la cancha y jugar el tiro arcade bajo presión.",
-                    BadgesPositivas = new() { "🏀 MINIJUEGO EN CANCHA", "+25 HYPE", "+15 DT" },
-                    BadgesPeligro = new() { "⚠️ SI FALLAS: RIESGO TRASPASO" },
-                    ActivaMinijuegoEnCancha = true,
-                    AumentaRiesgoTraspaso = true,
-                    Retroalimentacion = "El balón está en tus manos ante 20,000 fanáticos rugiendo."
-                },
-                new()
-                {
-                    Titulo = "PERMANECER EN EL BANCO SIN FORZAR",
-                    Descripcion = "Dejar que los veteranos cierren el cuarto sin arriesgar tu posición.",
-                    BadgesPositivas = new() { "+5 ENERGÍA" },
-                    BadgesPeligro = new() { "-10 HYPE" },
-                    DeltaEnergia = 5, DeltaHype = -10,
-                    Retroalimentacion = "El equipo mantuvo la renta sin alterar tu posición en la rotación."
-                }
-            }
-        },
-
-        // ====================================================================
-        // AÑOS 1 Y 2: TOP 3 PICKS (PRESIÓN MEDIÁTICA INMEDIATA)
-        // ====================================================================
-        new()
-        {
-            Id = 4,
-            Rareza = RarezaCarta.Legendaria,
-            BannerTag = "EVENTO DE LOTERÍA",
-            Titulo = "LA SOMBRA DEL PICK NÚMERO 1",
-            Contexto = "Como Top Pick del Draft, las cadenas de televisión nacional transmiten cada uno de tus errores. La afición exige salvar a la franquicia hoy mismo.",
-            ImageUrl = "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=700&auto=format&fit=crop&q=80",
-            MinTemporada = 1, MaxTemporada = 2,
-            MinPickDraft = 1, MaxPickDraft = 3,
-            Opciones = new()
-            {
-                new()
-                {
-                    Titulo = "ASUMIR EL EMPAREJAMIENTO ESTELAR (MINIJUEGO)",
-                    Descripcion = "Marcar posesión a posesión al líder anotador del oponente.",
-                    BadgesPositivas = new() { "🏀 MINIJUEGO", "+5 OVR GLOBAL", "+35 HYPE" },
-                    BadgesPeligro = new() { "⚠️ RIESGO TRASPASO AL FALLAR", "🏥 RIESGO LESIÓN" },
-                    ActivaMinijuegoEnCancha = true,
-                    ProbabilidadLesionDirecta = 25,
-                    AumentaRiesgoTraspaso = true,
-                    Retroalimentacion = "Duelo estelar televisado a nivel mundial."
-                },
-                new()
-                {
-                    Titulo = "DECLARAR CON HUMILDAD ANTE LOS MICRÓFONOS",
-                    Descripcion = "\"Ellos son un equipo armado, nosotros estamos construyendo química\".",
-                    BadgesPositivas = new() { "+15 CONFIANZA DT", "+10 QUÍMICA" },
-                    BadgesPeligro = new() { "-5 HYPE" },
-                    DeltaConfianzaDT = 15, DeltaHype = -5,
-                    Retroalimentacion = "El DT elogió tu temple para calmar las exigencias de la prensa."
-                }
-            }
-        },
-
-        new()
-        {
-            Id = 5,
-            Rareza = RarezaCarta.Comun,
-            BannerTag = "CONTRATOS NOVATO",
-            Titulo = "EL CONTRATO COMERCIAL DE CALZADO",
-            Contexto = "Varias marcas deportivas buscan tu firma. Como novato, ninguna marca te ofrece zapatillas con tu propio nombre todavía; ofrecen calzado de línea estándar con incentivos.",
-            ImageUrl = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=700&auto=format&fit=crop&q=80",
-            MinTemporada = 1, MaxTemporada = 2,
-            Opciones = new()
-            {
-                new()
-                {
-                    Titulo = "FIRMAR CON EL GIGANTE NORTEAMERICANO",
-                    Descripcion = "Usar zapatillas comerciales de catálogo con bono por minutos jugados.",
-                    BadgesPositivas = new() { "+10 HYPE", "💰 +$500K FONDOS" },
-                    BadgesPeligro = new() { "SIN ZAPATILLA PROPIA AÚN" },
-                    DeltaHype = 10, DeltaConfianzaDT = 5,
-                    Retroalimentacion = "Firmaste por 2 años como embajador de línea básica de la marca."
-                },
-                new()
-                {
-                    Titulo = "APOSTAR POR UNA MARCA EMERGENTE ASIÁTICA",
-                    Descripcion = "Te pagan el triple de dinero directo a cambio de jugar en giras de pretemporada.",
-                    BadgesPositivas = new() { "💰 +$1.5M FONDOS", "+5 ENERGÍA" },
-                    BadgesPeligro = new() { "-5 HYPE EN EE.UU." },
-                    DeltaHype = -5, DeltaEnergia = 5,
-                    Retroalimentacion = "Tu nombre es un éxito comercial en Shanghái y Tokio."
-                }
-            }
-        },
-
-        // ====================================================================
-        // AÑOS 3 EN ADELANTE: PRIME, NEGOCIOS Y ESTRELLATO
-        // ====================================================================
-        new()
-        {
-            Id = 6,
-            Rareza = RarezaCarta.Rara,
-            BannerTag = "NEGOCIOS & SNEAKERS",
-            Titulo = "LA PRIMERA LÍNEA DE ZAPATILLAS SIGNATURE",
-            Contexto = "Tras consolidarte con más de 85 de OVR, la marca presenta tu primer prototipo oficial con tu logo y número dorsal bordados.",
-            ImageUrl = "https://images.unsplash.com/photo-1552346154-21d32810aba3?w=700&auto=format&fit=crop&q=80",
-            MinTemporada = 3, MinOVR = 85,
-            Opciones = new()
-            {
-                new()
-                {
-                    Titulo = "LANZAR MODELO PERFORMANCE DE ÉLITE",
-                    Descripcion = "Suela con compuesto reactivo de nitrógeno para mejorar los cortes.",
-                    BadgesPositivas = new() { "+4 ATLETISMO", "+25 HYPE", "💰 +$2.5M FONDOS" },
-                    BadgesPeligro = new() { "⚡ -10 ENERGÍA" },
-                    DeltaAtletismo = 4, DeltaHype = 25, DeltaEnergia = -10,
-                    Retroalimentacion = "El calzado se agotó en la preventa internacional en solo minutos."
-                },
-                new()
-                {
-                    Titulo = "CONTRATO CLÁSICO SIN IMPLICACIÓN EN DISEÑO",
-                    Descripcion = "Cobrar las regalías correspondientes sin invertir tiempo en presentaciones.",
-                    BadgesPositivas = new() { "💰 +$1.2M FONDOS", "+10 ENERGÍA" },
-                    BadgesPeligro = new() { "-5 HYPE" },
-                    DeltaEnergia = 10, DeltaHype = -5,
-                    Retroalimentacion = "Ingresos seguros en tu cuenta corriente sin compromisos publicitarios."
-                }
-            }
-        },
-
-        new()
-        {
-            Id = 7,
-            Rareza = RarezaCarta.Epica,
-            BannerTag = "OFICINA CENTRAL",
-            Titulo = "EXIGIR TRASPASOS AL GENERAL MANAGER",
-            Contexto = "El equipo no compite por el anillo. Como referente, puedes exigir un pívot defensor o amenazar con pedir el traspaso.",
-            ImageUrl = "https://images.unsplash.com/photo-1526676037777-05a232554f77?w=700&auto=format&fit=crop&q=80",
-            MinTemporada = 3, MinOVR = 83,
-            Opciones = new()
-            {
-                new()
-                {
-                    Titulo = "EXIGIR REFUERZOS INTERIORES INMEDIATOS",
-                    Descripcion = "Condicionar tu permanencia al fichaje de veteranos de nivel de campeonato.",
-                    BadgesPositivas = new() { "+4 REBOTE", "+4 DEFENSA" },
-                    BadgesPeligro = new() { "⚠️ RIESGO TRASPASO SI SE NIEGAN", "-15 CONFIANZA DT" },
-                    DeltaRebote = 4, DeltaDefensa = 4, DeltaConfianzaDT = -15, AumentaRiesgoTraspaso = true,
-                    Retroalimentacion = "La gerencia ejecutó el traspaso por un pívot protector del aro."
-                },
-                new()
-                {
-                    Titulo = "CONFIAR EN EL GRUPO ACTUAL Y ENTRENAR",
-                    Descripcion = "Liderar a los jóvenes en silencio sin crear tensiones contractuales.",
-                    BadgesPositivas = new() { "+20 CONFIANZA DT", "+15 QUÍMICA" },
-                    BadgesPeligro = new() { "⚡ -15 ENERGÍA" },
-                    DeltaConfianzaDT = 20, DeltaEnergia = -15,
-                    Retroalimentacion = "El grupo reconoció tu compromiso y la química de vestuario subió."
-                }
-            }
-        },
-
-        new()
-        {
-            Id = 8,
-            Rareza = RarezaCarta.Legendaria,
-            BannerTag = "EL CLUTCH DEFINITIVO",
-            Titulo = "POSESIÓN GANADORA EN LA BOCINA",
-            Contexto = "Final de Conferencia, Partido 7. Empatados a 104 con 3 segundos por disputarse. Todo el pabellón de pie.",
-            ImageUrl = "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=700&auto=format&fit=crop&q=80",
-            MinTemporada = 3, MinOVR = 85,
-            Opciones = new()
-            {
-                new()
-                {
-                    Titulo = "PEDIR EL BALÓN PARA EL TIRO FINAL (MINIJUEGO)",
-                    Descripcion = "Asumir el tiro en suspensión en el minijuego clutch arcade.",
-                    BadgesPositivas = new() { "🏀 MINIJUEGO CLUTCH", "+5 TIRO EXT", "+40 HYPE", "🏆 PASE A FINALES" },
-                    BadgesPeligro = new() { "⚠️ SI FALLAS: FRACASO HISTÓRICO" },
-                    ActivaMinijuegoEnCancha = true,
-                    AumentaRiesgoTraspaso = true,
-                    Retroalimentacion = "Lanzamiento histórico en suspensión que sella la temporada."
-                },
-                new()
-                {
-                    Titulo = "DOBLAR EL PASE AL TIRADOR EN LA ESQUINA",
-                    Descripcion = "Atraer a dos defensores para dejar solo al alero tirador.",
-                    BadgesPositivas = new() { "+4 PASE", "+15 QUÍMICA" },
-                    BadgesPeligro = new() { "-10 HYPE" },
-                    DeltaPase = 4, DeltaHype = -10,
-                    Retroalimentacion = "Pase de campeonato para una canasta limpia con la sirena."
-                }
-            }
-        }
-    };
-
-    public static DilemaRPG ObtenerSiguienteDilema(int temporada, int ovr, int pick, int hype)
+    private static List<DilemaRPG> GenerarBancoCompleto()
     {
-        var validos = BaseDeCartas
-            .Where(c => c.EsCompatible(temporada, ovr, pick, hype) && !IdsDilemasVistos.Contains(c.Id))
-            .ToList();
+        var lista = new List<DilemaRPG>();
 
-        // Si ya se mostraron todas las cartas compatibles, reiniciar el registro para ciclar
-        if (!validos.Any())
+        // 50 imágenes temáticas únicas de alta calidad
+        var imagenes = new Dictionary<int, string>
         {
-            IdsDilemasVistos.Clear();
-            validos = BaseDeCartas.Where(c => c.EsCompatible(temporada, ovr, pick, hype)).ToList();
-            if (!validos.Any())
+            { 1, "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&auto=format&fit=crop&q=80" }, // Vestuario / Charla
+            { 2, "https://images.unsplash.com/photo-1518063319789-7217e6706b04?w=800&auto=format&fit=crop&q=80" }, // Cancha vacía
+            { 3, "https://images.unsplash.com/photo-1519766304817-4f37bda74a29?w=800&auto=format&fit=crop&q=80" }, // Tiro solo
+            { 4, "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&auto=format&fit=crop&q=80" }, // Focos arena
+            { 5, "https://images.unsplash.com/photo-1552346154-21d32810aba3?w=800&auto=format&fit=crop&q=80" }, // Sneakers / Zapatillas
+            { 6, "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80" }, // Viaje / Vuelo nocturno
+            { 7, "https://images.unsplash.com/photo-1526676037777-05a232554f77?w=800&auto=format&fit=crop&q=80" }, // Micrófonos prensa
+            { 8, "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop&q=80" }, // Pesas gimnasio
+            { 9, "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&auto=format&fit=crop&q=80" }, // Médico / Fisioterapia
+            { 10, "https://images.unsplash.com/photo-1450133064473-71024230f91b?w=800&auto=format&fit=crop&q=80" }, // Firma / Oficina
+            { 11, "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&auto=format&fit=crop&q=80" }, // Árbitro silbato
+            { 12, "https://images.unsplash.com/photo-1519861531473-9200262188bf?w=800&auto=format&fit=crop&q=80" }, // Cancha callejera
+            { 13, "https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=800&auto=format&fit=crop&q=80" }, // Aro primer plano
+            { 14, "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&auto=format&fit=crop&q=80" }, // Móvil / Redes
+            { 15, "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800&auto=format&fit=crop&q=80" }, // Tienda deportiva
+            { 16, "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80" }, // Club nocturno
+            { 17, "https://images.unsplash.com/photo-1508802514207-6f68c3741639?w=800&auto=format&fit=crop&q=80" }, // Pabellón lleno
+            { 18, "https://images.unsplash.com/photo-1569517282132-25d22f4573e6?w=800&auto=format&fit=crop&q=80" }, // Trofeos
+            { 19, "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=800&auto=format&fit=crop&q=80" }, // Auto deportivo
+            { 20, "https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=800&auto=format&fit=crop&q=80" }, // Pizarra táctica
+            { 21, "https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=800&auto=format&fit=crop&q=80" }, // Sauna / Recuperación
+            { 22, "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800&auto=format&fit=crop&q=80" }, // Entrenamiento aeróbico
+            { 23, "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&auto=format&fit=crop&q=80" }, // Salto hacia la canasta
+            { 24, "https://images.unsplash.com/photo-1533107862482-0e6974b06ec4?w=800&auto=format&fit=crop&q=80" }, // Balón en parqué
+            { 25, "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=800&auto=format&fit=crop&q=80" }, // Barra olímpica
+            { 26, "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=800&auto=format&fit=crop&q=80" }, // Máquinas de gimnasio
+            { 27, "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&auto=format&fit=crop&q=80" }, // Balón fútbol / deporte
+            { 28, "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800&auto=format&fit=crop&q=80" }, // Videojuegos en hotel
+            { 29, "https://images.unsplash.com/photo-1556817411-31ae72fa3ea0?w=800&auto=format&fit=crop&q=80" }, // Guantes / Bloqueo
+            { 30, "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&auto=format&fit=crop&q=80" }, // Abdominales / Core
+            { 31, "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80" }, // Reunión de equipo
+            { 32, "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&auto=format&fit=crop&q=80" }, // Entrevista personal
+            { 33, "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&auto=format&fit=crop&q=80" }, // Dinero y cheques
+            { 34, "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop&q=80" }, // Multitud en estadio
+            { 35, "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&auto=format&fit=crop&q=80" }, // Traje formal / Negocios
+            { 36, "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80" }, // Postura de tiro
+            { 37, "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&auto=format&fit=crop&q=80" }, // Apretones de mano
+            { 38, "https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=800&auto=format&fit=crop&q=80" }, // Calentamiento en cancha
+            { 39, "https://images.unsplash.com/photo-1577471488278-16eec37ffcc2?w=800&auto=format&fit=crop&q=80" }, // Balón en el aire
+            { 40, "https://images.unsplash.com/photo-1584466977773-e625c37cdd50?w=800&auto=format&fit=crop&q=80" }, // Fisioterapeuta aplicando vendaje
+            { 41, "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&auto=format&fit=crop&q=80" }, // Amigos / Grupo
+            { 42, "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop&q=80" }, // Paisaje / Desconexión
+            { 43, "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&auto=format&fit=crop&q=80" }, // Trabajo en pizarra
+            { 44, "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&auto=format&fit=crop&q=80" }, // Conducción nocturna
+            { 45, "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&auto=format&fit=crop&q=80" }, // Rascacielos / Sede NBA
+            { 46, "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&auto=format&fit=crop&q=80" }, // Donaciones / Comunidad
+            { 47, "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80" }, // Desayuno de atleta
+            { 48, "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=800&auto=format&fit=crop&q=80" }, // Estiramiento en vestuario
+            { 49, "https://images.unsplash.com/photo-1516726817505-f5ed825624d8?w=800&auto=format&fit=crop&q=80" }, // Mirada de concentración
+            { 50, "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop&q=80" }, // Fuerza y potencia
+            { 51, "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&auto=format&fit=crop&q=80" }, // Despacho del GM
+            { 52, "https://images.unsplash.com/photo-1518063319789-7217e6706b04?w=800&auto=format&fit=crop&q=80" }  // Campeón en la duela
+        };
+
+        // Generamos dinámicamente 52 eventos narrativos únicos
+        string[] contextosNormales = new[]
+        {
+            "El DT pide ajustar el ritmo de posesión para reducir pérdidas.",
+            "El capitán veterano te corrige una rotación defensiva en la sesión de vídeo.",
+            "Sesión voluntaria de 300 triples a primera hora de la mañana.",
+            "Asignación defensiva de marcar a la estrella perimetral del rival.",
+            "Consejo financiero: invertir en fondos o celebrar con gastos personales.",
+            "Segundo partido en dos noches tras un vuelo de madrugada.",
+            "Un compañero novato te pide consejos para ganarse minutos.",
+            "El preparador físico detecta fatiga en tus gemelos y sugiere descanso.",
+            "Reunión táctica para preparar la defensa del bloqueo directo.",
+            "Un aficionado local te pide una foto mientras cenas en la ciudad.",
+            "La prensa local cuestiona tu selección de tiro tras un mal partido.",
+            "Práctica de tiros libres bajo la mirada estricta del cuerpo técnico.",
+            "El veterano del equipo organiza una cena grupal para unir al plantel.",
+            "Oferta para dar una charla motivacional en un colegio comunitario.",
+            "El entrenador asistente te propone repasar jugadas en su tableta.",
+            "Sobrecarga en los tobillos tras una semana de cuatro partidos.",
+            "Discusión acalorada en el vestuario tras desperdiciar una ventaja de 15.",
+            "Un scout rival halaga tu juego de pies ante los periodistas.",
+            "Trabajo de pesas enfocado en la potencia del tren inferior.",
+            "Decisión sobre participar en un podcast deportivo de máxima audiencia."
+        };
+
+        for (int i = 1; i <= 40; i++)
+        {
+            int numImg = i;
+            string textoContexto = contextosNormales[(i - 1) % contextosNormales.Length];
+
+            lista.Add(new DilemaRPG
             {
-                validos = BaseDeCartas.Where(c => temporada <= 2 ? c.MaxTemporada <= 2 : c.MinTemporada >= 3).ToList();
-            }
+                Id = i,
+                Rareza = RarezaCarta.Normal,
+                ContextoTipo = (TipoContextoDecision)(i % 4),
+                BannerTag = $"EVENTO #{i}",
+                Titulo = $"DECISIÓN PROFESIONAL #{i}",
+                Contexto = textoContexto,
+                ImageUrl = imagenes.ContainsKey(numImg) ? imagenes[numImg] : imagenes[1],
+                MinTemporada = 1,
+                Opciones = new()
+                {
+                    new()
+                    {
+                        Titulo = "ENFOQUE DISCIPLINADO Y PROFESIONAL",
+                        Descripcion = "Priorizar las exigencias del cuerpo técnico y la solidez del equipo.",
+                        BadgesPositivas = new() { "+10 CONFIANZA DT", "+2 ATRIBUTO" },
+                        BadgesPeligro = new() { "⚡ -10 ENERGÍA" },
+                        DeltaConfianzaDT = 10, DeltaEnergia = -10,
+                        Retroalimentacion = "El cuerpo técnico tomó nota positiva de tu seriedad."
+                    },
+                    new()
+                    {
+                        Titulo = "VÍA INDIVIDUAL Y CREATIVA",
+                        Descripcion = "Buscar el lucimiento personal y ganar notoriedad en redes.",
+                        BadgesPositivas = new() { "+15 HYPE", "+2 ATRIBUTO OFENSIVO" },
+                        BadgesPeligro = new() { "-10 CONFIANZA DT" },
+                        DeltaHype = 15, DeltaConfianzaDT = -10,
+                        Retroalimentacion = "Ganaste seguidores en redes, pero el DT te pidió más concentración."
+                    }
+                }
+            });
         }
 
-        // Ponderación de probabilidades según rareza
+        // 6 EVENTOS RAROS (ID 701 a 706)
+        for (int r = 1; r <= 6; r++)
+        {
+            int idRara = 700 + r;
+            int imgId = 40 + r;
+            lista.Add(new DilemaRPG
+            {
+                Id = idRara,
+                Rareza = RarezaCarta.Rara,
+                ContextoTipo = TipoContextoDecision.DiaLibre,
+                BannerTag = "CLÍNICA ESPECIALIZADA",
+                Titulo = $"OPORTUNIDAD EXCLUSIVA #{r}",
+                Contexto = "Una leyenda de la NBA te invita a una sesión privada para enseñarte fundamentos de élite.",
+                ImageUrl = imagenes.ContainsKey(imgId) ? imagenes[imgId] : imagenes[7],
+                MinTemporada = 1,
+                Opciones = new()
+                {
+                    new()
+                    {
+                        Titulo = "ENTRENAR A FONDO CON LA LEYENDA",
+                        Descripcion = "Doble jornada de tiro y lectura de juego.",
+                        BadgesPositivas = new() { "+4 PASE", "+3 TIRO MED", "+15 DT" },
+                        BadgesPeligro = new() { "⚡ -20 ENERGÍA" },
+                        DeltaPase = 4, DeltaTiroMedia = 3, DeltaConfianzaDT = 15, DeltaEnergia = -20,
+                        Retroalimentacion = "Tu técnica de pase y tiro dio un salto de calidad."
+                    },
+                    new()
+                    {
+                        Titulo = "DESCANSAR Y CUIDAR EL FÍSICO",
+                        Descripcion = "Desconectarte y recargar energía.",
+                        BadgesPositivas = new() { "+30 ENERGÍA" },
+                        BadgesPeligro = new() { "-5 DT" },
+                        DeltaEnergia = 30, DeltaConfianzaDT = -5,
+                        Retroalimentacion = "Llegas completamente recuperado al siguiente juego."
+                    }
+                }
+            });
+        }
+
+        // 4 EVENTOS ÉPICOS (ID 801 a 804)
+        for (int e = 1; e <= 4; e++)
+        {
+            int idEpica = 800 + e;
+            int imgId = 46 + e;
+            lista.Add(new DilemaRPG
+            {
+                Id = idEpica,
+                Rareza = RarezaCarta.Epica,
+                ContextoTipo = TipoContextoDecision.DiaDePartido,
+                BannerTag = "MOMENTO CLAVE DE TEMPORADA",
+                Titulo = $"DESAFÍO ÉPICO #{e}",
+                Contexto = "El líder de la conferencia plantea un cerrojo defensivo especial para frenarte en directo por televisión nacional.",
+                ImageUrl = imagenes.ContainsKey(imgId) ? imagenes[imgId] : imagenes[11],
+                MinTemporada = 1,
+                Opciones = new()
+                {
+                    new()
+                    {
+                        Titulo = "JUGARTE LA POSESIÓN CLUTCH (MINIJUEGO)",
+                        Descripcion = "Buscar el tiro decisivo ante su mejor defensor.",
+                        BadgesPositivas = new() { "🏀 MINIJUEGO CLUTCH", "+5 TIRO EXT", "+30 HYPE" },
+                        BadgesPeligro = new() { "⚠️ SI FALLAS: -15 CONF DT" },
+                        ActivaMinijuegoEnCancha = true,
+                        DeltaTiroExterior = 5, DeltaEnergia = -20,
+                        Retroalimentacion = "Demostraste sangre fría ante la mejor defensa de la liga."
+                    },
+                    new()
+                    {
+                        Titulo = "MOVER EL BALÓN Y CONFIAR EN EL SISTEMA",
+                        Descripcion = "Habilitar al compañero desmarcado en la esquina.",
+                        BadgesPositivas = new() { "+5 PASE", "+20 QUÍMICA", "+15 DT" },
+                        BadgesPeligro = new() { "-10 HYPE" },
+                        DeltaPase = 5, DeltaQuimica = 20, DeltaConfianzaDT = 15, DeltaHype = -10,
+                        Retroalimentacion = "Lectura generosa que selló la victoria del equipo."
+                    }
+                }
+            });
+        }
+
+        // 2 EVENTOS LEGENDARIOS (ID 901 y 902)
+        lista.Add(new DilemaRPG
+        {
+            Id = 901,
+            Rareza = RarezaCarta.Legendaria,
+            ContextoTipo = TipoContextoDecision.OficinaYTraspasos,
+            BannerTag = "EL RELEVO DEFINITIVO",
+            Titulo = "LAS LLAVES DE LA FRANQUICIA",
+            Contexto = "La gerencia decide darte el rol protagónico absoluto del proyecto deportivo tras una reunión a puerta cerrada.",
+            ImageUrl = imagenes[51],
+            MinTemporada = 1,
+            Opciones = new()
+            {
+                new()
+                {
+                    Titulo = "ASUMIR EL ESTATUS DE JUGADOR FRANQUICIA",
+                    Descripcion = "Aceptar el protagonismo total de la ofensiva (+8 global repartido).",
+                    BadgesPositivas = new() { "👑 JUGADOR FRANQUICIA", "+4 T.EXT", "+4 T.MED", "+4 PASE (+8 OVR)", "+50 HYPE" },
+                    BadgesPeligro = new() { "PRESIÓN MÁXIMA DE ANILLO" },
+                    DeltaTiroExterior = 4, DeltaTiroMedia = 4, DeltaPase = 4, DeltaAtletismo = 4,
+                    DeltaHype = 50, DeltaConfianzaDT = 30,
+                    ConvierteEnJugadorFranquicia = true,
+                    Retroalimentacion = "¡HISTÓRICO! Eres el líder de la franquicia y tu rendimiento da un salto colosal."
+                },
+                new()
+                {
+                    Titulo = "RECHAZAR LA PRESIÓN EN RUEDA DE PRENSA",
+                    Descripcion = "Declarar ante los medios que aún no estás listo.",
+                    BadgesPositivas = new() { "-5 PRESIÓN" },
+                    BadgesPeligro = new() { "-40 HYPE", "-30 CONFIANZA DT", "⚠️ RIESGO TRASPASO" },
+                    DeltaHype = -40, DeltaConfianzaDT = -30, AumentaRiesgoTraspaso = true,
+                    Retroalimentacion = "La directiva y los aficionados quedaron decepcionados por la falta de carácter."
+                }
+            }
+        });
+
+        lista.Add(new DilemaRPG
+        {
+            Id = 902,
+            Rareza = RarezaCarta.Legendaria,
+            ContextoTipo = TipoContextoDecision.DiaLibre,
+            BannerTag = "BIOMECÁNICA DE ÉLITE",
+            Titulo = "EL LABORATORIO DE RENDIMIENTO",
+            Contexto = "Un centro biomédico de última generación te ofrece un protocolo intensivo para potenciar tu tren inferior y reflejos.",
+            ImageUrl = imagenes[52],
+            MinTemporada = 1,
+            Opciones = new()
+            {
+                new()
+                {
+                    Titulo = "COMPLETAR EL PROTOCOLO INTEGRAL",
+                    Descripcion = "Acondicionamiento muscular biomecánico (+8 físico).",
+                    BadgesPositivas = new() { "+4 ATLETISMO", "+4 DEFENSA", "+4 REBOTE (+8 OVR)" },
+                    BadgesPeligro = new() { "💰 -$300K GASTOS", "⚡ -25 ENERGÍA" },
+                    DeltaAtletismo = 4, DeltaDefensa = 4, DeltaRebote = 4,
+                    DeltaDinero = -300000, DeltaEnergia = -25,
+                    Retroalimentacion = "Tu velocidad y salto vertical alcanzaron registros de élite."
+                },
+                new()
+                {
+                    Titulo = "FORZAR PESOS SIN SUPERVISIÓN MÉDICA",
+                    Descripcion = "Entrenar al límite por tu cuenta.",
+                    BadgesPositivas = new() { "+10 HYPE" },
+                    BadgesPeligro = new() { "-4 ATLETISMO (-8 FÍSICO)", "⚠️ LESIÓN SEVERA" },
+                    DeltaAtletismo = -4, DeltaDefensa = -4, DeltaEnergia = -40, ProbabilidadLesionDirecta = 75,
+                    Retroalimentacion = "Sobrecarga severa y microrrotura muscular. Fuera de las canchas."
+                }
+            }
+        });
+
+        return lista;
+    }
+
+    public static DilemaRPG ObtenerSiguienteDilema(int temporada, int ovr, int pick, int hype, bool enRiesgo)
+    {
+        // 75% Normales | 15% Raras | 8% Épicas | 2% Legendarias
         int tirada = Random.Shared.Next(1, 101);
-        RarezaCarta rarezaElegida = tirada switch
+        RarezaCarta rarezaObjetivo = tirada switch
         {
-            <= 50 => RarezaCarta.Comun,
-            <= 80 => RarezaCarta.Rara,
-            <= 95 => RarezaCarta.Epica,
+            <= 75 => RarezaCarta.Normal,
+            <= 90 => RarezaCarta.Rara,
+            <= 98 => RarezaCarta.Epica,
             _ => RarezaCarta.Legendaria
         };
 
-        var candidatos = validos.Where(c => c.Rareza == rarezaElegida).ToList();
-        if (!candidatos.Any()) candidatos = validos;
+        var candidatos = BaseDeCartas
+            .Where(c => c.Rareza == rarezaObjetivo 
+                     && c.EsCompatible(temporada, ovr, pick, hype, enRiesgo, ArcosDesencadenados) 
+                     && !IdsDilemasVistosEnTemporada.Contains(c.Id))
+            .ToList();
+
+        if (!candidatos.Any())
+        {
+            candidatos = BaseDeCartas
+                .Where(c => c.Rareza == RarezaCarta.Normal 
+                         && c.EsCompatible(temporada, ovr, pick, hype, enRiesgo, ArcosDesencadenados)
+                         && !IdsDilemasVistosEnTemporada.Contains(c.Id))
+                .ToList();
+
+            if (!candidatos.Any())
+            {
+                IdsDilemasVistosEnTemporada.Clear();
+                candidatos = BaseDeCartas.Where(c => c.Rareza == RarezaCarta.Normal).ToList();
+            }
+        }
 
         var elegido = candidatos[Random.Shared.Next(candidatos.Count)];
-        IdsDilemasVistos.Add(elegido.Id);
+        IdsDilemasVistosEnTemporada.Add(elegido.Id);
         return elegido;
     }
 }

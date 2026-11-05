@@ -7,49 +7,156 @@
 @inject IJSRuntime JS
 @implements IDisposable
 
-<div class="container py-4" style="max-width: 860px;">
+<div class="container-fluid py-3 px-lg-4" style="max-width: 1040px;">
 
     @if (GameState.FaseActual == FaseJuego.Creacion)
     {
-        <div class="sports-card p-4 border border-secondary text-center">
-            <h1 class="nba-title display-5 text-white mb-0">THE NEXT PICK</h1>
-            <p class="text-secondary small mb-4">Simulador de Carrera NBA con Consecuencias Reales</p>
-
-            <div class="row g-2 mb-3 text-start">
-                <div class="col-8">
-                    <label class="form-label text-secondary small fw-bold">NOMBRE DE LA PROMESA</label>
-                    <input class="form-control bg-dark text-white border-secondary" placeholder="Ej: Marcus Vance" @bind="nombreInput" />
+        <div class="arcade-menu-frame rounded-4 p-3 p-md-4 shadow-lg position-relative overflow-hidden">
+            
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom border-dark">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge px-3 py-2 fs-6 fw-bold" style="background: #FFC72C; color: #000; box-shadow: 0 0 15px rgba(255,199,44,0.4);">
+                        ★ NBA CLASS OF 2026
+                    </span>
+                    <h1 class="nba-title text-white mb-0 display-6 title-glow" style="letter-spacing: 2px;">
+                        THE NEXT PICK
+                    </h1>
                 </div>
-                <div class="col-4">
-                    <label class="form-label text-secondary small fw-bold">PAÍS</label>
-                    <select class="form-select bg-dark text-white border-secondary" @bind="paisInput">
-                        <option value="Colombia">🇨🇴 Colombia</option>
-                        <option value="Estados Unidos">🇺🇸 Estados Unidos</option>
-                        <option value="España">🇪🇸 España</option>
-                        <option value="Argentina">🇦🇷 Argentina</option>
-                    </select>
+                <div class="text-end d-none d-md-block">
+                    <span class="badge bg-black border border-secondary text-secondary small px-3 py-1">
+                        BLAZOR 16-BIT CAREER SIM
+                    </span>
                 </div>
             </div>
 
-            <div class="row g-2 mb-3 text-start">
-                <div class="col-6">
-                    <label class="form-label text-secondary small fw-bold">DORSAL (#)</label>
-                    <input type="number" class="form-control bg-dark text-white border-secondary" min="0" max="99" @bind="dorsalInput" />
+            <div class="row g-4 align-items-stretch">
+                <div class="col-12 col-lg-7 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-8">
+                                <label class="arcade-label">NOMBRE DEL PROSPECTO</label>
+                                <input class="form-control arcade-input" placeholder="Ej: Marcus Vance" @bind="nombreInput" />
+                            </div>
+                            <div class="col-4">
+                                <label class="arcade-label">DORSAL (#)</label>
+                                <input type="number" class="form-control arcade-input text-center fw-bold text-warning" min="0" max="99" @bind="dorsalInput" />
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="arcade-label">PAÍS DE ORIGEN</label>
+                                <select class="form-select arcade-input" @bind="paisInput">
+                                    <option value="Colombia">🇨🇴 Colombia</option>
+                                    <option value="Estados Unidos">🇺🇸 Estados Unidos</option>
+                                    <option value="España">🇪🇸 España</option>
+                                    <option value="Argentina">🇦🇷 Argentina</option>
+                                    <option value="República Dominicana">🇩🇴 Rep. Dominicana</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="arcade-label">POSICIÓN PRIMARIA</label>
+                                <select class="form-select arcade-input" @bind="posicionInput">
+                                    @foreach (var pos in Enum.GetValues<Posicion>())
+                                    {
+                                        <option value="@pos">@pos</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <label class="arcade-label mb-2">SELECCIONA TU ARQUETIPO DE JUEGO</label>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <div class="archetype-card p-2 rounded @(arquetipoSeleccionado == "Tirador" ? "active-arch" : "")"
+                                     @onclick='() => SeleccionarArquetipo("Tirador")'>
+                                    <div class="fw-bold text-white small">🎯 TIRADOR LETAL</div>
+                                    <div class="text-success fw-bold" style="font-size: 0.7rem;">+8 T.Exterior / +5 T.Media</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="archetype-card p-2 rounded @(arquetipoSeleccionado == "Playmaker" ? "active-arch" : "")"
+                                     @onclick='() => SeleccionarArquetipo("Playmaker")'>
+                                    <div class="fw-bold text-white small">⚡ PLAYMAKER PURO</div>
+                                    <div class="text-info fw-bold" style="font-size: 0.7rem;">+10 Pase / +5 Velocidad</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="archetype-card p-2 rounded @(arquetipoSeleccionado == "Atleta" ? "active-arch" : "")"
+                                     @onclick='() => SeleccionarArquetipo("Atleta")'>
+                                    <div class="fw-bold text-white small">🚀 ATLETA EXPLOSIVO</div>
+                                    <div class="text-warning fw-bold" style="font-size: 0.7rem;">+9 Salto / +6 Rebote</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="archetype-card p-2 rounded @(arquetipoSeleccionado == "Cerrojo" ? "active-arch" : "")"
+                                     @onclick='() => SeleccionarArquetipo("Cerrojo")'>
+                                    <div class="fw-bold text-white small">🛡️ CERROJO DEFENSIVO</div>
+                                    <div class="text-danger fw-bold" style="font-size: 0.7rem;">+10 Defensa / +5 Rebote</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-2 rounded bg-black border border-dark mb-3">
+                            <div class="d-flex justify-content-between text-secondary small fw-bold mb-1">
+                                <span>PROYECCIÓN INICIAL DEL SCOUTING</span>
+                                <span class="text-warning">OVR INICIAL: @CalcularOVRPreview()</span>
+                            </div>
+                            <div class="row g-1 text-center" style="font-size: 0.65rem;">
+                                <div class="col-2 p-1 bg-dark rounded text-warning">EXT: @(ObtenerStatPreview("EXT"))</div>
+                                <div class="col-2 p-1 bg-dark rounded text-warning">MED: @(ObtenerStatPreview("MED"))</div>
+                                <div class="col-2 p-1 bg-dark rounded text-info">PAS: @(ObtenerStatPreview("PAS"))</div>
+                                <div class="col-2 p-1 bg-dark rounded text-danger">DEF: @(ObtenerStatPreview("DEF"))</div>
+                                <div class="col-2 p-1 bg-dark rounded text-success">REB: @(ObtenerStatPreview("REB"))</div>
+                                <div class="col-2 p-1 bg-dark rounded text-light">ATL: @(ObtenerStatPreview("ATL"))</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn arcade-btn-3d btn-warning w-100 py-3 fw-bold text-dark fs-5 mt-2" @onclick="IniciarRutaDraft">
+                        ENTRAR AL NBA DRAFT COMBINE 🎯
+                    </button>
                 </div>
-                <div class="col-6">
-                    <label class="form-label text-secondary small fw-bold">POSICIÓN</label>
-                    <select class="form-select bg-dark text-white border-secondary" @bind="posicionInput">
-                        @foreach (var pos in Enum.GetValues<Posicion>())
-                        {
-                            <option value="@pos">@pos</option>
-                        }
-                    </select>
+
+                <div class="col-12 col-lg-5">
+                    <div class="locker-booth p-3 rounded-3 h-100 d-flex flex-column justify-content-between text-center position-relative">
+                        <div class="locker-plate py-1 px-3 mx-auto rounded border border-warning shadow">
+                            <span class="text-warning fw-bold small text-uppercase letter-spacing-1">
+                                LOCKER #@dorsalInput • @posicionInput.ToString().ToUpper()
+                            </span>
+                        </div>
+
+                        <div class="locker-interior my-3 py-4 position-relative d-flex align-items-center justify-content-center">
+                            <div class="hanger-wire"></div>
+                            
+                            <PixelArtPlayer Estado="@ObtenerPoseArquetipo()" 
+                                            TieneBalon="@(arquetipoSeleccionado == "Playmaker" || arquetipoSeleccionado == "Tirador")" 
+                                            ColorPrimario="#1D428A" 
+                                            NumeroDorsal="@dorsalInput" 
+                                            AnchoPx="130" 
+                                            AltoPx="155" />
+                        </div>
+
+                        <div class="locker-bench p-2 rounded border border-secondary">
+                            <div class="d-flex justify-content-between align-items-center px-2">
+                                <span class="badge bg-black border border-secondary text-secondary small">CALZADO: SNEAKERS ROOKIE</span>
+                                <span class="badge bg-success text-dark fw-bold">PROSPECTO APTO</span>
+                            </div>
+                            <div class="text-white small fw-bold mt-1">@nombreInput</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <button class="btn btn-warning py-3 fw-bold text-dark fs-5 w-100" @onclick="IniciarRutaDraft">
-                ENTRAR AL NBA DRAFT COMBINE 🎯
-            </button>
+            <div class="broadcast-ticker mt-4 rounded overflow-hidden">
+                <div class="ticker-tag px-3 py-1 fw-bold text-dark bg-warning d-inline-block">NBA DRAFT LIVE</div>
+                <div class="ticker-text text-secondary small py-1">
+                    <span>🏀 Los scouts de la liga se congregan para evaluar a la clase del 2026...</span>
+                    <span>⚡ Rumores: Los equipos de lotería buscan tiradores con personalidad clutch...</span>
+                    <span>🏆 El Salón de la Fama aguarda a una nueva generación de leyendas...</span>
+                </div>
+            </div>
+
         </div>
     }
     else if (GameState.FaseActual == FaseJuego.DraftCombine)
@@ -58,19 +165,7 @@
     }
     else if (GameState.FaseActual == FaseJuego.EleccionEquipo)
     {
-        var eqElegido = GameState.EquipoQueTeEligio ?? EquipoNBA.Franquicias[0];
-        <div class="sports-card p-4 text-center my-3 border border-warning" style="max-width: 620px; margin: auto;">
-            <h1 class="nba-title text-warning display-4">NOCHE DEL DRAFT 2026</h1>
-            <div class="my-4 p-4 rounded bg-black border border-warning">
-                <span class="text-secondary small fw-bold text-uppercase d-block mb-2">PICK #@GameState.PickAsignado DEL DRAFT:</span>
-                <img src="@eqElegido.LogoUrl" style="height: 80px; width: 80px; object-fit: contain;" class="my-2" alt="Logo" />
-                <h3 class="text-white fw-bold">¡LOS @eqElegido.Nombre.ToUpper()!</h3>
-                <h4 class="text-warning nba-title fs-2">SELECCIONAN A @(GameState.JugadorActivo?.Nombre?.ToUpper() ?? "PROSPECTA")</h4>
-            </div>
-            <button class="btn btn-warning py-3 px-5 fw-bold text-dark fs-4" @onclick="() => GameState.ConfirmarDraftYComenzar()">
-                PONERSE EL JERSEY Y EMPEZAR 🏀
-            </button>
-        </div>
+        <DraftNightCeremony />
     }
     else if (GameState.FaseActual == FaseJuego.MinijuegoTiro)
     {
@@ -84,7 +179,7 @@
             <div class="alert alert-dark border border-danger text-light my-3 p-3">
                 <p class="mb-0 fs-5">@GameState.NoticiaTraspaso</p>
             </div>
-            <button class="btn btn-danger py-2 px-5 fw-bold text-white fs-5" @onclick="() => GameState.ContinuarTrasTraspaso()">
+            <button class="btn arcade-btn-3d btn-danger py-2 px-5 fw-bold text-white fs-5" @onclick="() => GameState.ContinuarTrasTraspaso()">
                 REPORTARSE AL NUEVO CLUB
             </button>
         </div>
@@ -97,7 +192,7 @@
             <div class="alert alert-dark border border-warning text-warning my-3 p-3">
                 <p class="mb-0 fs-5">@GameState.DiagnosticoLesion</p>
             </div>
-            <button class="btn btn-warning py-2 px-5 fw-bold text-dark fs-5" @onclick="() => GameState.ContinuarTrasLesion()">
+            <button class="btn arcade-btn-3d btn-warning py-2 px-5 fw-bold text-dark fs-5" @onclick="() => GameState.ContinuarTrasLesion()">
                 INICIAR REHABILITACIÓN
             </button>
         </div>
@@ -109,7 +204,7 @@
         <div class="sports-card p-3 mb-3" style="border-top: 4px solid @eq.ColorPrimario;">
             <div class="d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-3">
-                    <PixelArtPlayer Estado="Bote" TieneBalon="true" ColorPrimario="@eq.ColorPrimario" AnchoPx="75" AltoPx="90" />
+                    <PixelArtPlayer Estado="Bote" TieneBalon="true" ColorPrimario="@eq.ColorPrimario" NumeroDorsal="@(GameState.JugadorActivo?.NumeroDorsal ?? 11)" AnchoPx="75" AltoPx="90" />
 
                     <div>
                         <div class="d-flex align-items-center gap-2">
@@ -120,13 +215,15 @@
                                 <span class="badge bg-danger text-white fw-bold">TRANSFERIBLE ⚠️</span>
                             }
                         </div>
-                        <span class="text-secondary small">#@GameState.JugadorActivo?.NumeroDorsal @GameState.JugadorActivo?.Posicion | @eq.Nombre (Año @GameState.TemporadaActual)</span>
+                        <span class="text-secondary small">#@GameState.JugadorActivo?.NumeroDorsal @GameState.JugadorActivo?.Posicion | @eq.Nombre (@GameState.TemporadaTextoActual)</span>
                     </div>
                 </div>
 
                 <div class="text-end">
-                    <img src="@eq.LogoUrl" style="height: 48px; width: 48px; object-fit: contain;" alt="Logo" />
-                    <div class="small fw-bold text-success mt-1">$@((GameState.DineroDisponible / 1_000_000.0).ToString("0.0"))M</div>
+                    <button class="btn arcade-btn-3d btn-warning btn-sm fw-bold text-dark mb-1" @onclick="() => mostrarModalPremios = true">
+                        🏆 VER PREMIOS (@GameState.HistorialPremios.Count)
+                    </button>
+                    <div class="small fw-bold text-success">$@((GameState.DineroDisponible / 1_000_000.0).ToString("0.0"))M</div>
                 </div>
             </div>
 
@@ -180,6 +277,8 @@
             </div>
         </div>
 
+        <BarraProgresoTemporada />
+
         @if (!string.IsNullOrEmpty(GameState.UltimaNoticia))
         {
             <div class="alert alert-dark py-2 px-3 small border border-secondary text-center mb-2 text-warning">
@@ -188,6 +287,10 @@
         }
 
         <DecisionCardRPG />
+    }
+    else if (GameState.FaseActual == FaseJuego.AllStarWeekend)
+    {
+        <AllStarWeekendHub />
     }
     else if (GameState.FaseActual == FaseJuego.Playoffs)
     {
@@ -199,11 +302,17 @@
             <h2 class="nba-title display-4 text-white mb-1">TEMPORADA @(GameState.TemporadaActual - 1) CONCLUIDA</h2>
             <p class="text-secondary">Récord: <strong class="text-white">@GameState.Victorias V - @GameState.Derrotas D</strong> | Saldo: <strong class="text-success">$@((GameState.DineroDisponible / 1_000_000.0).ToString("0.0"))M</strong></p>
 
+            <div class="my-3">
+                <button class="btn arcade-btn-3d btn-warning px-4 py-2 fw-bold text-dark" @onclick="() => mostrarModalPremios = true">
+                    🏆 REVISAR VITRINA DE TROFEOS & ALL-NBA
+                </button>
+            </div>
+
             <div class="d-flex justify-content-center gap-3 mt-4">
-                <button class="btn btn-outline-danger px-4 py-3 fw-bold" @onclick="() => GameState.RetirarJugador()">
+                <button class="btn arcade-btn-3d btn-outline-danger px-4 py-3 fw-bold" @onclick="() => GameState.RetirarJugador()">
                     RETIRARSE DEL BALONCESTO 🚪
                 </button>
-                <button class="btn btn-warning px-5 py-3 fw-bold text-dark fs-5" @onclick="() => GameState.AvanzarSiguienteTemporada()">
+                <button class="btn arcade-btn-3d btn-warning px-5 py-3 fw-bold text-dark fs-5" @onclick="() => GameState.AvanzarSiguienteTemporada()">
                     CONTINUAR A LA SIGUIENTE TEMPORADA 🏆
                 </button>
             </div>
@@ -231,17 +340,143 @@
             }
 
             <div class="row g-2 text-center my-3">
-                <div class="col-4 p-2 bg-dark rounded border border-secondary">Anillos: <strong>@GameState.AnillosCampeon</strong></div>
-                <div class="col-4 p-2 bg-dark rounded border border-secondary">MVPs: <strong>@GameState.PremiosMVP</strong></div>
-                <div class="col-4 p-2 bg-dark rounded border border-secondary">Años: <strong>@GameState.TemporadaActual</strong></div>
+                <div class="col-3 p-2 bg-dark rounded border border-secondary">Anillos: <strong>@GameState.AnillosCampeon</strong></div>
+                <div class="col-3 p-2 bg-dark rounded border border-secondary">MVPs: <strong>@GameState.PremiosMVP</strong></div>
+                <div class="col-3 p-2 bg-dark rounded border border-secondary">Premios: <strong>@GameState.HistorialPremios.Count</strong></div>
+                <div class="col-3 p-2 bg-dark rounded border border-secondary">Años: <strong>@GameState.TemporadaActual</strong></div>
             </div>
 
-            <button class="btn btn-warning py-3 px-5 fw-bold text-dark mt-3" @onclick="() => GameState.IniciarCreacion()">
+            <button class="btn arcade-btn-3d btn-outline-warning py-2 px-4 fw-bold mb-3" @onclick="() => mostrarModalPremios = true">
+                🏆 VER PALMARÉS COMPLETO
+            </button>
+
+            <button class="btn arcade-btn-3d btn-warning py-3 px-5 fw-bold text-dark w-100" @onclick="() => GameState.IniciarCreacion()">
                 INICIAR NUEVA CARRERA
             </button>
         </div>
     }
+
+    <!-- MODAL DE VITRINA DE PREMIOS -->
+    @if (mostrarModalPremios)
+    {
+        <VitrinaPremiosModal OnCerrar="() => mostrarModalPremios = false" />
+    }
+
 </div>
+
+<style>
+    .arcade-menu-frame {
+        background: radial-gradient(circle at 50% 20%, #151d2a 0%, #080b12 85%);
+        border: 3px solid #232d3f;
+        box-shadow: 0 0 35px rgba(0, 240, 255, 0.15);
+    }
+    .title-glow {
+        text-shadow: 0 0 14px rgba(255, 199, 44, 0.4), 2px 2px 0 #000;
+    }
+    .arcade-label {
+        color: #94a3b8;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.8px;
+        margin-bottom: 4px;
+        display: block;
+    }
+    .arcade-input {
+        background: #0b0f17 !important;
+        border: 2px solid #273549 !important;
+        color: #f8fafc !important;
+        font-weight: bold;
+        transition: all 0.12s ease-in-out;
+    }
+    .arcade-input:focus {
+        border-color: #00f0ff !important;
+        box-shadow: 0 0 12px rgba(0, 240, 255, 0.35) !important;
+    }
+    .archetype-card {
+        background: #0f1622;
+        border: 2px solid #202b3c;
+        cursor: pointer;
+        transition: all 0.12s ease-out;
+    }
+    .archetype-card:hover {
+        border-color: #94a3b8;
+        transform: translateY(-2px);
+    }
+    .active-arch {
+        background: #182233 !important;
+        border-color: #FFC72C !important;
+        box-shadow: 0 0 12px rgba(255, 199, 44, 0.35);
+        transform: scale(1.02);
+    }
+
+    .arcade-btn-3d {
+        position: relative;
+        border: 2px solid #000 !important;
+        box-shadow: 0 6px 0 rgba(0, 0, 0, 0.85) !important;
+        transition: all 0.08s ease-in-out;
+        user-select: none;
+    }
+    .arcade-btn-3d:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 0 rgba(0, 0, 0, 0.9) !important;
+        filter: brightness(1.1);
+    }
+    .arcade-btn-3d:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.95) !important;
+    }
+
+    .locker-booth {
+        background: linear-gradient(180deg, #18202c 0%, #0d121a 100%);
+        border: 3px solid #2d3b50;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+    }
+    .locker-plate {
+        background: #000;
+        border-radius: 4px;
+        display: inline-block;
+    }
+    .locker-interior {
+        min-height: 220px;
+        background: repeating-linear-gradient(90deg, #111827 0px, #111827 15px, #0e1420 15px, #0e1420 30px);
+        border: 2px solid #1f2937;
+        border-radius: 6px;
+    }
+    .hanger-wire {
+        position: absolute;
+        top: 15px;
+        width: 35px;
+        height: 12px;
+        border-top: 3px solid #64748b;
+        border-left: 2px solid #64748b;
+        border-right: 2px solid #64748b;
+        border-radius: 5px 5px 0 0;
+    }
+    .locker-bench {
+        background: #111827;
+    }
+
+    .broadcast-ticker {
+        background: #000;
+        border: 1px solid #1e293b;
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+    .ticker-text {
+        display: inline-block;
+        padding-left: 20px;
+        animation: marquee 20s linear infinite;
+    }
+    .ticker-text span {
+        margin-right: 30px;
+    }
+    @@keyframes marquee {
+        0%   { transform: translateX(100%); }
+        100% { transform: translateX(-100%); }
+    }
+</style>
 
 @code {
     private string nombreInput = "Marcus Vance";
@@ -249,6 +484,8 @@
     private int dorsalInput = 11;
     private Posicion posicionInput = Posicion.Base;
     private RitmoSimulacion ritmoInput = RitmoSimulacion.Detallada;
+    private string arquetipoSeleccionado = "Tirador";
+    private bool mostrarModalPremios = false;
 
     protected override void OnInitialized()
     {
@@ -257,12 +494,70 @@
 
     private void ActualizarVista() => InvokeAsync(StateHasChanged);
 
+    private void SeleccionarArquetipo(string arq)
+    {
+        arquetipoSeleccionado = arq;
+    }
+
+    private string ObtenerPoseArquetipo() => arquetipoSeleccionado switch
+    {
+        "Tirador" => "Bote",
+        "Playmaker" => "Bote",
+        "Atleta" => "Celebrando",
+        "Cerrojo" => "Defendiendo",
+        _ => "Idle"
+    };
+
+    private int ObtenerStatPreview(string stat)
+    {
+        return stat switch
+        {
+            "EXT" => arquetipoSeleccionado == "Tirador" ? 84 : 70,
+            "MED" => arquetipoSeleccionado == "Tirador" ? 82 : 72,
+            "PAS" => arquetipoSeleccionado == "Playmaker" ? 85 : 68,
+            "DEF" => arquetipoSeleccionado == "Cerrojo" ? 86 : 67,
+            "REB" => arquetipoSeleccionado == "Atleta" ? 78 : (arquetipoSeleccionado == "Cerrojo" ? 75 : 62),
+            "ATL" => arquetipoSeleccionado == "Atleta" ? 85 : 72,
+            _ => 70
+        };
+    }
+
+    private int CalcularOVRPreview() => arquetipoSeleccionado switch
+    {
+        "Tirador" => 74,
+        "Playmaker" => 74,
+        "Atleta" => 75,
+        "Cerrojo" => 74,
+        _ => 72
+    };
+
     private void IniciarRutaDraft()
     {
-        var jugador = new JugadorBuilder()
+        var builder = new JugadorBuilder()
             .ConDatosBasicos(nombreInput, paisInput, dorsalInput, posicionInput)
-            .AsignarAtributosPorPosicion()
-            .Build();
+            .AsignarAtributosPorPosicion();
+
+        var jugador = builder.Build();
+
+        switch (arquetipoSeleccionado)
+        {
+            case "Tirador":
+                jugador.TiroExterior = Math.Min(99, jugador.TiroExterior + 8);
+                jugador.TiroMedia = Math.Min(99, jugador.TiroMedia + 5);
+                break;
+            case "Playmaker":
+                jugador.Pase = Math.Min(99, jugador.Pase + 10);
+                jugador.Atletismo = Math.Min(99, jugador.Atletismo + 4);
+                break;
+            case "Atleta":
+                jugador.Atletismo = Math.Min(99, jugador.Atletismo + 10);
+                jugador.Rebote = Math.Min(99, jugador.Rebote + 6);
+                break;
+            case "Cerrojo":
+                jugador.Defensa = Math.Min(99, jugador.Defensa + 10);
+                jugador.Rebote = Math.Min(99, jugador.Rebote + 4);
+                break;
+        }
 
         GameState.IrADraftCombine(jugador, ritmoInput);
     }

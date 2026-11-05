@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("The-next-Pick")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d829d48872571d232686f92080c124bee22b6086")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+87ac402de4c7c2ace418e17fbfacac71675e397a")]
 [assembly: System.Reflection.AssemblyProductAttribute("The-next-Pick")]
 [assembly: System.Reflection.AssemblyTitleAttribute("The-next-Pick")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
