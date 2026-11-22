@@ -1,5 +1,7 @@
 ﻿using System.Text.Json;
 using TheNextPick.Models;
+using TheNextPick.Engine.Strategies;
+using TheNextPick.Engine.Observer;
 
 namespace TheNextPick.Engine;
 
@@ -27,8 +29,15 @@ public enum FormatoPlayoffs
     CampanaClutchCompleta
 }
 
-public class GameStateService
+// SUJETO OBSERVABLE (ISujetoObservable) + CONTEXTO DE SIMULACIÓN (IEstrategiaSimulacion)
+public class GameStateService : ISujetoObservable
 {
+    private readonly List<IObservadorJuego> _observadores = new();
+    private IEstrategiaSimulacion _estrategiaSimulacion = new EstrategiaSimulacionDetallada();
+
+    public string UltimoEventoNotificado { get; private set; } = "Inicio";
+    public int CantidadObservadoresActivos => _observadores.Count;
+
     public Jugador? JugadorActivo { get; set; }
     public FaseJuego FaseActual { get; set; } = FaseJuego.Creacion;
     public RitmoSimulacion RitmoElegido { get; set; } = RitmoSimulacion.Detallada;
@@ -111,6 +120,37 @@ public class GameStateService
         InicializarInsignias();
     }
 
+    // MÉTODOS DEL PATRÓN OBSERVER
+    public void Suscribir(IObservadorJuego observador)
+    {
+        if (!_observadores.Contains(observador))
+            _observadores.Add(observador);
+    }
+
+    public void Desuscribir(IObservadorJuego observador)
+    {
+        _observadores.Remove(observador);
+    }
+
+    public void Notificar(string eventoOrigen = "CambioDeEstado")
+    {
+        UltimoEventoNotificado = eventoOrigen;
+        foreach (var obs in _observadores.ToList())
+        {
+            obs.Actualizar(eventoOrigen);
+        }
+        OnStateChanged?.Invoke();
+    }
+
+    // CAMBIO DE ESTRATEGIA DE SIMULACIÓN EN TIEMPO DE EJECUCIÓN
+    public void EstablecerEstrategiaSimulacion(RitmoSimulacion ritmo)
+    {
+        RitmoElegido = ritmo;
+        _estrategiaSimulacion = ritmo == RitmoSimulacion.Rapida
+            ? new EstrategiaSimulacionRapida()
+            : new EstrategiaSimulacionDetallada();
+    }
+
     private void InicializarInsignias()
     {
         CatalogoInsignias = new()
@@ -149,14 +189,14 @@ public class GameStateService
         {
             if (ovr >= 76 || PuntosCombine >= 70)
             {
-                AgregarPremio("Rookie del Año (ROY)", CategoriaPremio.TrofeoMayor, "🏆", 
+                AgregarPremio("Rookie del Año (ROY)", CategoriaPremio.TrofeoMayor, "🏆",
                     "Elegido como el mejor novato de la clase del Draft tras una campaña dominante.", "#FFC72C");
-                AgregarPremio("NBA All-Rookie First Team", CategoriaPremio.QuintetoIdeal, "⭐", 
+                AgregarPremio("NBA All-Rookie First Team", CategoriaPremio.QuintetoIdeal, "⭐",
                     "Miembro del Mejor Quinteto de Novatos de la liga.", "#10b981");
             }
             else
             {
-                AgregarPremio("NBA All-Rookie Second Team", CategoriaPremio.QuintetoIdeal, "⭐", 
+                AgregarPremio("NBA All-Rookie Second Team", CategoriaPremio.QuintetoIdeal, "⭐",
                     "Miembro del Segundo Mejor Quinteto de Novatos de la liga.", "#38bdf8");
             }
         }
@@ -164,42 +204,42 @@ public class GameStateService
         if (ovr >= 88 && Victorias >= 4)
         {
             PremiosMVP++;
-            AgregarPremio("Most Valuable Player (MVP)", CategoriaPremio.TrofeoMayor, "👑", 
+            AgregarPremio("Most Valuable Player (MVP)", CategoriaPremio.TrofeoMayor, "👑",
                 $"Galardonado con el trofeo Michael Jordan al jugador más determinante de la NBA ({temp}).", "#FFC72C");
         }
 
         if (ovr >= 86 && Victorias >= 3)
         {
-            AgregarPremio("All-NBA First Team", CategoriaPremio.QuintetoIdeal, "🥇", 
+            AgregarPremio("All-NBA First Team", CategoriaPremio.QuintetoIdeal, "🥇",
                 "Seleccionado en el Primer Quinteto Ideal oficial de la liga entre los 5 mejores del mundo.", "#FFC72C");
         }
         else if (ovr >= 80)
         {
-            AgregarPremio("All-NBA Second Team", CategoriaPremio.QuintetoIdeal, "🥈", 
+            AgregarPremio("All-NBA Second Team", CategoriaPremio.QuintetoIdeal, "🥈",
                 "Seleccionado en el Segundo Quinteto Ideal de la NBA.", "#94a3b8");
         }
         else if (ovr >= 76 && Victorias >= 4)
         {
-            AgregarPremio("All-NBA Third Team", CategoriaPremio.QuintetoIdeal, "🥉", 
+            AgregarPremio("All-NBA Third Team", CategoriaPremio.QuintetoIdeal, "🥉",
                 "Reconocido entre los mejores 15 jugadores de la temporada regular.", "#b45309");
         }
 
         if (JugadorActivo.Defensa >= 88)
         {
-            AgregarPremio("Defensor del Año (DPOY)", CategoriaPremio.TrofeoMayor, "🛡️", 
+            AgregarPremio("Defensor del Año (DPOY)", CategoriaPremio.TrofeoMayor, "🛡️",
                 "Elegido el mejor ancla defensivo del campeonato.", "#00f0ff");
-            AgregarPremio("NBA All-Defensive First Team", CategoriaPremio.QuintetoIdeal, "🛡️", 
+            AgregarPremio("NBA All-Defensive First Team", CategoriaPremio.QuintetoIdeal, "🛡️",
                 "Titular en el Mejor Quinteto Defensivo de la NBA.", "#00f0ff");
         }
         else if (JugadorActivo.Defensa >= 82)
         {
-            AgregarPremio("NBA All-Defensive Second Team", CategoriaPremio.QuintetoIdeal, "🛡️", 
+            AgregarPremio("NBA All-Defensive Second Team", CategoriaPremio.QuintetoIdeal, "🛡️",
                 "Integrante del Segundo Mejor Quinteto Defensivo.", "#64748b");
         }
 
         if (Hype >= 55 && ovr >= 78)
         {
-            AgregarPremio("NBA All-Star", CategoriaPremio.AllStar, "⭐", 
+            AgregarPremio("NBA All-Star", CategoriaPremio.AllStar, "⭐",
                 $"Seleccionado para el All-Star Game ({temp}).", "#38bdf8");
         }
     }
@@ -219,16 +259,17 @@ public class GameStateService
         HistorialPremios.Clear();
         InicializarInsignias();
         CatalogoDecisionesRPG.ReiniciarMemoriaHistorica();
-        Notificar();
+        Notificar("NuevaCarrera");
     }
 
     public void IrADraftCombine(Jugador jugador, RitmoSimulacion ritmo)
     {
+        if (jugador == null) throw new ArgumentNullException(nameof(jugador));
         JugadorActivo = jugador;
-        RitmoElegido = ritmo;
+        EstablecerEstrategiaSimulacion(ritmo);
         PuntosCombine = 0;
         FaseActual = FaseJuego.DraftCombine;
-        Notificar();
+        Notificar("InicioDraftCombine");
     }
 
     public void FinalizarCombine(int puntos)
@@ -281,13 +322,11 @@ public class GameStateService
         }
 
         if (EquipoQueTeEligio == null)
-        {
             EquipoQueTeEligio = EquipoNBA.Franquicias[0];
-        }
 
         AsignarContratoRookie(EquipoQueTeEligio.Nombre, PickAsignado);
         FaseActual = FaseJuego.EleccionEquipo;
-        Notificar();
+        Notificar("CeremoniaDraft");
     }
 
     private void AsignarContratoRookie(string equipo, int pick)
@@ -305,6 +344,8 @@ public class GameStateService
 
     public void ConfirmarDraftYComenzar()
     {
+        if (JugadorActivo == null)
+            throw new InvalidOperationException("No se puede iniciar temporada sin un prospecto creado.");
         IniciarTemporada();
     }
 
@@ -324,7 +365,7 @@ public class GameStateService
         CatalogoDecisionesRPG.IniciarNuevaTemporada();
         SiguienteDilema();
         FaseActual = FaseJuego.TemporadaRegular;
-        Notificar();
+        Notificar("InicioTemporada");
     }
 
     public void TomarDecision(OpcionDecisionRPG opcion)
@@ -332,15 +373,13 @@ public class GameStateService
         if (JugadorActivo == null) return;
 
         if (opcion.DesencadenaArcoId > 0)
-        {
             CatalogoDecisionesRPG.ArcosDesencadenados.Add(opcion.DesencadenaArcoId);
-        }
 
         if (opcion.ActivaMinijuegoEnCancha)
         {
             opcionPendienteMinijuego = opcion;
             FaseActual = FaseJuego.MinijuegoTiro;
-            Notificar();
+            Notificar("InicioMinijuegoClutch");
             return;
         }
 
@@ -392,7 +431,6 @@ public class GameStateService
 
         if (exito)
         {
-            // Aplicación de bonificaciones de atributos
             JugadorActivo.TiroExterior = Math.Clamp(JugadorActivo.TiroExterior + opcion.DeltaTiroExterior, 40, 99);
             JugadorActivo.TiroMedia = Math.Clamp(JugadorActivo.TiroMedia + opcion.DeltaTiroMedia, 40, 99);
             JugadorActivo.Pase = Math.Clamp(JugadorActivo.Pase + opcion.DeltaPase, 40, 99);
@@ -400,7 +438,6 @@ public class GameStateService
             JugadorActivo.Rebote = Math.Clamp(JugadorActivo.Rebote + opcion.DeltaRebote, 40, 99);
             JugadorActivo.Atletismo = Math.Clamp(JugadorActivo.Atletismo + opcion.DeltaAtletismo, 40, 99);
 
-            // Recompensa Legendaria de Estatus
             if (opcion.ConvierteEnJugadorFranquicia)
             {
                 JugadorActivo.EsJugadorFranquicia = true;
@@ -491,7 +528,7 @@ public class GameStateService
         }
 
         FaseActual = FaseJuego.AlertaLesion;
-        Notificar();
+        Notificar("AlertaLesion");
     }
 
     public void ContinuarTrasLesion()
@@ -528,7 +565,7 @@ public class GameStateService
 
         NoticiaTraspaso = $"¡BOMBAZO EN LA NBA! {anterior} te ha traspasado formalmente a {destino.Nombre.ToUpper()}. Motivo oficial: {motivo}";
         FaseActual = FaseJuego.AlertaTraspaso;
-        Notificar();
+        Notificar("AlertaTraspaso");
     }
 
     public void ContinuarTrasTraspaso()
@@ -545,7 +582,7 @@ public class GameStateService
         {
             AllStarDisputadoEsteAno = true;
             FaseActual = FaseJuego.AllStarWeekend;
-            Notificar();
+            Notificar("AllStarWeekend");
             return;
         }
 
@@ -554,13 +591,9 @@ public class GameStateService
             EvaluarPremiosTemporada();
 
             if (Victorias >= 4)
-            {
                 IniciarPlayoffsSimples();
-            }
             else
-            {
                 ProcesarFinDeTemporada();
-            }
             return;
         }
 
@@ -577,7 +610,7 @@ public class GameStateService
     {
         int ovr = JugadorActivo?.OVR ?? 70;
         DilemaRPGActual = CatalogoDecisionesRPG.ObtenerSiguienteDilema(TemporadaActual, ovr, PickAsignado, Hype, EnRiesgoTraspaso);
-        Notificar();
+        Notificar("NuevaDecision");
     }
 
     public void IniciarPlayoffsSimples()
@@ -595,7 +628,7 @@ public class GameStateService
         FormatoPlayoffTemporada = (FormatoPlayoffs)formatos.GetValue(Random.Shared.Next(formatos.Length))!;
 
         ActualizarRivalRonda();
-        Notificar();
+        Notificar("InicioPlayoffs");
     }
 
     public void ActualizarRivalRonda()
@@ -623,13 +656,13 @@ public class GameStateService
         {
             AnillosCampeon++;
             UltimaNoticia = "¡CAMPEONES DEL MUNDO! Has ganado el anillo de la NBA.";
-            
-            AgregarPremio("Campeón de la NBA (Anillo Larry O'Brien)", CategoriaPremio.Campeonato, "💍", 
+
+            AgregarPremio("Campeón de la NBA (Anillo Larry O'Brien)", CategoriaPremio.Campeonato, "💍",
                 $"Campeón absoluto de la National Basketball Association ({TemporadaTextoActual}).", "#FFC72C");
 
             if ((JugadorActivo?.OVR ?? 70) >= 80)
             {
-                AgregarPremio("Bill Russell Finals MVP", CategoriaPremio.TrofeoMayor, "🏆", 
+                AgregarPremio("Bill Russell Finals MVP", CategoriaPremio.TrofeoMayor, "🏆",
                     "Elegido Jugador Más Valioso de las Finales de la NBA.", "#FFC72C");
             }
 
@@ -639,24 +672,27 @@ public class GameStateService
 
         RondaIndicePlayoffs++;
         ActualizarRivalRonda();
-        Notificar();
+        Notificar("SiguienteRondaPlayoffs");
     }
 
+    // DELEGA EL CÁLCULO DE PARTIDOS A LA ESTRATEGIA ACTIVA (IEstrategiaSimulacion)
     private void SimularBloquePartidos()
     {
         if (JugadorActivo == null) return;
-        UltimosPuntos = Random.Shared.Next(16, 32);
-        UltimosRebotes = Random.Shared.Next(4, 11);
-        UltimasAsistencias = Random.Shared.Next(4, 12);
+        var resultado = _estrategiaSimulacion.SimularBloque(JugadorActivo, Quimica, Energia);
+
+        UltimosPuntos = resultado.Puntos;
+        UltimosRebotes = resultado.Rebotes;
+        UltimasAsistencias = resultado.Asistencias;
+        UltimoFueVictoria = resultado.FueVictoria;
 
         JugadorActivo.PuntosTotales += UltimosPuntos;
         JugadorActivo.PartidosTotales++;
 
-        UltimoFueVictoria = Random.Shared.Next(1, 101) <= (JugadorActivo.OVR / 2) + 22;
         if (UltimoFueVictoria) Victorias++;
         else Derrotas++;
 
-        Energia = Math.Clamp(Energia - 10, 0, 100);
+        Energia = Math.Clamp(Energia - resultado.DesgasteEnergia, 0, 100);
     }
 
     private void ProcesarFinDeTemporada()
@@ -665,7 +701,7 @@ public class GameStateService
         DineroDisponible += SalarioAnual;
         PuntosDesarrollo += (Victorias >= 4 ? 6 : 4);
         TemporadaActual++;
-        Notificar();
+        Notificar("FinTemporada");
     }
 
     public void AvanzarSiguienteTemporada()
@@ -675,12 +711,10 @@ public class GameStateService
 
     public void RetirarJugador()
     {
-        EnSalonDeLaFama = (AnillosCampeon >= 2 && PremiosMVP >= 1) || 
-                         (AnillosCampeon >= 3) || 
+        EnSalonDeLaFama = (AnillosCampeon >= 2 && PremiosMVP >= 1) ||
+                         (AnillosCampeon >= 3) ||
                          (PremiosMVP >= 2 && TemporadaActual >= 8);
         FaseActual = FaseJuego.Retiro;
-        Notificar();
+        Notificar("Retiro");
     }
-
-    public void Notificar() => OnStateChanged?.Invoke();
 }

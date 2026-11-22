@@ -1,16 +1,39 @@
 ﻿@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
+<div class="game-fullscreen-shell">
+    <main class="game-viewport-wrapper">
+        @Body
     </main>
 </div>
+
+<style>
+    .game-fullscreen-shell {
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 12px 20px;
+        overflow-x: hidden;
+    }
+
+    .game-viewport-wrapper {
+        width: 100%;
+        max-width: 1440px;
+        margin: 0 auto;
+    }
+
+    /* Escala panorámica para que tarjetas, minijuegos y textos se vean más grandes en monitor */
+    @@media (min-width: 1200px) {
+        .game-viewport-wrapper {
+            zoom: 1.18;
+        }
+    }
+
+    @@media (min-width: 1600px) {
+        .game-viewport-wrapper {
+            zoom: 1.28;
+        }
+    }
+</style>
