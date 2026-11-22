@@ -146,7 +146,7 @@ public class GameStateService : ISujetoObservable
     public void EstablecerEstrategiaSimulacion(RitmoSimulacion ritmo)
     {
         RitmoElegido = ritmo;
-        _estrategiaSimulacion = ritmo == RitmoSimulacion.Rapida
+        _estrategiaSimulacion = ritmo != RitmoSimulacion.Detallada
             ? new EstrategiaSimulacionRapida()
             : new EstrategiaSimulacionDetallada();
     }
@@ -718,3 +718,4 @@ public class GameStateService : ISujetoObservable
         Notificar("Retiro");
     }
 }
+
