@@ -1,4 +1,4 @@
-﻿@namespace TheNextPick.Components
+@namespace TheNextPick.Components
 @using TheNextPick.Engine
 @inject GameStateService GameState
 
@@ -133,12 +133,13 @@
         eventoEnJuego = false;
         eventoFinalizado = true;
 
+        string? premio = null;
         if (puntos >= 18)
         {
             hypeGanado = 30;
             tituloResultado = "¡CAMPEÓN DEL CONCURSO DE TRIPLES! 🏆";
             detalleResultado = $"Anotaste {puntos} puntos en una exhibición legendaria. Tu nombre queda grabado en el palmarés de la liga.";
-            GameState.PremiosGanadosTemporada.Add("Campeón del Concurso de Triples All-Star");
+            premio = "Campeón del Concurso de Triples All-Star";
         }
         else
         {
@@ -147,9 +148,7 @@
             detalleResultado = $"Finalizaste con {puntos} puntos. Aunque no alcanzaste el trofeo, tu tiro exterior generó respeto en la prensa.";
         }
 
-        GameState.Hype = Math.Clamp(GameState.Hype + hypeGanado, 0, 100);
-        GameState.ConfianzaDT = Math.Clamp(GameState.ConfianzaDT + 10, 0, 100);
-        GameState.UltimaNoticia = detalleResultado;
+        GameState.RegistrarResultadoAllStar(detalleResultado, hypeGanado, premio);
         StateHasChanged();
     }
 
@@ -158,12 +157,13 @@
         eventoEnJuego = false;
         eventoFinalizado = true;
 
+        string? premio = null;
         if (ganado)
         {
             hypeGanado = 25;
             tituloResultado = "¡MVP DEL RISING STARS CHALLENGE! ⭐";
             detalleResultado = "Lideraste a tu conferencia con una actuación clutch decisiva en el tramo final del partido de promesas.";
-            GameState.PremiosGanadosTemporada.Add("MVP del Rising Stars Challenge");
+            premio = "MVP del Rising Stars Challenge";
         }
         else
         {
@@ -172,9 +172,7 @@
             detalleResultado = "Disputaste minutos valiosos en televisión abierta junto a las mejores promesas jóvenes de la competición.";
         }
 
-        GameState.Hype = Math.Clamp(GameState.Hype + hypeGanado, 0, 100);
-        GameState.ConfianzaDT = Math.Clamp(GameState.ConfianzaDT + 10, 0, 100);
-        GameState.UltimaNoticia = detalleResultado;
+        GameState.RegistrarResultadoAllStar(detalleResultado, hypeGanado, premio);
         StateHasChanged();
     }
 

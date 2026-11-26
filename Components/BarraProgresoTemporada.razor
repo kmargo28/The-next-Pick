@@ -1,4 +1,4 @@
-﻿@namespace TheNextPick.Components
+@namespace TheNextPick.Components
 @using TheNextPick.Engine
 @inject GameStateService GameState
 
@@ -11,7 +11,7 @@
             <span class="text-white small fw-bold">CALENDARIO REGULAR (82 PARTIDOS)</span>
         </div>
         <div class="text-end">
-            <span class="text-info fw-bold font-monospace small">@PorcentajeAvance()% COMPLETADO</span>
+            <span class="text-info fw-bold font-monospace small">@GameState.PartidosJugados / 82 · @PorcentajeAvance()% COMPLETADO</span>
         </div>
     </div>
 
@@ -86,17 +86,17 @@
 @code {
     private int PorcentajeAvance()
     {
-        int dec = GameState.DecisionesTomadasTemporada;
-        int tot = Math.Max(1, GameState.TotalDecisionesTemporada);
-        return Math.Clamp((dec * 100) / tot, 5, 100);
+        int dec = GameState.PartidosJugados;
+        int tot = Math.Max(1, GameStateService.TotalPartidosTemporada);
+        return Math.Clamp((dec * 100) / tot, 0, 100);
     }
 
-    private int FaseIndice => GameState.DecisionesTomadasTemporada switch
+    private int FaseIndice => GameState.PartidosJugados switch
     {
-        0 or 1 => 1,
-        2 => 2,
-        3 => 3,
-        4 or 5 => 4,
+        <= 20 => 1,
+        <= 40 => 2,
+        41 => 3,
+        <= 70 => 4,
         _ => 5
     };
 }

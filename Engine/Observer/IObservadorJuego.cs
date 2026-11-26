@@ -1,6 +1,6 @@
-﻿namespace TheNextPick.Engine.Observer;
+namespace TheNextPick.Engine.Observer;
 
-// INTERFAZ OBSERVER: Todo componente visual que reacciona al estado global la implementa
+// INTERFAZ OBSERVER: Contrato del observador directo; Home actualiza sus componentes hijos
 public interface IObservadorJuego
 {
     void Actualizar(string eventoOrigen);

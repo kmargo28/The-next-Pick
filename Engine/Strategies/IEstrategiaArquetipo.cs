@@ -1,4 +1,4 @@
-﻿using TheNextPick.Models;
+using TheNextPick.Models;
 
 namespace TheNextPick.Engine.Strategies;
 
@@ -7,8 +7,6 @@ public interface IEstrategiaArquetipo
     string Clave { get; }
     string Nombre { get; }
     string PoseVestuario { get; }
-    int OvrProyectado { get; }
-    Dictionary<string, int> ObtenerStatsPreview();
     void AplicarBonificaciones(Jugador jugador);
 }
 
@@ -17,12 +15,7 @@ public class EstrategiaTirador : IEstrategiaArquetipo
     public string Clave => "Tirador";
     public string Nombre => "Tirador Letal";
     public string PoseVestuario => "Bote";
-    public int OvrProyectado => 74;
 
-    public Dictionary<string, int> ObtenerStatsPreview() => new()
-    {
-        { "EXT", 84 }, { "MED", 82 }, { "PAS", 68 }, { "DEF", 67 }, { "REB", 62 }, { "ATL", 72 }
-    };
 
     public void AplicarBonificaciones(Jugador jugador)
     {
@@ -36,12 +29,7 @@ public class EstrategiaPlaymaker : IEstrategiaArquetipo
     public string Clave => "Playmaker";
     public string Nombre => "Playmaker Puro";
     public string PoseVestuario => "Bote";
-    public int OvrProyectado => 74;
 
-    public Dictionary<string, int> ObtenerStatsPreview() => new()
-    {
-        { "EXT", 70 }, { "MED", 72 }, { "PAS", 85 }, { "DEF", 67 }, { "REB", 62 }, { "ATL", 76 }
-    };
 
     public void AplicarBonificaciones(Jugador jugador)
     {
@@ -55,12 +43,7 @@ public class EstrategiaAtleta : IEstrategiaArquetipo
     public string Clave => "Atleta";
     public string Nombre => "Atleta Explosivo";
     public string PoseVestuario => "Celebrando";
-    public int OvrProyectado => 75;
 
-    public Dictionary<string, int> ObtenerStatsPreview() => new()
-    {
-        { "EXT", 70 }, { "MED", 72 }, { "PAS", 68 }, { "DEF", 67 }, { "REB", 78 }, { "ATL", 85 }
-    };
 
     public void AplicarBonificaciones(Jugador jugador)
     {
@@ -74,12 +57,7 @@ public class EstrategiaCerrojo : IEstrategiaArquetipo
     public string Clave => "Cerrojo";
     public string Nombre => "Cerrojo Defensivo";
     public string PoseVestuario => "Defendiendo";
-    public int OvrProyectado => 74;
 
-    public Dictionary<string, int> ObtenerStatsPreview() => new()
-    {
-        { "EXT", 70 }, { "MED", 72 }, { "PAS", 68 }, { "DEF", 86 }, { "REB", 75 }, { "ATL", 72 }
-    };
 
     public void AplicarBonificaciones(Jugador jugador)
     {

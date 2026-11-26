@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 @namespace TheNextPick.Pages
 @using TheNextPick.Models
 @using TheNextPick.Engine
@@ -89,14 +89,14 @@
                                 <div class="archetype-card p-3 rounded @(estrategiaActual.Clave == "Playmaker" ? "active-arch" : "")"
                                      @onclick='() => SeleccionarArquetipo("Playmaker")'>
                                     <div class="fw-bold text-white">⚡ PLAYMAKER PURO</div>
-                                    <div class="text-info fw-bold small">+10 Pase / +4 Velocidad</div>
+                                    <div class="text-info fw-bold small">+10 Pase / +4 Atletismo</div>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="archetype-card p-3 rounded @(estrategiaActual.Clave == "Atleta" ? "active-arch" : "")"
                                      @onclick='() => SeleccionarArquetipo("Atleta")'>
                                     <div class="fw-bold text-white">🚀 ATLETA EXPLOSIVO</div>
-                                    <div class="text-warning fw-bold small">+10 Salto / +6 Rebote</div>
+                                    <div class="text-warning fw-bold small">+10 Atletismo / +6 Rebote</div>
                                 </div>
                             </div>
                             <div class="col-6">
@@ -108,19 +108,24 @@
                             </div>
                         </div>
 
-                        @{ var statsPreview = estrategiaActual.ObtenerStatsPreview(); }
+                        <label class="arcade-label" for="ritmo">RITMO DE SIMULACIÓN</label>
+                        <select id="ritmo" class="form-select arcade-input mb-3" @bind="ritmoInput">
+                            <option value="@RitmoSimulacion.Detallada">Detallada · química y fatiga</option>
+                            <option value="@RitmoSimulacion.Expres">Rápida · atributos y menor desgaste</option>
+                        </select>
+                        @{ var preview = CrearProspecto(); }
                         <div class="p-3 rounded bg-black border border-dark mb-3">
                             <div class="d-flex justify-content-between text-secondary small fw-bold mb-2">
                                 <span>PROYECCIÓN INICIAL DEL SCOUTING</span>
-                                <span class="text-warning">OVR INICIAL: @estrategiaActual.OvrProyectado</span>
+                                <span class="text-warning">OVR INICIAL: @preview.OVR</span>
                             </div>
                             <div class="row g-2 text-center small fw-bold">
-                                <div class="col-2 p-2 bg-dark rounded text-warning">EXT: @statsPreview["EXT"]</div>
-                                <div class="col-2 p-2 bg-dark rounded text-warning">MED: @statsPreview["MED"]</div>
-                                <div class="col-2 p-2 bg-dark rounded text-info">PAS: @statsPreview["PAS"]</div>
-                                <div class="col-2 p-2 bg-dark rounded text-danger">DEF: @statsPreview["DEF"]</div>
-                                <div class="col-2 p-2 bg-dark rounded text-success">REB: @statsPreview["REB"]</div>
-                                <div class="col-2 p-2 bg-dark rounded text-light">ATL: @statsPreview["ATL"]</div>
+                                <div class="col-2 p-2 bg-dark rounded text-warning">EXT: @preview.TiroExterior</div>
+                                <div class="col-2 p-2 bg-dark rounded text-warning">MED: @preview.TiroMedia</div>
+                                <div class="col-2 p-2 bg-dark rounded text-info">PAS: @preview.Pase</div>
+                                <div class="col-2 p-2 bg-dark rounded text-danger">DEF: @preview.Defensa</div>
+                                <div class="col-2 p-2 bg-dark rounded text-success">REB: @preview.Rebote</div>
+                                <div class="col-2 p-2 bg-dark rounded text-light">ATL: @preview.Atletismo</div>
                             </div>
                         </div>
                     </div>
@@ -313,7 +318,7 @@
     else if (GameState.FaseActual == FaseJuego.FinTemporada)
     {
         <div class="sports-card p-4 text-center">
-            <h2 class="nba-title display-4 text-white mb-1">TEMPORADA @(GameState.TemporadaActual - 1) CONCLUIDA</h2>
+            <h2 class="nba-title display-4 text-white mb-1">TEMPORADA @GameState.TemporadaActual CONCLUIDA</h2>
             <p class="text-secondary">Récord: <strong class="text-white">@GameState.Victorias V - @GameState.Derrotas D</strong> | Saldo: <strong class="text-success">$@((GameState.DineroDisponible / 1_000_000.0).ToString("0.0"))M</strong></p>
 
             <div class="my-3">
@@ -524,6 +529,15 @@
             estrategiaActual = estrategia;
     }
 
+    private Jugador CrearProspecto()
+    {
+        var jugador = new JugadorBuilder()
+            .ConDatosBasicos(nombreInput.Trim(), paisInput, dorsalInput, posicionInput)
+            .AsignarAtributosPorPosicion().Build();
+        estrategiaActual.AplicarBonificaciones(jugador);
+        return jugador;
+    }
+
     private void IniciarRutaDraft()
     {
         try
@@ -534,13 +548,7 @@
             if (dorsalInput < 0 || dorsalInput > 99)
                 throw new ArgumentOutOfRangeException(nameof(dorsalInput), "El dorsal debe estar entre 0 y 99.");
 
-            var jugador = new JugadorBuilder()
-                .ConDatosBasicos(nombreInput.Trim(), paisInput, dorsalInput, posicionInput)
-                .AsignarAtributosPorPosicion()
-                .Build();
-
-            // Ejecución polimórfica de la estrategia seleccionada (sin condicionales)
-            estrategiaActual.AplicarBonificaciones(jugador);
+            var jugador = CrearProspecto();
 
             GameState.IrADraftCombine(jugador, ritmoInput);
         }

@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using TheNextPick.Models;
 using TheNextPick.Engine.Strategies;
 using TheNextPick.Engine.Observer;
@@ -69,7 +69,9 @@ public class GameStateService : ISujetoObservable
     public int Derrotas { get; set; } = 0;
     public int PartidosJugados => Victorias + Derrotas;
     public int DecisionesTomadasTemporada { get; set; } = 0;
-    public int TotalDecisionesTemporada => 6;
+    public const int TotalPartidosTemporada = 82;
+    private static readonly int[] CierresBloque = { 14, 28, 41, 55, 69, 82 };
+    public int TotalDecisionesTemporada => CierresBloque.Length;
     public int PuntosDesarrollo { get; set; } = 0;
     public bool AllStarDisputadoEsteAno { get; set; } = false;
 
@@ -123,6 +125,7 @@ public class GameStateService : ISujetoObservable
     // MÉTODOS DEL PATRÓN OBSERVER
     public void Suscribir(IObservadorJuego observador)
     {
+        ArgumentNullException.ThrowIfNull(observador);
         if (!_observadores.Contains(observador))
             _observadores.Add(observador);
     }
@@ -201,14 +204,15 @@ public class GameStateService : ISujetoObservable
             }
         }
 
-        if (ovr >= 88 && Victorias >= 4)
+        if (ovr >= 88 && Victorias >= 42)
         {
-            PremiosMVP++;
+            if (!HistorialPremios.Any(p => p.Nombre == "Most Valuable Player (MVP)" && p.TemporadaTexto == temp))
+                PremiosMVP++;
             AgregarPremio("Most Valuable Player (MVP)", CategoriaPremio.TrofeoMayor, "👑",
                 $"Galardonado con el trofeo Michael Jordan al jugador más determinante de la NBA ({temp}).", "#FFC72C");
         }
 
-        if (ovr >= 86 && Victorias >= 3)
+        if (ovr >= 86 && Victorias >= 41)
         {
             AgregarPremio("All-NBA First Team", CategoriaPremio.QuintetoIdeal, "🥇",
                 "Seleccionado en el Primer Quinteto Ideal oficial de la liga entre los 5 mejores del mundo.", "#FFC72C");
@@ -218,7 +222,7 @@ public class GameStateService : ISujetoObservable
             AgregarPremio("All-NBA Second Team", CategoriaPremio.QuintetoIdeal, "🥈",
                 "Seleccionado en el Segundo Quinteto Ideal de la NBA.", "#94a3b8");
         }
-        else if (ovr >= 76 && Victorias >= 4)
+        else if (ovr >= 76 && Victorias >= 42)
         {
             AgregarPremio("All-NBA Third Team", CategoriaPremio.QuintetoIdeal, "🥉",
                 "Reconocido entre los mejores 15 jugadores de la temporada regular.", "#b45309");
@@ -257,6 +261,10 @@ public class GameStateService : ISujetoObservable
         InfraccionesAcumuladas = 0;
         EnRiesgoTraspaso = false;
         HistorialPremios.Clear();
+        PremiosGanadosTemporada.Clear();
+        PuntosDesarrollo = 0;
+        Energia = 100;
+        Victorias = Derrotas = DecisionesTomadasTemporada = 0;
         InicializarInsignias();
         CatalogoDecisionesRPG.ReiniciarMemoriaHistorica();
         Notificar("NuevaCarrera");
@@ -352,6 +360,7 @@ public class GameStateService : ISujetoObservable
     private void IniciarTemporada()
     {
         Energia = 100;
+        PremiosGanadosTemporada.Clear();
         ConfianzaDT = CatalogoInsignias.Any(b => b.Id == "microondas" && b.Desbloqueada) ? 70 : 55;
         Quimica = 50;
         Victorias = 0;
@@ -535,14 +544,13 @@ public class GameStateService : ISujetoObservable
     {
         if (JugadorActivo?.LesionActual == TipoLesion.RoturaLigamentosACL)
         {
-            Derrotas += 8;
-            Victorias += 2;
+            SimularHasta(TotalPartidosTemporada);
+            DecisionesTomadasTemporada = TotalDecisionesTemporada;
+            EvaluarPremiosTemporada();
             ProcesarFinDeTemporada();
             return;
         }
 
-        JugadorActivo!.PartidosRestantesLesion = 0;
-        JugadorActivo.LesionActual = TipoLesion.Ninguna;
         Energia = 80;
         FaseActual = FaseJuego.TemporadaRegular;
         ContinuarBucleTemporada();
@@ -590,7 +598,7 @@ public class GameStateService : ISujetoObservable
         {
             EvaluarPremiosTemporada();
 
-            if (Victorias >= 4)
+            if (Victorias >= 42)
                 IniciarPlayoffsSimples();
             else
                 ProcesarFinDeTemporada();
@@ -620,8 +628,8 @@ public class GameStateService : ISujetoObservable
         VictoriasSeriePlayoff = 0;
         DerrotasSeriePlayoff = 0;
 
-        if (Victorias >= 5) SeedPlayoffs = Random.Shared.Next(1, 3);
-        else if (Victorias >= 4) SeedPlayoffs = Random.Shared.Next(3, 6);
+        if (Victorias >= 55) SeedPlayoffs = Random.Shared.Next(1, 3);
+        else if (Victorias >= 42) SeedPlayoffs = Random.Shared.Next(3, 6);
         else SeedPlayoffs = Random.Shared.Next(6, 9);
 
         var formatos = Enum.GetValues<FormatoPlayoffs>();
@@ -678,34 +686,79 @@ public class GameStateService : ISujetoObservable
     // DELEGA EL CÁLCULO DE PARTIDOS A LA ESTRATEGIA ACTIVA (IEstrategiaSimulacion)
     private void SimularBloquePartidos()
     {
+        if (JugadorActivo == null || DecisionesTomadasTemporada < 1) return;
+        SimularHasta(CierresBloque[Math.Min(DecisionesTomadasTemporada, TotalDecisionesTemporada) - 1]);
+    }
+
+    private void SimularHasta(int objetivo)
+    {
         if (JugadorActivo == null) return;
-        var resultado = _estrategiaSimulacion.SimularBloque(JugadorActivo, Quimica, Energia);
+        int desgaste = 0;
+        while (PartidosJugados < objetivo)
+        {
+            var resultado = _estrategiaSimulacion.SimularBloque(JugadorActivo, Quimica, Energia);
+            bool lesionado = JugadorActivo.EstaLesionado;
+            UltimosPuntos = lesionado ? 0 : resultado.Puntos;
+            UltimosRebotes = lesionado ? 0 : resultado.Rebotes;
+            UltimasAsistencias = lesionado ? 0 : resultado.Asistencias;
+            UltimoFueVictoria = resultado.FueVictoria;
+            if (resultado.FueVictoria) Victorias++; else Derrotas++;
+            if (lesionado)
+            {
+                JugadorActivo.PartidosRestantesLesion--;
+                if (JugadorActivo.PartidosRestantesLesion == 0)
+                    JugadorActivo.LesionActual = TipoLesion.Ninguna;
+            }
+            else
+            {
+                JugadorActivo.PuntosTotales += resultado.Puntos;
+                JugadorActivo.RebotesTotales += resultado.Rebotes;
+                JugadorActivo.AsistenciasTotales += resultado.Asistencias;
+                JugadorActivo.PartidosTotales++;
+                if (resultado.FueVictoria) JugadorActivo.VictoriasTotales++;
+                else JugadorActivo.DerrotasTotales++;
+            }
+            desgaste = resultado.DesgasteEnergia;
+        }
+        // El desgaste se aplica una vez por bloque, no por cada partido.
+        Energia = Math.Clamp(Energia - desgaste, 0, 100);
+    }
 
-        UltimosPuntos = resultado.Puntos;
-        UltimosRebotes = resultado.Rebotes;
-        UltimasAsistencias = resultado.Asistencias;
-        UltimoFueVictoria = resultado.FueVictoria;
-
-        JugadorActivo.PuntosTotales += UltimosPuntos;
-        JugadorActivo.PartidosTotales++;
-
-        if (UltimoFueVictoria) Victorias++;
-        else Derrotas++;
-
-        Energia = Math.Clamp(Energia - resultado.DesgasteEnergia, 0, 100);
+    public void RegistrarResultadoAllStar(string noticia, int hype, string? premio = null)
+    {
+        if (FaseActual != FaseJuego.AllStarWeekend)
+            throw new InvalidOperationException("El evento All-Star no está activo.");
+        if (premio != null)
+        {
+            if (!PremiosGanadosTemporada.Contains(premio)) PremiosGanadosTemporada.Add(premio);
+            AgregarPremio(premio, CategoriaPremio.AllStar, "🏆", noticia);
+        }
+        Hype = Math.Clamp(Hype + hype, 0, 100);
+        ConfianzaDT = Math.Clamp(ConfianzaDT + 10, 0, 100);
+        UltimaNoticia = noticia;
+        Notificar("ResultadoAllStar");
     }
 
     private void ProcesarFinDeTemporada()
     {
         FaseActual = FaseJuego.FinTemporada;
         DineroDisponible += SalarioAnual;
-        PuntosDesarrollo += (Victorias >= 4 ? 6 : 4);
-        TemporadaActual++;
+        PuntosDesarrollo += (Victorias >= 42 ? 6 : 4);
+        if (JugadorActivo != null) JugadorActivo.AniosEnLiga++;
         Notificar("FinTemporada");
     }
 
     public void AvanzarSiguienteTemporada()
     {
+        if (FaseActual != FaseJuego.FinTemporada) return;
+        TemporadaActual++;
+        if (JugadorActivo != null)
+        {
+            JugadorActivo.Edad++;
+            JugadorActivo.AniosEnEquipoActual++;
+            JugadorActivo.LesionActual = TipoLesion.Ninguna;
+            JugadorActivo.PartidosRestantesLesion = 0;
+        }
         IniciarTemporada();
     }
 

@@ -1,4 +1,4 @@
-﻿using TheNextPick.Models;
+using TheNextPick.Models;
 
 namespace TheNextPick.Engine;
 
@@ -21,7 +21,7 @@ public static class CatalogoDecisionesRPG
     {
         var lista = new List<DilemaRPG>();
 
-        // 50 imágenes temáticas únicas de alta calidad
+        // Imágenes temáticas de alta calidad
         var imagenes = new Dictionary<int, string>
         {
             { 1, "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&auto=format&fit=crop&q=80" }, // Vestuario / Charla
@@ -78,7 +78,7 @@ public static class CatalogoDecisionesRPG
             { 52, "https://images.unsplash.com/photo-1518063319789-7217e6706b04?w=800&auto=format&fit=crop&q=80" }  // Campeón en la duela
         };
 
-        // Generamos dinámicamente 52 eventos narrativos únicos
+        // Generamos dinámicamente 52 registros narrativos
         string[] contextosNormales = new[]
         {
             "El DT pide ajustar el ritmo de posesión para reducir pérdidas.",
@@ -124,18 +124,18 @@ public static class CatalogoDecisionesRPG
                     {
                         Titulo = "ENFOQUE DISCIPLINADO Y PROFESIONAL",
                         Descripcion = "Priorizar las exigencias del cuerpo técnico y la solidez del equipo.",
-                        BadgesPositivas = new() { "+10 CONFIANZA DT", "+2 ATRIBUTO" },
+                        BadgesPositivas = new() { "+10 CONFIANZA DT", "+2 DEFENSA" },
                         BadgesPeligro = new() { "⚡ -10 ENERGÍA" },
-                        DeltaConfianzaDT = 10, DeltaEnergia = -10,
+                        DeltaConfianzaDT = 10, DeltaEnergia = -10, DeltaDefensa = 2,
                         Retroalimentacion = "El cuerpo técnico tomó nota positiva de tu seriedad."
                     },
                     new()
                     {
                         Titulo = "VÍA INDIVIDUAL Y CREATIVA",
                         Descripcion = "Buscar el lucimiento personal y ganar notoriedad en redes.",
-                        BadgesPositivas = new() { "+15 HYPE", "+2 ATRIBUTO OFENSIVO" },
+                        BadgesPositivas = new() { "+15 HYPE", "+2 TIRO EXT" },
                         BadgesPeligro = new() { "-10 CONFIANZA DT" },
-                        DeltaHype = 15, DeltaConfianzaDT = -10,
+                        DeltaHype = 15, DeltaConfianzaDT = -10, DeltaTiroExterior = 2,
                         Retroalimentacion = "Ganaste seguidores en redes, pero el DT te pidió más concentración."
                     }
                 }
@@ -203,9 +203,9 @@ public static class CatalogoDecisionesRPG
                         Titulo = "JUGARTE LA POSESIÓN CLUTCH (MINIJUEGO)",
                         Descripcion = "Buscar el tiro decisivo ante su mejor defensor.",
                         BadgesPositivas = new() { "🏀 MINIJUEGO CLUTCH", "+5 TIRO EXT", "+30 HYPE" },
-                        BadgesPeligro = new() { "⚠️ SI FALLAS: -15 CONF DT" },
+                        BadgesPeligro = new() { "⚠️ SI FALLAS: -22 CONF DT / -15 HYPE" },
                         ActivaMinijuegoEnCancha = true,
-                        DeltaTiroExterior = 5, DeltaEnergia = -20,
+                        DeltaTiroExterior = 5, DeltaEnergia = -20, DeltaHype = 30,
                         Retroalimentacion = "Demostraste sangre fría ante la mejor defensa de la liga."
                     },
                     new()
@@ -237,8 +237,8 @@ public static class CatalogoDecisionesRPG
                 new()
                 {
                     Titulo = "ASUMIR EL ESTATUS DE JUGADOR FRANQUICIA",
-                    Descripcion = "Aceptar el protagonismo total de la ofensiva (+8 global repartido).",
-                    BadgesPositivas = new() { "👑 JUGADOR FRANQUICIA", "+4 T.EXT", "+4 T.MED", "+4 PASE (+8 OVR)", "+50 HYPE" },
+                    Descripcion = "Aceptar el protagonismo total de la ofensiva (+4 en cuatro atributos).",
+                    BadgesPositivas = new() { "👑 JUGADOR FRANQUICIA", "+4 T.EXT", "+4 T.MED", "+4 PASE", "+4 ATLETISMO", "+50 HYPE" },
                     BadgesPeligro = new() { "PRESIÓN MÁXIMA DE ANILLO" },
                     DeltaTiroExterior = 4, DeltaTiroMedia = 4, DeltaPase = 4, DeltaAtletismo = 4,
                     DeltaHype = 50, DeltaConfianzaDT = 30,
@@ -249,7 +249,7 @@ public static class CatalogoDecisionesRPG
                 {
                     Titulo = "RECHAZAR LA PRESIÓN EN RUEDA DE PRENSA",
                     Descripcion = "Declarar ante los medios que aún no estás listo.",
-                    BadgesPositivas = new() { "-5 PRESIÓN" },
+                    BadgesPositivas = new() { "SIN BENEFICIO DE ATRIBUTOS" },
                     BadgesPeligro = new() { "-40 HYPE", "-30 CONFIANZA DT", "⚠️ RIESGO TRASPASO" },
                     DeltaHype = -40, DeltaConfianzaDT = -30, AumentaRiesgoTraspaso = true,
                     Retroalimentacion = "La directiva y los aficionados quedaron decepcionados por la falta de carácter."
@@ -272,8 +272,8 @@ public static class CatalogoDecisionesRPG
                 new()
                 {
                     Titulo = "COMPLETAR EL PROTOCOLO INTEGRAL",
-                    Descripcion = "Acondicionamiento muscular biomecánico (+8 físico).",
-                    BadgesPositivas = new() { "+4 ATLETISMO", "+4 DEFENSA", "+4 REBOTE (+8 OVR)" },
+                    Descripcion = "Acondicionamiento muscular biomecánico (+4 atletismo, defensa y rebote).",
+                    BadgesPositivas = new() { "+4 ATLETISMO", "+4 DEFENSA", "+4 REBOTE " },
                     BadgesPeligro = new() { "💰 -$300K GASTOS", "⚡ -25 ENERGÍA" },
                     DeltaAtletismo = 4, DeltaDefensa = 4, DeltaRebote = 4,
                     DeltaDinero = -300000, DeltaEnergia = -25,
@@ -283,8 +283,8 @@ public static class CatalogoDecisionesRPG
                 {
                     Titulo = "FORZAR PESOS SIN SUPERVISIÓN MÉDICA",
                     Descripcion = "Entrenar al límite por tu cuenta.",
-                    BadgesPositivas = new() { "+10 HYPE" },
-                    BadgesPeligro = new() { "-4 ATLETISMO (-8 FÍSICO)", "⚠️ LESIÓN SEVERA" },
+                    BadgesPositivas = new() { "SIN BENEFICIO DE ATRIBUTOS" },
+                    BadgesPeligro = new() { "-4 ATLETISMO", "-4 DEFENSA", "⚠️ LESIÓN SEVERA" },
                     DeltaAtletismo = -4, DeltaDefensa = -4, DeltaEnergia = -40, ProbabilidadLesionDirecta = 75,
                     Retroalimentacion = "Sobrecarga severa y microrrotura muscular. Fuera de las canchas."
                 }

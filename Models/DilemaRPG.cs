@@ -1,11 +1,11 @@
-﻿namespace TheNextPick.Models;
+namespace TheNextPick.Models;
 
 public enum RarezaCarta
 {
     Normal,       // Decisión estándar: Sin etiquetas de rareza ni halos
     Rara,         // Evento especial poco común (~15% prob)
     Epica,        // Evento especial de gran impacto (~8% prob)
-    Legendaria    // Evento extraordinario (~2% prob): +8 OVR / Jugador Franquicia
+    Legendaria    // Evento extraordinario (~2% prob): Mejoras de atributos / Jugador Franquicia
 }
 
 public enum TipoContextoDecision
