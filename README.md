@@ -34,11 +34,4 @@ Validation es un ejecutable de comprobaciones sin dependencias de pruebas extern
 - El catálogo contiene 52 registros con ID único; algunos comparten contexto y opciones. Las probabilidades base por rareza son 75/15/8/2 y pueden cambiar al agotarse candidatos elegibles.
 - Las lesiones restan apariciones del jugador, pero el equipo completa su calendario. La lesión grave termina la temporada sin playoffs; el jugador se recupera para la siguiente.
 
-## Sustentación
 
-1. Cambiar posición y arquetipo; comprobar que el OVR mostrado corresponde al jugador creado.
-2. Elegir detallada o rápida; mostrar la llamada polimórfica a SimularBloque y sus fórmulas.
-3. Explicar Suscribir → Notificar → Actualizar → StateHasChanged, y Desuscribir al disponer Home.
-4. Ejecutar Validation y mostrar el calendario de 82 partidos y los premios All-Star.
-
-Los algoritmos son extensibles por interfaz; nuevas opciones también requieren registrarse en la selección correspondiente. Las propiedades del dominio siguen siendo públicas: las notificaciones se emiten explícitamente en las operaciones del servicio.
